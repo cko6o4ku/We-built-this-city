@@ -1,0 +1,62 @@
+-- control stages
+require 'utils.data_stages'
+_LIFECYCLE = _STAGE.control -- Control stage
+_DEBUG = true
+_DUMP_ENV = false
+
+
+
+-- other stuff
+local Event = require 'utils.event'
+require 'utils.server'
+require "utils.server_commands"
+require "utils.utils"
+require "utils.table"
+require "utils.color_data"
+require "utils.session_data"
+require "utils.player_modifiers"
+
+require "features.gui.main"
+require "features.gui.player_list"
+require "features.gui.admin"
+require "features.gui.group"
+require "features.gui.poll"
+require "features.gui.score"
+require "features.gui.config"
+require "features.functions.chatbot"
+require "features.functions.antigrief"
+require "features.modules.corpse_markers"
+require "features.modules.floaty_chat"
+require "features.modules.autohotbar"
+require "features.modules.autostash"
+require "features.commands.misc"
+
+
+-- load from config/map
+require 'config'
+
+if _DUMP_ENV then
+    require 'utils.dump_env'
+end
+if _DEBUG then
+    require 'utils.debug.command'
+end
+
+local function on_player_created(event)
+	local player = game.players[event.player_index]
+	player.gui.top.style = 'slot_table_spacing_horizontal_flow'
+	player.gui.left.style = 'slot_table_spacing_vertical_flow'
+end
+
+local function on_init()
+	game.forces.player.research_queue_enabled = true
+end
+
+local loaded = _G.package.loaded
+function require(path)
+    return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
+end
+
+
+Event.on_init(on_init)
+Event.add(defines.events.on_player_created, on_player_created)
