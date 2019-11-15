@@ -15,8 +15,11 @@ Modified by Gerkiz *-*
 
 local math_random = math.random
 local Global = require 'utils.global'
-local Tabs = require "features.gui.main"
+local Event = require 'utils.event'
 local P = require "utils.player_modifiers"
+local Tabs = require 'features.gui.main'
+local m_gui = require "mod-gui"
+local mod = m_gui.get_frame_flow
 local visuals_delay = 1800
 local level_up_floating_text_color = {0, 205, 0}
 local xp_floating_text_color = {157, 157, 157}
@@ -79,8 +82,8 @@ local function get_one_punch_chance(player)
 end
 
 local function draw_gui_char_button(player)
-	if player.gui.top.rpg then return end
-	local b = player.gui.top.add({type = "sprite-button", name = "rpg", caption = "CHAR"})
+	if mod(player).rpg_button then return end
+	local b = mod(player).add{type = "sprite-button", name = "rpg_button", caption = "[RPG]"}
 	b.style.font_color = {165,165,165}
 	b.style.font = "heading-1"
 	b.style.minimal_height = 38
@@ -90,11 +93,11 @@ local function draw_gui_char_button(player)
 end
 
 local function update_char_button(player)
-	if not player.gui.top.rpg then draw_gui_char_button(player) end
+	if not mod(player).rpg_button then draw_gui_char_button(player) end
 	if rpg_t[player.index].points_to_distribute > 0 then
-		player.gui.top.rpg.style.font_color = {245, 0, 0}
+		mod(player).rpg_button.style.font_color = {245, 0, 0}
 	else
-		player.gui.top.rpg.style.font_color = {175,175,175}
+		mod(player).rpg_button.style.font_color = {175,175,175}
 	end
 end
 
@@ -174,11 +177,11 @@ local function add_gui_increase_stat(element, name, player, width)
 	e.style.minimal_width = 38
 	e.style.font = "default-large-semibold"
 	e.style.font_color = {0,0,0}
-	e.style.horizontal_align = "center"	
-	e.style.vertical_align = "center"	
+	e.style.horizontal_align = "center"
+	e.style.vertical_align = "center"
 	e.style.padding = 0
-	e.style.margin = 0	
-	e.tooltip = "Rightclick to allocate 5 points."
+	e.style.margin = 0
+	e.tooltip = "Right click to allocate 5 points."
 	
 	return e
 end
@@ -191,20 +194,21 @@ local function add_separator(element, width)
 	return e
 end
 
-local function draw_gui(player, forced)
-	if not forced then
-		if rpg_t[player.index].gui_refresh_delay > game.tick then return end
-	end
-	
+local function draw_gui(player)
+	local left = player.gui.left
+	if left.rpg then left.rpg.destroy() end
+	if not player.character then return end
+
 	Tabs.panel_clear_left_gui(player)
 	
-	if player.gui.left.rpg then player.gui.left.rpg.destroy() end
-	if not player.character then return end
-	
-	local frame = player.gui.left.add({type = "frame", name = "rpg", direction = "vertical"})
+	local frame = left.add{type = "frame", name = "rpg", direction = "vertical", style = "changelog_subheader_frame"}
 	frame.style.maximal_width = 425
 	frame.style.minimal_width = 425
 	frame.style.margin = 6
+
+	local subhead = frame.add{type = "frame", name = "sub_header", style = "changelog_subheader_frame"}
+
+	Tabs.AddLabel(subhead, "scen_info", "Choose your class!", "subheader_caption_label")
 	
 	add_separator(frame, 400)
 	
@@ -419,6 +423,7 @@ local function draw_level_text(player)
 end
 
 local function level_up(player)
+	local left = player.gui.left
 	local distribute_points_gain = 0	
 	for i = rpg_t[player.index].level + 1, #experience_levels, 1 do
 		if rpg_t[player.index].xp > experience_levels[i] then
@@ -433,15 +438,16 @@ local function level_up(player)
 	rpg_t[player.index].points_to_distribute = rpg_t[player.index].points_to_distribute + distribute_points_gain
 	update_char_button(player)
 	table.shuffle_table(rpg_frame_icons)
-	if player.gui.left.rpg then draw_gui(player, true) end
+	if left.rpg then draw_gui(player) end
 	level_up_effects(player)
 end
 
 local function gain_xp(player, amount)
+	local left = player.gui.left
 	amount = math.round(amount, 2)
 	rpg_t[player.index].xp = rpg_t[player.index].xp + amount
 	rpg_t[player.index].xp_since_last_floaty_text = rpg_t[player.index].xp_since_last_floaty_text + amount
-	if player.gui.left.rpg then draw_gui(player, false) end
+	if left.rpg then draw_gui(player) end
 	if not experience_levels[rpg_t[player.index].level + 1] then return end
 	if rpg_t[player.index].xp >= experience_levels[rpg_t[player.index].level + 1] then
 		level_up(player)
@@ -454,7 +460,8 @@ local function gain_xp(player, amount)
 end
 
 function Public.rpg_reset_player(player)
-	if player.gui.left.rpg then player.gui.left.rpg.destroy() end
+	local left = player.gui.left
+	if left.rpg then left.rpg.destroy() end
 	if not player.character then
 		player.set_controller({type=defines.controllers.god})
 		player.create_character() 
@@ -480,47 +487,39 @@ function Public.rpg_reset_all_players()
 end
 
 local function on_gui_click(event)
-	if not event.element then return end
-	if not event.element.valid then return end
+	if not (event and event.element and event.element.valid) then return end
+	local player = game.players[event.player_index]
+	local left = player.gui.left
 	local element = event.element
-	
-	if element.type ~= "sprite-button" then return end
-	
-	if element.caption == "CHAR" then
-		if element.name == "rpg" then
-			local player = game.players[event.player_index]
-			if player.gui.left.rpg then
-				player.gui.left.rpg.destroy()
-				return
-			end
-			draw_gui(player, false)
+	local name = element.name
+
+	if name == "rpg_button" then
+		if left.rpg then
+			left.rpg.destroy()
+		else
+			draw_gui(player)
 		end
 	end
-	
-	if element.caption ~= "✚" then return end
-	if element.sprite ~= "virtual-signal/signal-red" then return end
-	
-	local index = element.name
-	local player = game.players[event.player_index]
-	if not rpg_t[player.index][index] then return end
+
+	if not rpg_t[player.index][name] then return end
 	if not player.character then return end
-	
+
 	if event.button == defines.mouse_button_type.right then
 		for a = 1, 5, 1 do
-			if rpg_t[player.index].points_to_distribute <= 0 then draw_gui(player, true) return end
+			if rpg_t[player.index].points_to_distribute <= 0 then draw_gui(player) return end
 			rpg_t[player.index].points_to_distribute = rpg_t[player.index].points_to_distribute - 1
-			rpg_t[player.index][index] = rpg_t[player.index][index] + 1
+			rpg_t[player.index][name] = rpg_t[player.index][name] + 1
 			update_player_stats(player)
 		end
-		draw_gui(player, true)
+		draw_gui(player)
 		return
 	end
-	
-	if rpg_t[player.index].points_to_distribute <= 0 then draw_gui(player, true) return end
+
+	if rpg_t[player.index].points_to_distribute <= 0 then draw_gui(player) return end
 	rpg_t[player.index].points_to_distribute = rpg_t[player.index].points_to_distribute - 1
-	rpg_t[player.index][index] = rpg_t[player.index][index] + 1
+	rpg_t[player.index][name] = rpg_t[player.index][name] + 1
 	update_player_stats(player)
-	draw_gui(player, true)
+	draw_gui(player)
 end
 
 local xp_yield = {
@@ -826,18 +825,18 @@ local function on_init(event)
 	table.shuffle_table(rpg_frame_icons)
 end
 
-local event = require 'utils.event'
-event.on_init(on_init)
-event.add(defines.events.on_built_entity, on_built_entity)
-event.add(defines.events.on_entity_damaged, on_entity_damaged)
-event.add(defines.events.on_entity_died, on_entity_died)
-event.add(defines.events.on_gui_click, on_gui_click)
-event.add(defines.events.on_player_changed_position, on_player_changed_position)
-event.add(defines.events.on_player_crafted_item, on_player_crafted_item)
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
-event.add(defines.events.on_player_repaired_entity, on_player_repaired_entity)
-event.add(defines.events.on_player_respawned, on_player_respawned)
-event.add(defines.events.on_player_rotated_entity, on_player_rotated_entity)
-event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
+
+Event.on_init(on_init)
+Event.add(defines.events.on_built_entity, on_built_entity)
+Event.add(defines.events.on_entity_damaged, on_entity_damaged)
+Event.add(defines.events.on_entity_died, on_entity_died)
+Event.add(defines.events.on_gui_click, on_gui_click)
+Event.add(defines.events.on_player_changed_position, on_player_changed_position)
+Event.add(defines.events.on_player_crafted_item, on_player_crafted_item)
+Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+Event.add(defines.events.on_player_repaired_entity, on_player_repaired_entity)
+Event.add(defines.events.on_player_respawned, on_player_respawned)
+Event.add(defines.events.on_player_rotated_entity, on_player_rotated_entity)
+Event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
 
 return Public

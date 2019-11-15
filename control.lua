@@ -15,6 +15,7 @@ require "utils.table"
 require "utils.color_data"
 require "utils.session_data"
 require "utils.player_modifiers"
+require "utils.surface"
 
 require "features.gui.main"
 require "features.gui.player_list"
@@ -30,6 +31,8 @@ require "features.modules.floaty_chat"
 require "features.modules.autohotbar"
 require "features.modules.autostash"
 require "features.commands.misc"
+
+require "features.modules.rpg"
 
 
 -- load from config/map

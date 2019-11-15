@@ -121,8 +121,9 @@ end
 
 -- Broadcast messages to all connected players
 function SendBroadcastMsg(msg)
+    local color = { r=0, g=255, b=171}
     for name,player in pairs(game.connected_players) do
-        player.print(msg)
+        player.print(msg, color)
     end
 end
 

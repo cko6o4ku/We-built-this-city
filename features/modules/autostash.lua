@@ -1,7 +1,10 @@
 --this adds a button that stashes/sorts your inventory into nearby chests in some kind of intelligent way - mewmew
 -- modified by gerkiz
+local m_gui = require "mod-gui"
+local mod = m_gui.get_frame_flow
 
 local print_color = {r = 120, g = 255, b = 0}
+
 
 local function create_floaty_text(surface, position, name, count, height_offset)
 	if global.autostash_floating_text_y_offsets[position.x .. "_" .. position.y] then
@@ -200,8 +203,8 @@ local function auto_stash(player, event)
 end
 
 local function create_gui_button(player)
-	if player.gui.top.auto_stash then return end
-	local b = player.gui.top.add({
+	if mod(player).auto_stash then return end
+	local b = mod(player).add({
 		type = "sprite-button",
 		sprite = "item/wooden-chest",
 		name = "auto_stash",

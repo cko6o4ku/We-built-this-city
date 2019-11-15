@@ -353,6 +353,7 @@ local function on_gui_click(event)
 			global.player_list.last_poke_tick[event.element.player_index] = game.tick
 			local p = game.players[poked_player]
 			global.player_list.pokes[p.index] = global.player_list.pokes[p.index] + 1
+			Tabs.refresh(player)
 		end
 	end
 end

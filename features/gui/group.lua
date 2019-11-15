@@ -8,7 +8,7 @@ local build_group_gui = (function (player, frame)
 	local members_width = 90
 	local member_columns = 3
 	local actions_width = 80
-	local total_height = frame.style.minimal_height - 60
+	local total_height = 400
 	
 	frame.clear()
 	

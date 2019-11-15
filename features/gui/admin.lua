@@ -108,6 +108,11 @@ local function kill(player, source_player)
 	end
 end
 
+local function respawn_player(player)
+	SeparateSpawnsPlayerCreated(player.index)
+	log("Resetting and respawning " .. player.name)
+end
+
 local enemy_messages = {
 	"Shoot on sight!",
 	"Wanted dead or alive!"
@@ -187,32 +192,33 @@ local create_admin_panel = (function (player, frame)
 			end
 		end
 	end
-	
+
 	local drop_down = frame.add({type = "drop-down", name = "admin_player_select", items = player_names, selected_index = selected_index})
 	drop_down.style.minimal_width = 326
 	drop_down.style.right_padding = 12
 	drop_down.style.left_padding = 12
-			
+
 	local t = frame.add({type = "table", column_count = 3})
-	local buttons = {
-		t.add({type = "button", caption = "Jail", name = "jail", tooltip = "Jails the player, they will no longer be able to perform any actions except writing in chat."}),
-		t.add({type = "button", caption = "Free", name = "free", tooltip = "Frees the player from jail."}),			
-		t.add({type = "button", caption = "Bring Player", name = "bring_player", tooltip = "Teleports the selected player to your position."}),
-		t.add({type = "button", caption = "Make Enemy", name = "enemy", tooltip = "Sets the selected players force to enemy_players.          DO NOT USE IN PVP MAPS!!"}),
-		t.add({type = "button", caption = "Make Ally", name = "ally", tooltip = "Sets the selected players force back to the default player force.           DO NOT USE IN PVP MAPS!!"}),
-		t.add({type = "button", caption = "Go to Player", name = "go_to_player", tooltip = "Teleport yourself to the selected player."}),		
-		t.add({type = "button", caption = "Spank", name = "spank", tooltip = "Hurts the selected player with minor damage. Can not kill the player."}),
-		t.add({type = "button", caption = "Damage", name = "damage", tooltip = "Damages the selected player with greater damage. Can not kill the player."}),
-		t.add({type = "button", caption = "Kill", name = "kill", tooltip = "Kills the selected player instantly."})
-		
-	}
-	for _, button in pairs(buttons) do
-		button.style.font = "default-bold"
-		--button.style.font_color = { r=0.99, g=0.11, b=0.11}
-		button.style.font_color = { r=0.99, g=0.99, b=0.99}
-		button.style.minimal_width = 106
+
+	t.add({type = "button", caption = "Jail", name = "jail", tooltip = "Jails the player, they will no longer be able to perform any actions except writing in chat."})
+	t.add({type = "button", caption = "Free", name = "free", tooltip = "Frees the player from jail."})
+	t.add({type = "button", caption = "Bring Player", name = "bring_player", tooltip = "Teleports the selected player to your position."})
+	t.add({type = "button", caption = "Make Enemy", name = "enemy", tooltip = "Sets the selected players force to enemy_players.          DO NOT USE IN PVP MAPS!!"})
+	t.add({type = "button", caption = "Make Ally", name = "ally", tooltip = "Sets the selected players force back to the default player force.           DO NOT USE IN PVP MAPS!!"})
+	t.add({type = "button", caption = "Go to Player", name = "go_to_player", tooltip = "Teleport yourself to the selected player."})
+	t.add({type = "button", caption = "Spank", name = "spank", tooltip = "Hurts the selected player with minor damage. Can not kill the player."})
+	t.add({type = "button", caption = "Damage", name = "damage", tooltip = "Damages the selected player with greater damage. Can not kill the player."})
+	t.add({type = "button", caption = "Kill", name = "kill", tooltip = "Kills the selected player instantly."})
+
+	if package.loaded['map_gen.mps_dev.main'] then
+		t.add({type = "button", caption = "Respawn Player", name = "respawn_player", tooltip = "Will reset and respawn the player"})
 	end
-	
+
+	t.style.font = "default-bold"
+	--button.style.font_color = { r=0.99, g=0.11, b=0.11}
+	t.style.font_color = { r=0.99, g=0.99, b=0.99}
+	t.style.minimal_width = 106
+
 	local line = frame.add { type = "line"}
 	line.style.top_margin = 8
 	line.style.bottom_margin = 8
@@ -284,7 +290,8 @@ local admin_functions = {
 		["kill"] = kill,
 		["enemy"] = enemy,
 		["ally"] = ally,
-		["go_to_player"] = go_to_player
+		["go_to_player"] = go_to_player,
+		["respawn_player"] = respawn_player
 	}
 
 local admin_global_functions = {

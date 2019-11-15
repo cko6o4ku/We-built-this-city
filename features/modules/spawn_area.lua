@@ -22,7 +22,7 @@ local p_tile = 'stone-path'
 
 function spawn_on_chunk_generated(event)
     if not global.spawn_generated then
-        local surface = game.surfaces["nauvis"]
+        local surface = game.surfaces[2]
         local offset = {x=-0,y=0}
         local base_tiles = {}
         local tiles = {}

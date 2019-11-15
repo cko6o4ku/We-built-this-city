@@ -5,23 +5,19 @@ local font = "default-game"
 
 local brain = {
     [1] = {"Our Discord server is at: discord.io/wbtc"},
-    [2] = {"Need an admin? Type @Mods in game chat to notify moderators,", "or put a message in the discord help channel."},
-	[3] = {"Scenario repository for download:", "https://github.com/Gerkiz/Comfy"},
+    [2] = {"Need an admin? Type @Mods in game chat to notify moderators,", "or put a message in the discord help channel."}
 }
 
 local links = {
 	["admin"] = brain[2],
 	["administrator"] = brain[2],
 	["discord"] = brain[1],
-	["download"] = brain[3],
-	["github"] = brain[3],
 	["greifer"] = brain[2],
 	["grief"] = brain[2],
 	["griefer"] = brain[2],
 	["griefing"] = brain[2],
 	["mod"] = brain[2],
 	["moderator"] = brain[2],
-	["scenario"] = brain[3],
 	["stealing"] = brain[2],
 	["stole"] = brain[2],
 	["troll"] = brain[2],
