@@ -1,5 +1,7 @@
 local event = require 'utils.event' 
 
+local Public = {}
+
 local tile_positions = {
     {-3,-2},{-3,-1},{-3,0},{-3,1},{-3,2},{3,-2},{3,-1},{3,0},{3,1},{3,2},
     {-2,-3},{-1,-3},{0,-3},{1,-3},{2,-3},{-2,3},{-1,3},{0,3},{1,3},{2,3}
@@ -20,7 +22,7 @@ local p_radius = 20
 local p_tile = 'stone-path'
 
 
-function spawn_on_chunk_generated(event)
+function Public.spawn_on_chunk_generated(event)
     if not global.spawn_generated then
         local surface = game.surfaces[2]
         local offset = {x=-0,y=0}
@@ -30,7 +32,7 @@ function spawn_on_chunk_generated(event)
                 for y = -p_radius-5, p_radius+5 do
                     if x^2+y^2 < decon_radius^2 then
                         table.insert(base_tiles,{name=decon_tile,position={x+offset.x,y+offset.y}})
-                        if not CUSTOM_SPAWN then
+                        if not global.custom_spawn then
                             local entities = surface.find_entities_filtered{area={{x+offset.x-1,y+offset.y-1},{x+offset.x,y+offset.y}}}
                             for _,entity in pairs(entities) do if entity.name ~= 'character' then entity.destroy() end end
                         end
@@ -50,7 +52,9 @@ function spawn_on_chunk_generated(event)
     end
 end
 event.add(defines.events.on_chunk_generated, function(event)
-    if event.tick > 4 then 
-        spawn_on_chunk_generated(event)
+    if event.tick > 4 then
+        Public.spawn_on_chunk_generated(event)
     end
 end)
+
+return Public

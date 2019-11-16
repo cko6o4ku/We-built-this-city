@@ -210,7 +210,7 @@ local create_admin_panel = (function (player, frame)
 	t.add({type = "button", caption = "Damage", name = "damage", tooltip = "Damages the selected player with greater damage. Can not kill the player."})
 	t.add({type = "button", caption = "Kill", name = "kill", tooltip = "Kills the selected player instantly."})
 
-	if package.loaded['map_gen.mps_dev.main'] then
+	if package.loaded['map_gen.mps_0_17.main'] then
 		t.add({type = "button", caption = "Respawn Player", name = "respawn_player", tooltip = "Will reset and respawn the player"})
 	end
 

@@ -13,13 +13,14 @@
 --      the on_sector_scanned event.
 -- 5. Chunks timeout after 1 hour-ish, configurable
 
-require("map_gen.mps_dev.lib.oarc_utils")
-require("map_gen.mps_dev.config")
+local Utils = require("map_gen.mps_0_17.lib.oarc_utils")
+local Config = require("map_gen.mps_0_17.config")
+local global_data = require 'map_gen.mps_0_17.lib.table'.get_table()
 
-REGROWTH_TIMEOUT_TICKS = TICKS_PER_HOUR
+local Public = {}
 
 -- Init globals and set player join area to be off limits.
-function RegrowthInit()
+function Public.RegrowthInit()
     if (global.rg == nil) then
         global.rg = {}
         global.rg.surfaces_index = 1
@@ -29,18 +30,18 @@ function RegrowthInit()
     end
 end
 
-function TriggerCleanup()
+function Public.TriggerCleanup()
     global.rg.force_removal_flag = game.tick
 end
 
-function ForceRemoveChunksCmd(cmd_table)
+function Public.ForceRemoveChunksCmd(cmd_table)
     if (game.players[cmd_table.player_index].admin) then
-        TriggerCleanup()
+        Public.TriggerCleanup()
     end
 end
 
-function RegrowthAddSurface(s_index)
-    RegrowthInit()
+function Public.RegrowthAddSurface(s_index)
+    Public.RegrowthInit()
 
     if (global.rg[s_index] ~= nil) then
         log("ERROR - Tried to add surface that was already added?")
@@ -67,10 +68,10 @@ end
 -- Adds new chunks to the global table to track them.
 -- This should always be called first in the chunk generate sequence
 -- (Compared to other RSO & Oarc related functions...)
-function RegrowthChunkGenerate(event)
+function Public.RegrowthChunkGenerate(event)
 
     local s_index = event.surface.index
-    local c_pos = GetChunkPosFromTilePos(event.area.left_top)
+    local c_pos = Utils.GetChunkPosFromTilePos(event.area.left_top)
 
     -- Surface must be "added" first.
     if (global.rg[s_index] == nil) then return end
@@ -101,8 +102,8 @@ function RegrowthChunkGenerate(event)
 end
 
 -- Mark an area for "immediate" forced removal
-function MarkAreaForRemoval(s_index, pos, chunk_radius)
-    local c_pos = GetChunkPosFromTilePos(pos)
+function Public.MarkAreaForRemoval(s_index, pos, chunk_radius)
+    local c_pos = Utils.GetChunkPosFromTilePos(pos)
     for i=-chunk_radius,chunk_radius do
         for k=-chunk_radius,chunk_radius do
             local x = c_pos.x+i
@@ -119,7 +120,7 @@ function MarkAreaForRemoval(s_index, pos, chunk_radius)
 end
 
 -- Marks a chunk containing a position that won't ever be deleted.
-function MarkChunkSafe(s_index, c_pos)
+function Public.MarkChunkSafe(s_index, c_pos)
     if (global.rg[s_index].map[c_pos.x] == nil) then
         global.rg[s_index].map[c_pos.x] = {}
     end
@@ -127,27 +128,27 @@ function MarkChunkSafe(s_index, c_pos)
 end
 
 -- Marks a safe area around a TILE position that won't ever be deleted.
-function MarkAreaSafeGivenTilePos(s_index, pos, chunk_radius)
+function Public.MarkAreaSafeGivenTilePos(s_index, pos, chunk_radius)
     if (global.rg[s_index] == nil) then return end
 
-    local c_pos = GetChunkPosFromTilePos(pos)
-    MarkAreaSafeGivenChunkPos(s_index, c_pos, chunk_radius)
+    local c_pos = Utils.GetChunkPosFromTilePos(pos)
+    Public.MarkAreaSafeGivenChunkPos(s_index, c_pos, chunk_radius)
 end
 
 -- Marks a safe area around a CHUNK position that won't ever be deleted.
-function MarkAreaSafeGivenChunkPos(s_index, c_pos, chunk_radius)
+function Public.MarkAreaSafeGivenChunkPos(s_index, c_pos, chunk_radius)
     if (global.rg[s_index] == nil) then return end
 
     for i=-chunk_radius,chunk_radius do
         for j=-chunk_radius,chunk_radius do
-            MarkChunkSafe(s_index, {x=c_pos.x+i,y=c_pos.y+j})
+            Public.MarkChunkSafe(s_index, {x=c_pos.x+i,y=c_pos.y+j})
         end
     end
 end
 
 -- Refreshes timers on a chunk containing position
-function RefreshChunkTimer(s_index, pos, bonus_time)
-    local c_pos = GetChunkPosFromTilePos(pos)
+function Public.RefreshChunkTimer(s_index, pos, bonus_time)
+    local c_pos = Utils.GetChunkPosFromTilePos(pos)
 
     if (global.rg[s_index].map[c_pos.x] == nil) then
         global.rg[s_index].map[c_pos.x] = {}
@@ -159,8 +160,8 @@ end
 
 -- Forcefully refreshes timers on a chunk containing position
 -- Will overwrite -1 flag.
--- function OarcRegrowthForceRefreshChunk(s_index, pos, bonus_time)
---     local c_pos = GetChunkPosFromTilePos(pos)
+-- function Public.OarcRegrowthForceRefreshChunk(s_index, pos, bonus_time)
+--     local c_pos = Utils.GetChunkPosFromTilePos(pos)
 
 --     if (global.rg[s_index].map[c_pos.x] == nil) then
 --         global.rg[s_index].map[c_pos.x] = {}
@@ -169,8 +170,8 @@ end
 -- end
 
  -- Refreshes timers on all chunks around a certain area
-function RefreshArea(s_index, pos, chunk_radius, bonus_time)
-    local c_pos = GetChunkPosFromTilePos(pos)
+function Public.RefreshArea(s_index, pos, chunk_radius, bonus_time)
+    local c_pos = Utils.GetChunkPosFromTilePos(pos)
 
     for i=-chunk_radius,chunk_radius do
         for k=-chunk_radius,chunk_radius do
@@ -188,16 +189,16 @@ function RefreshArea(s_index, pos, chunk_radius, bonus_time)
 end
 
 -- Refreshes timers on all chunks near an ACTIVE radar
-function RegrowthSectorScan(event)
+function Public.RegrowthSectorScan(event)
     local s_index = event.radar.surface.index
     if (global.rg[s_index] == nil) then return end
 
-    RefreshArea(s_index, event.radar.position, 14, 0)
-    RefreshChunkTimer(s_index, event.chunk_position, 0)
+    Public.RefreshArea(s_index, event.radar.position, 14, 0)
+    Public.RefreshChunkTimer(s_index, event.chunk_position, 0)
 end
 
 -- Refresh all chunks near a single player. Cyles through all connected players.
-function RefreshPlayerArea()
+function Public.RefreshPlayerArea()
     global.rg.player_refresh_index = global.rg.player_refresh_index + 1
     if (global.rg.player_refresh_index > #game.connected_players) then
         global.rg.player_refresh_index = 1
@@ -209,13 +210,13 @@ function RefreshPlayerArea()
         local s_index = player.character.surface.index
         if (global.rg[s_index] == nil) then return end
 
-        RefreshArea(s_index, player.position, 4, 0)
+        Public.RefreshArea(s_index, player.position, 4, 0)
     end
 end
 
 -- Gets the next chunk the array map and checks to see if it has timed out.
 -- Adds it to the removal list if it has.
-function RegrowthSingleStepArray(s_index)
+function Public.RegrowthSingleStepArray(s_index)
 
     -- Increment X and reset when we hit the end.
     if (global.rg[s_index].x_index > global.rg[s_index].max_x) then
@@ -252,7 +253,7 @@ function RegrowthSingleStepArray(s_index)
     -- If the chunk has timed out, add it to the removal list
     local c_timer = global.rg[s_index].map[xidx][yidx]
     if ((c_timer ~= nil) and (c_timer ~= -1) and
-        ((c_timer + REGROWTH_TIMEOUT_TICKS) < game.tick)) then
+        ((c_timer + global_data.ticks_per_hour) < game.tick)) then
 
         -- Check chunk actually exists
         if (game.surfaces[s_index].is_chunk_generated({x=xidx, y=yidx})) then
@@ -265,9 +266,8 @@ function RegrowthSingleStepArray(s_index)
 end
 
 -- Remove all chunks at same time to reduce impact to FPS/UPS
-function OarcRegrowthRemoveAllChunks()
+function Public.OarcRegrowthRemoveAllChunks()
     for _,s_index in pairs(global.rg.active_surfaces) do
-        print(k,v)
 
         while (#global.rg[s_index].removal_list > 0) do
             local c_remove = table.remove(global.rg[s_index].removal_list)
@@ -304,14 +304,14 @@ end
 -- This is the main work function, it checks a single chunk in the list
 -- per tick. It works according to the rules listed in the header of this
 -- file.
-function RegrowthOnTick()
+function Public.RegrowthOnTick()
 
     if (#global.rg.active_surfaces == 0) then return end
 
     -- Every half a second, refresh all chunks near a single player
     -- Cyles through all players. Tick is offset by 2
     if ((game.tick % (30)) == 2) then
-        RefreshPlayerArea()
+        Public.RefreshPlayerArea()
     end
 
     -- Iterate through the active surfaces.
@@ -330,47 +330,47 @@ function RegrowthOnTick()
     -- According to /measured-command this shouldn't take more
     -- than 0.1ms on average
     for i=1,20 do
-        RegrowthSingleStepArray(s_index)
+        Public.RegrowthSingleStepArray(s_index)
     end
 
     -- Allow enable/disable of auto cleanup, can change during runtime.
-    if (global.ocfg.enable_regrowth) then
+    if (global.enable_regrowth) then
 
-        local interval_ticks = REGROWTH_TIMEOUT_TICKS
+        local interval_ticks = global_data.ticks_per_hour
         -- Send a broadcast warning before it happens.
         if ((game.tick % interval_ticks) == interval_ticks-601) then
             if (#global.rg[s_index].removal_list > 100) then
-                SendBroadcastMsg("Map cleanup in 10 seconds... Unused and old map chunks will be deleted!")
+                Utils.SendBroadcastMsg("Map cleanup in 10 seconds... Unused and old map chunks will be deleted!")
             end
         end
 
         -- Delete all listed chunks across all active surfaces
         if ((game.tick % interval_ticks) == interval_ticks-1) then
             if (#global.rg[s_index].removal_list > 100) then
-                OarcRegrowthRemoveAllChunks()
-                SendBroadcastMsg("Map cleanup done, sorry for your loss.")
+                Public.OarcRegrowthRemoveAllChunks()
+                Utils.SendBroadcastMsg("Map cleanup done, sorry for your loss.")
             end
         end
     end
 end
 
--- This function removes any chunks flagged but on demand.
+-- This function Public.removes any chunks flagged but on demand.
 -- Controlled by the global.rg.force_removal_flag
--- This function may be used outside of the normal regrowth modse.
-function RegrowthForceRemovalOnTick()
+-- This function Public.may be used outside of the normal regrowth modse.
+function Public.RegrowthForceRemovalOnTick()
     -- Catch force remove flag
     if (game.tick == global.rg.force_removal_flag+60) then
-        SendBroadcastMsg("Map cleanup (forced) in 10 seconds... Unused and old map chunks will be deleted!")
+        Utils.SendBroadcastMsg("Map cleanup (forced) in 10 seconds... Unused and old map chunks will be deleted!")
     end
 
     if (game.tick == global.rg.force_removal_flag+660) then
-        OarcRegrowthRemoveAllChunks()
-        SendBroadcastMsg("Map cleanup done, sorry for your loss.")
+        Public.OarcRegrowthRemoveAllChunks()
+        Utils.SendBroadcastMsg("Map cleanup done, sorry for your loss.")
     end
 end
 
 -- Broadcast messages to all connected players
-function SendBroadcastMsg(msg)
+function Public.SendBroadcastMsg(msg)
     local color = { r=0, g=255, b=171}
     for _,player in pairs(game.connected_players) do
         player.print(msg, color)
@@ -378,6 +378,8 @@ function SendBroadcastMsg(msg)
 end
 
 -- Gets chunk position of a tile.
-function GetChunkPosFromTilePos(tile_pos)
+function Public.GetChunkPosFromTilePos(tile_pos)
     return {x=math.floor(tile_pos.x/32), y=math.floor(tile_pos.y/32)}
 end
+
+return Public

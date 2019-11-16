@@ -1,7 +1,28 @@
 --scoreboard by mewmew
+-- modified by Gerkiz
 
-local event = require 'utils.event'
+local Event = require 'utils.event'
+local Global = require 'utils.global'
 local Tabs = require 'features.gui.main'
+
+local scoreboard = {}
+local scoreboard_sort_by = {}
+local show_floating_damage = {}
+
+Global.register(
+    {
+    scoreboard=scoreboard,
+    scoreboard_sort_by=scoreboard_sort_by,
+    show_floating_damage=show_floating_damage
+    },
+    function(tbl)
+        scoreboard = tbl.scoreboard
+        scoreboard_sort_by = tbl.scoreboard_sort_by
+        show_floating_damage = tbl.show_floating_damage
+    end
+)
+
+local Public = {}
 
 local sorting_symbol = {ascending = "▲", descending = "▼"}
 local building_and_mining_blacklist = {
@@ -11,7 +32,7 @@ local building_and_mining_blacklist = {
 }
 
 local function get_score_list(force)
-	local score = global.score[force]
+	local score = scoreboard[force]
 	local score_list = {}
 	for _, p in pairs(game.connected_players) do
 		if score.players[p.name] then
@@ -47,7 +68,7 @@ local function get_total_biter_killcount(force)
 end
 
 local function add_global_stats(frame, player)
-	local score = global.score[player.force.name]
+	local score = scoreboard[player.force.name]
 	local t = frame.add { type = "table", column_count = 5}
 
 	local l = t.add { type = "label", caption = "Rockets launched: "}
@@ -70,7 +91,7 @@ local function add_global_stats(frame, player)
 	l.style.font_color = { r=0.9, g=0.9, b=0.9}
 	l.style.minimal_width = 145
 
-	local l = t.add { type = "checkbox", caption = "Show floating numbers", state = global.show_floating_killscore[player.name], name = "show_floating_killscore_texts"	}
+	local l = t.add { type = "checkbox", caption = "Show floating numbers", state = show_floating_damage[player.name], name = "show_floating_killscore_texts"	}
 	l.style.font_color = { r=0.8, g=0.8, b=0.8}
 end
 
@@ -84,7 +105,7 @@ local show_score = (function (player, frame)
 	local line = frame.add { type = "line"}
 	line.style.top_margin = 8
 	line.style.bottom_margin = 8
-	
+
 	-- Score per player
 	local t = frame.add { type = "table", column_count = 5 }
 
@@ -97,7 +118,7 @@ local show_score = (function (player, frame)
 		{ column = "mined_entities", name = "score_mined_entities", caption = "Mined entities" }
 	}
 
-	local sorting_pref = global.score_sort_by[player.name]
+	local sorting_pref = scoreboard_sort_by[player.name]
 	for _, header in ipairs(headers) do
 		local cap = header.caption
 
@@ -175,12 +196,12 @@ local function refresh_score_full()
 	end
 end
 
-local function init_player_table(player)
+function Public.init_player_table(player)
 	if not player then return end
-	if not global.score[player.force.name] then global.score[player.force.name] = {} end
-	if not global.score[player.force.name].players then global.score[player.force.name].players = {} end
-	if not global.score[player.force.name].players[player.name] then
-		global.score[player.force.name].players[player.name] = {
+	if not scoreboard[player.force.name] then scoreboard[player.force.name] = {} end
+	if not scoreboard[player.force.name].players then scoreboard[player.force.name].players = {} end
+	if not scoreboard[player.force.name].players[player.name] then
+		scoreboard[player.force.name].players[player.name] = {
 			built_entities = 0,
 			deaths = 0,
 			killscore = 0,
@@ -191,14 +212,12 @@ end
 
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
-	if not global.score then global.score = {} end
-	init_player_table(player)
-	if not global.score_sort_by then global.score_sort_by = {} end
-	if not global.score_sort_by[player.name] then
-		global.score_sort_by[player.name] = {method = "descending", column = "killscore"}
+	if not scoreboard then scoreboard = {} end
+	Public.init_player_table(player)
+	if not scoreboard_sort_by[player.name] then
+		scoreboard_sort_by[player.name] = {method = "descending", column = "killscore"}
 	end
-	if not global.show_floating_killscore then global.show_floating_killscore = {} end
-	if not global.show_floating_killscore[player.name] then global.show_floating_killscore[player.name] = false end
+	if not show_floating_damage[player.name] then show_floating_damage[player.name] = false end
 end
 
 local function on_gui_click(event)
@@ -210,12 +229,12 @@ local function on_gui_click(event)
 	local frame = Tabs.panel_get_active_frame(player)
 	if not frame then return end
 	if frame.name ~= "Scoreboard" then return end
-	
+
 	local name = event.element.name
 
 	-- Handles click on the checkbox, for floating score
 	if name == "show_floating_killscore_texts" then
-		global.show_floating_killscore[player.name] = event.element.state
+		show_floating_damage[player.name] = event.element.state
 		return
 	end
 
@@ -228,7 +247,7 @@ local function on_gui_click(event)
 	}
 	local column = element_to_column[name]
 	if column then
-		local sorting_pref = global.score_sort_by[player.name]
+		local sorting_pref = scoreboard_sort_by[player.name]
 		if sorting_pref.column == column and sorting_pref.method == "descending" then
 			sorting_pref.method = "ascending"
 		else
@@ -242,7 +261,7 @@ local function on_gui_click(event)
 	-- No more to handle
 end
 
-local function on_rocket_launched(event)
+local function on_rocket_launched()
 	refresh_score_full()
 end
 
@@ -267,29 +286,29 @@ local entity_score_values = {
 	["flamethrower-turret"] = 300,
 }
 
-local function train_type_cause(event)	
+local function train_type_cause(event)
 	local players = {}
 	if event.cause.train.passengers then
 		for _, player in pairs(event.cause.train.passengers) do
 			players[#players + 1] = player
 		end
-	end			
+	end
 	return players
 end
 
 local kill_causes = {
-	["character"] = 
+	["character"] =
 		function(event)
 			if not event.cause.player then return end
 			return {event.cause.player}
 		end,
-	["combat-robot"] = 
+	["combat-robot"] =
 		function(event)
 			if not event.cause.last_user then return end
 			if not game.players[event.cause.last_user.index] then return end
 			return {game.players[event.cause.last_user.index]}
 		end,
-	["car"] = 
+	["car"] =
 		function(event)
 			local players = {}
 			local driver = event.cause.get_driver()
@@ -314,34 +333,34 @@ local function on_entity_died(event)
 	if not event.cause.valid then return end
 	if event.entity.force.index == event.cause.force.index then return end
 	if not entity_score_values[event.entity.name] then return end
-	if not kill_causes[event.cause.type] then return end	
+	if not kill_causes[event.cause.type] then return end
 	local players_to_reward = kill_causes[event.cause.type](event)
 	if not players_to_reward then return end
-	if #players_to_reward == 0 then return end	
+	if #players_to_reward == 0 then return end
 	for _, player in pairs(players_to_reward) do
-		init_player_table(player)		
-		local score = global.score[player.force.name].players[player.name]		
+		Public.init_player_table(player)
+		local score = scoreboard[player.force.name].players[player.name]
 		score.killscore = score.killscore + entity_score_values[event.entity.name]
-		if global.show_floating_killscore[player.name] then
+		if show_floating_damage[player.name] then
 			event.entity.surface.create_entity({name = "flying-text", position = event.entity.position, text = tostring(entity_score_values[event.entity.name]), color = player.chat_color})
 		end
 	end
-end	
+end
 
 local function on_player_died(event)
 	local player = game.players[event.player_index]
-	init_player_table(player)
-	local score = global.score[player.force.name].players[player.name]
+	Public.init_player_table(player)
+	local score = scoreboard[player.force.name].players[player.name]
 	score.deaths = 1 + (score.deaths or 0)
 end
 
 local function on_player_mined_entity(event)
+	local player = game.players[event.player_index]
 	if not event.entity.valid then return end
 	if building_and_mining_blacklist[event.entity.type] then return end
-	
-	local player = game.players[event.player_index]	
-	init_player_table(player)
-	local score = global.score[player.force.name].players[player.name]
+
+	Public.init_player_table(player)
+	local score = scoreboard[player.force.name].players[player.name]
 	score.mined_entities = 1 + (score.mined_entities or 0)
 end
 
@@ -349,22 +368,19 @@ local function on_built_entity(event)
 	if not event.created_entity.valid then return end
 	if building_and_mining_blacklist[event.created_entity.type] then return end
 	local player = game.players[event.player_index]
-	init_player_table(player)
-	local score = global.score[player.force.name].players[player.name]
+	Public.init_player_table(player)
+	local score = scoreboard[player.force.name].players[player.name]
 	score.built_entities = 1 + (score.built_entities or 0)
 end
---[[
-local function tick(event)	
-	refresh_score_full()	
-end
-]]
+
 panel_tabs["Scoreboard"] = show_score
 
---event.on_nth_tick(300, tick)
-event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
-event.add(defines.events.on_player_died, on_player_died)
-event.add(defines.events.on_built_entity, on_built_entity)
-event.add(defines.events.on_entity_died, on_entity_died)
-event.add(defines.events.on_gui_click, on_gui_click)
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
-event.add(defines.events.on_rocket_launched, on_rocket_launched)
+Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
+Event.add(defines.events.on_player_died, on_player_died)
+Event.add(defines.events.on_built_entity, on_built_entity)
+Event.add(defines.events.on_entity_died, on_entity_died)
+Event.add(defines.events.on_gui_click, on_gui_click)
+Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+Event.add(defines.events.on_rocket_launched, on_rocket_launched)
+
+return Public

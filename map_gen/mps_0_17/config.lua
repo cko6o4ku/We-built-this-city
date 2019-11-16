@@ -1,91 +1,60 @@
--- example-config.lua (Rename this file to config.lua to use it)
--- Sep 24 2019 (updated on)
--- Configuration Options
---
--- You should be able to leave most of the settings here as defaults.
--- The only thing you definitely want to change are the welcome messages.
+local global_data = require 'map_gen.mps_0_17.lib.table'.get_table()
 
---------------------------------------------------------------------------------
--- Messages
--- You will want to change some of these to be your own.
---------------------------------------------------------------------------------
-
--- This stuff is shown in the welcome GUI and Info panel. Make sure it's valid.
-WELCOME_MSG_TITLE = "We built this city!"
-WELCOME_MSG = ""
-SERVER_MSG = "Rules: Be polite. Ask before changing other players stuff. Have fun!\n"..
+global.welcome_msg_title = "We built this city!"
+global.welcome_msg = ""
+global.server_msg = "Rules: Be polite. Ask before changing other players stuff. Have fun!\n"..
 "Discord: discord.io/wbtc"
 
-SCENARIO_INFO_MSG = "This scenario gives you and/or your friends your own starting area.\n"..
+global.scenario_info_msg = "This scenario gives you and/or your friends your own starting area.\n"..
 "You can be on the main team or your own. All teams are friendly.\n"..
 "If you leave in the first 15 minutes, your base and character will be deleted!"
 
-CONTACT_MSG = ""
+global.enable_vanilla_spawns = false
 
---------------------------------------------------------------------------------
--- Module Enables
---------------------------------------------------------------------------------
-
--- Enable this to have a vanilla style starting spawn.
--- This changes the experience pretty drastically.
--- If you enable this, you will NOT get the option to spawn using the "pre-fab"
--- fixed layout spawns. This is because the spawn types just don't balance well with
--- each other.
-ENABLE_VANILLA_SPAWNS = false
-
-ENABLE_DEFAULT_SPAWN = true
+global.enable_default_spawn = true
 
 -- This allows 2 players to spawn next to each other in the wilderness,
 -- each with their own starting point. It adds more GUI selection options.
-ENABLE_BUDDY_SPAWN = true
+global.enable_buddy_spawn = true
 
 -- Frontier style rocket silo mode
 -- This means you can't build silos, but some spawn out in the wild for you to use.
-FRONTIER_ROCKET_SILO_MODE = true
+global.frontier_rocket_silo_mode = true
 
 -- Silo Islands
--- This options is only valid when used with ENABLE_VANILLA_SPAWNS and FRONTIER_ROCKET_SILO_MODE!
+-- This options is only valid when used with global.enable_vanilla_spawns and global.frontier_rocket_silo_mode!
 -- This spreads out rocket silos on every OTHER island/vanilla spawn
-SILO_ISLANDS_MODE = false
+global.silo_island_mode = false
 
 -- Enable Undecorator
 -- Removes decorative items to reduce save file size.
-ENABLE_UNDECORATOR = false
+global.enable_undecorator = false
 
 
-ENABLE_SCRAMBLE = true
-
--- Enable Tags
-ENABLE_TAGS = false
+global.enable_scramble = true
 
 -- Enable Long Reach
-ENABLE_LONGREACH = false
+global.enable_longreach = false
 
 -- Enable Autofill
-ENABLE_AUTOFILL = true
+global.enable_autofill = true
 
 -- Enable vanilla loaders
-ENABLE_LOADERS = true
-
--- Enable Playerlist
-ENABLE_PLAYER_LIST = false
-PLAYER_LIST_OFFLINE_PLAYERS = false -- List offline players as well.
+global.enable_loaders = true
 
 -- Enable shared vision between teams (all teams are COOP regardless)
-ENABLE_SHARED_TEAM_VISION = true
+global.enable_shared_team_vision = true
 
 -- Cleans up unused chunks periodically. Helps keep map size down.
-ENABLE_REGROWTH = true
+global.enable_regrowth = true
 
 -- Only works if you have the Unused Chunk Removal mod installed.
-ENABLE_ABANDONED_BASE_REMOVAL = true
+global.enable_base_removal = true
 
 -- Enable the new 0.17 research queue by default for all forces.
-ENABLE_RESEARCH_QUEUE = true
+global.enable_r_queue = true
 
--- Lock power armor mk2, atomic bombs and artillery until you launch a rocket.
--- Also lock speed/prod module-3s
-LOCK_GOODIES_UNTIL_ROCKET_LAUNCH = false
+global.enable_power_armor = false
 
 --------------------------------------------------------------------------------
 -- MAP CONFIGURATION OPTIONS
@@ -103,19 +72,19 @@ LOCK_GOODIES_UNTIL_ROCKET_LAUNCH = false
 -- more balanced based on your distance and makes the game a little easier.
 -- No behemoth worms everywhere just because you spawned far away.
 -- If you're trying out the vanilla spawning, you might want to disable this.
-OARC_MODIFIED_ENEMY_SPAWNING = true
+global.modded_enemy = true
 
 ---------------------------------------
 -- Market
 ---------------------------------------
-ENABLE_MARKET = true
-enable_fishbank_terminal = true
+global.enable_market = true
+global.enable_fishbank_terminal = true
 
 ---------------------------------------
 -- Starting Items
 ---------------------------------------
 -- Items provided to the player the first time they join
-PLAYER_SPAWN_START_ITEMS = {
+global.player_spawn_start_items = {
     --{name="pistol", count=1},
     --{name="firearm-magazine", count=100},
     {name="iron-plate", count=8},
@@ -136,7 +105,7 @@ PLAYER_SPAWN_START_ITEMS = {
 }
 
 -- Items provided after EVERY respawn (disabled by default)
-PLAYER_RESPAWN_START_ITEMS = {
+global.player_respawn_start_items = {
      {name="pistol", count=1},
      {name="firearm-magazine", count=30}
 }
@@ -149,21 +118,21 @@ PLAYER_RESPAWN_START_ITEMS = {
 -- chunks. It ensures the spawn area isn't too near generated/explored/existing
 -- area. The larger you make this, the further away players will spawn from
 -- generated map area (even if it is not visible on the map!).
-CHECK_SPAWN_UNGENERATED_CHUNKS_RADIUS = 10
+global.check_spawn_ungenerated_chunk_radius = 10
 
 -- Near Distance in chunks
 -- When a player selects "near" spawn, they will be in or as close to this range as possible.
-NEAR_MIN_DIST = 0
-NEAR_MAX_DIST = 50
+global.near_min_dist = 0
+global.near_max_dist = 50
 
 -- Far Distance in chunks
 -- When a player selects "far" spawn, they will be at least this distance away.
-FAR_MIN_DIST = 200
-FAR_MAX_DIST = 300
+global.far_min_dist = 200
+global.far_max_dist = 300
 
 ---------------------------------------
 -- Vanilla spawn point options
--- (only applicable if ENABLE_VANILLA_SPAWNS is enabled.)
+-- (only applicable if global.enable_vanilla_spawns is enabled.)
 ---------------------------------------
 
 -- Num total spawns pre-assigned (minimum number)
@@ -171,10 +140,10 @@ FAR_MAX_DIST = 300
 -- https://forums.factorio.com/viewtopic.php?f=7&t=68657
 -- Not sure you need that much anyways....
 -- Points are in an even grid layout.
-VANILLA_SPAWN_COUNT = 60
+global.vanilla_spawn_count = 60
 
 -- Num tiles between each spawn. (I recommend at least 1000)
-VANILLA_SPAWN_SPACING = 2000
+global.vanilla_spawn_distance = 2000
 
 ---------------------------------------
 -- Resource & Spawn Circle Options
@@ -183,7 +152,7 @@ VANILLA_SPAWN_SPACING = 2000
 -- This is where you can modify what resources spawn, how much, where, etc.
 -- Once you have a config you like, it's a good idea to save it for later use
 -- so you don't lost it if you update the scenario.
-OARC_CFG = {
+global.scenario_config = {
 
     -- Misc spawn related config.
     gen_settings = {
@@ -191,7 +160,7 @@ OARC_CFG = {
         -- THIS IS WHAT SETS THE SPAWN CIRCLE SIZE!
         -- Create a circle of land area for the spawn
         -- If you make this much bigger than a few chunks, good luck.
-        land_area_tiles = CHUNK_SIZE*1.8,
+        land_area_tiles = global_data.chunk_size*1.8,
 
         -- Allow players to choose to spawn with a moat
         moat_choice_enabled = true,
@@ -216,18 +185,18 @@ OARC_CFG = {
     {
         -- Safe area has no aliens
         -- This is the radius in tiles of safe area.
-        safe_radius = CHUNK_SIZE*8,
+        safe_radius = global_data.chunk_size*8,
 
         -- Warning area has significantly reduced aliens
         -- This is the radius in tiles of warning area.
-        warn_radius = CHUNK_SIZE*16,
+        warn_radius = global_data.chunk_size*16,
 
         -- 1 : X (spawners alive : spawners destroyed) in this area
         warn_reduction = 20,
 
         -- Danger area has slightly reduce aliens
         -- This is the radius in tiles of danger area.
-        danger_radius = CHUNK_SIZE*32,
+        danger_radius = global_data.chunk_size*32,
 
         -- 1 : X (spawners alive : spawners destroyed) in this area
         danger_reduction = 5,
@@ -340,29 +309,29 @@ OARC_CFG = {
 -- Separate teams
 -- This allows you to join your own force/team. Everyone is still COOP/PvE, all
 -- teams are friendly and cease-fire.
-ENABLE_SEPARATE_TEAMS = true
+global.enable_separate_teams = true
 
 -- Main force is what default players join
-MAIN_FORCE = "Main Force"
+global.main_force_name = "Main Force"
 
 -- Enable if players can allow others to join their base.
 -- And specify how many including the host are allowed.
-ENABLE_SHARED_SPAWNS = true
-MAX_PLAYERS_AT_SHARED_SPAWN = 10
+global.enable_shared_spawns = true
+global.max_players = 10
 
 -- Share local team chat with all teams
 -- This makes it so you don't have to use /s
 -- But it also means you can't talk privately with your own team.
-ENABLE_SHARED_TEAM_CHAT = true
+global.team_chat = true
 
 ---------------------------------------
 -- Special Action Cooldowns
 ---------------------------------------
-RESPAWN_COOLDOWN_IN_MINUTES = 15
+global.respawn_cooldown = 15
 
 -- Require playes to be online for at least X minutes
 -- Else their character is removed and their spawn point is freed up for use
-MIN_ONLINE_TIME_IN_MINUTES = 15
+global.min_online = 15
 
 --------------------------------------------------------------------------------
 -- Frontier Rocket Silo Options
@@ -371,46 +340,45 @@ MIN_ONLINE_TIME_IN_MINUTES = 15
 -- Number of silos found in the wild.
 -- These will spawn in a circle at given distance from the center of the map
 -- If you set this number too high, you'll have a lot of delay at the start of the game.
-SILO_NUM_SPAWNS = 5
+global.silo_spawns = 5
 
 -- How many chunks away from the center of the map should the silo be spawned
-SILO_CHUNK_DISTANCE = 200
+global.silo_distance = 200
 
 -- If this is enabled, you get silos at the positions specified below.
 -- (The other settings above are ignored in this case.)
-SILO_FIXED_POSITION = false
+global.silo_fixed_pos = false
 
 -- If you want to set fixed spawn locations for some silos.
-SILO_POSITIONS = {{x = -1000, y = -1000},
+global.silo_pos = {{x = -1000, y = -1000},
                   {x = -1000, y = 1000},
                   {x = 1000,  y = -1000},
                   {x = 1000,  y = 1000}}
 
 -- Set this to false so that you have to search for the silo's.
-ENABLE_SILO_VISION = true
+global.enable_silo_vision = true
 
 -- Add beacons around the silo (Philip's mod)
-ENABLE_SILO_BEACONS = false
-ENABLE_SILO_RADAR = false
+global.enable_silo_beacon = false
+global.enable_silo_radar = false
 
 -- Allow silos to be built by the player, but forces them to build in
 -- the fixed locations. If this is false, silos are built and assigned
--- only to the main force. This can cause a problem for non main forces
--- when playing with LOCK_GOODIES_UNTIL_ROCKET_LAUNCH enabled.
-ENABLE_SILO_PLAYER_BUILD = true
+-- only to the main force. 
+global.enable_silo_player_build = true
 
 
 --------------------------------------------------------------------------------
 -- Long Reach Options
 --------------------------------------------------------------------------------
-BUILD_DIST_BONUS = 64
-REACH_DIST_BONUS = BUILD_DIST_BONUS
-RESOURCE_DIST_BONUS = 2
+global.build_dist_bonus = 64
+global.reach_dist_bonus = global.build_dist_bonus
+global.resource_dist_bonus = 2
 
 --------------------------------------------------------------------------------
 -- Autofill Options
 --------------------------------------------------------------------------------
-AUTOFILL_TURRET_AMMO_QUANTITY = 10
+global.autofill_ammo = 10
 
 --------------------------------------------------------------------------------
 -- ANTI-Griefing stuff ( I don't personally maintain this as I don't care for it.)
@@ -418,15 +386,8 @@ AUTOFILL_TURRET_AMMO_QUANTITY = 10
 --------------------------------------------------------------------------------
 -- Enable this to disable deconstructing from map view, and setting a time limit
 -- on ghost placements.
-ENABLE_ANTI_GRIEFING = false
+global.enable_antigrief = false
 
 -- Makes blueprint ghosts dissapear if they have been placed longer than this
--- ONLY has an effect if ENABLE_ANTI_GRIEFING is true!
-GHOST_TIME_TO_LIVE = 10 * TICKS_PER_MINUTE
-
---------------------------------------------------------------------------------
--- This turns on writing chat and certain events to specific files so that I can
--- use that for discord integration. I suggest you leave this off unless you
--- know what you are doing.
---------------------------------------------------------------------------------
-ENABLE_SERVER_WRITE_FILES = false
+-- ONLY has an effect if global.enable_antigrief is true!
+global.ghost_ttl = 10 * global_data.ticks_per_minute

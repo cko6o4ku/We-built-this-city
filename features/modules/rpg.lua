@@ -201,14 +201,13 @@ local function draw_gui(player)
 
 	Tabs.panel_clear_left_gui(player)
 	
-	local frame = left.add{type = "frame", name = "rpg", direction = "vertical", style = "changelog_subheader_frame"}
+	local frame = left.add{type = "frame", name = "rpg", direction = "vertical", caption = "RPG", style = "changelog_subheader_frame"}
 	frame.style.maximal_width = 425
 	frame.style.minimal_width = 425
 	frame.style.margin = 6
 
 	local subhead = frame.add{type = "frame", name = "sub_header", style = "changelog_subheader_frame"}
 
-	Tabs.AddLabel(subhead, "scen_info", "Choose your class!", "subheader_caption_label")
 	
 	add_separator(frame, 400)
 	

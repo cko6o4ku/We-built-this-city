@@ -1,6 +1,6 @@
 --require each map here
---require "map_gen.mps.main"
-require "map_gen.mps_dev.main"
+--require "map_gen.mps_0_16.main"
+require "map_gen.mps_0_17.main"
 --require "map_gen.scrapyard.main"
 -- require "map_gen.dangOreus"
 -- require "map_gen.heximaze"

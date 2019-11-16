@@ -23,14 +23,14 @@ require 'features.modules.spawn_area'
 require 'features.modules.splice'
 require 'features.modules.afk'
 
-require 'map_gen.mps.oarc_utils'
-require 'map_gen.mps.rso_control'
-require 'map_gen.mps.frontier_silo'
-require 'map_gen.mps.config'
+require 'map_gen.mps_0_16.oarc_utils'
+require 'map_gen.mps_0_16.rso_control'
+require 'map_gen.mps_0_16.frontier_silo'
+require 'map_gen.mps_0_16.config'
 
-require 'map_gen.mps.separate_spawns'
-require 'map_gen.mps.separate_spawns_guis'
-require 'map_gen.mps.regrowth_map'
+require 'map_gen.mps_0_16.separate_spawns'
+require 'map_gen.mps_0_16.separate_spawns_guis'
+require 'map_gen.mps_0_16.regrowth_map'
 
 local math_random = math.random
 

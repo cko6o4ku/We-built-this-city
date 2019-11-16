@@ -1,6 +1,8 @@
 local event = require 'utils.event'
 
-function to_kick_or_not_to_kick(event)
+local Public = {}
+
+function Public.to_kick_or_not_to_kick(event)
     if (game.tick%3600) ~= 0 then return end
     for _,player in pairs(game.connected_players) do
         local afk = #game.connected_players < 3 and 30
@@ -10,4 +12,6 @@ function to_kick_or_not_to_kick(event)
     end
 end
 
-event.add(defines.events.on_tick, to_kick_or_not_to_kick)
+event.add(defines.events.on_tick, Public.to_kick_or_not_to_kick)
+
+return Public

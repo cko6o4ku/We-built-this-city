@@ -1,68 +1,57 @@
--- oarc_gui_utils.lua
--- Mar 2019
+local Public = {}
 
--- Generic GUI stuff goes here.
-
---------------------------------------------------------------------------------
--- GUI Styles
---------------------------------------------------------------------------------
-
-my_fixed_width_style = {
+Public.my_fixed_width_style = {
     minimal_width = 450,
     maximal_width = 450
 }
-my_label_style = {
-    -- minimal_width = 450,
-    -- maximal_width = 50,
+Public.my_label_style = {
     single_line = false,
     font_color = {r=1,g=1,b=1},
     top_padding = 0,
     bottom_padding = 0
 }
-my_label_header_style = {
+Public.my_label_header_style = {
     single_line = false,
     font = "heading-1",
     font_color = {r=1,g=1,b=1},
     top_padding = 0,
     bottom_padding = 0
 }
-my_label_header_grey_style = {
+Public.my_label_header_grey_style = {
     single_line = false,
     font = "heading-1",
     font_color = {r=0.6,g=0.6,b=0.6},
     top_padding = 0,
     bottom_padding = 0
 }
-my_note_style = {
-    -- minimal_width = 450,
+Public.my_note_style = {
     single_line = false,
     font = "default-small-semibold",
     font_color = {r=1,g=0.5,b=0.5},
     top_padding = 0,
     bottom_padding = 0
 }
-my_warning_style = {
-    -- minimal_width = 450,
-    -- maximal_width = 450,
+Public.my_warning_style = {
+
     single_line = false,
     font_color = {r=1,g=0.1,b=0.1},
     top_padding = 0,
     bottom_padding = 0
 }
-my_spacer_style = {
+Public.my_spacer_style = {
     minimal_height = 10,
     top_padding = 0,
     bottom_padding = 0
 }
-my_small_button_style = {
+Public.my_small_button_style = {
     font = "default-small-semibold"
 }
-my_player_list_fixed_width_style = {
+Public.my_player_list_fixed_width_style = {
     minimal_width = 200,
     maximal_width = 400,
     maximal_height = 200
 }
-my_player_list_admin_style = {
+Public.my_player_list_admin_style = {
     font = "default-semibold",
     font_color = {r=1,g=0.5,b=0.5},
     minimal_width = 200,
@@ -70,34 +59,33 @@ my_player_list_admin_style = {
     bottom_padding = 0,
     single_line = false,
 }
-my_player_list_style = {
+Public.my_player_list_style = {
     font = "default-semibold",
     minimal_width = 200,
     top_padding = 0,
     bottom_padding = 0,
     single_line = false,
 }
-my_player_list_offline_style = {
-    -- font = "default-semibold",
+Public.my_player_list_offline_style = {
     font_color = {r=0.5,g=0.5,b=0.5},
     minimal_width = 200,
     top_padding = 0,
     bottom_padding = 0,
     single_line = false,
 }
-my_player_list_style_spacer = {
+Public.my_player_list_style_spacer = {
     minimal_height = 20,
 }
-my_color_red = {r=1,g=0.1,b=0.1}
+Public.my_color_red = {r=1,g=0.1,b=0.1}
 
-my_longer_label_style = {
+Public.my_longer_label_style = {
     maximal_width = 600,
     single_line = false,
     font_color = {r=1,g=1,b=1},
     top_padding = 0,
     bottom_padding = 0
 }
-my_longer_warning_style = {
+Public.my_longer_warning_style = {
     maximal_width = 600,
     single_line = false,
     font_color = {r=1,g=0.1,b=0.1},
@@ -110,28 +98,30 @@ my_longer_warning_style = {
 --------------------------------------------------------------------------------
 
 -- Apply a style option to a GUI
-function ApplyStyle (guiIn, styleIn)
+function Public.ApplyStyle (guiIn, styleIn)
     for k,v in pairs(styleIn) do
         guiIn.style[k]=v
     end
 end
 
 -- Shorter way to add a label with a style
-function AddLabel(guiIn, name, message, style)
+function Public.AddLabel(guiIn, name, message, style)
     local g = guiIn.add{name = name, type = "label",
                     caption=message}
     if (type(style) == "table") then
-        ApplyStyle(g, style)
+        Public.ApplyStyle(g, style)
     else
         g.style = style
     end
 end
 
 -- Shorter way to add a spacer
-function AddSpacer(guiIn)
-    ApplyStyle(guiIn.add{type = "label", caption=" "}, my_spacer_style)
+function Public.AddSpacer(guiIn)
+    Public.ApplyStyle(guiIn.add{type = "label", caption=" "}, Public.my_spacer_style)
 end
 
-function AddSpacerLine(guiIn)
-    ApplyStyle(guiIn.add{type = "line", direction="horizontal"}, my_spacer_style)
+function Public.AddSpacerLine(guiIn)
+    Public.ApplyStyle(guiIn.add{type = "line", direction="horizontal"}, Public.my_spacer_style)
 end
+
+return Public

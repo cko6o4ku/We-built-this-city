@@ -77,7 +77,7 @@ end
 
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
-	if player.online_time == 0 then	Tabs.panel_call_tab(player, "Map Info") end
+	if player.online_time == 0 then	Tabs.panel_call_tab(player, "Info") end
 end
 
 local function on_gui_click(event)
@@ -87,7 +87,7 @@ local function on_gui_click(event)
 	if event.element.name == "close_map_intro" then game.players[event.player_index].gui.left.panel.destroy() return end
 end
 
-panel_tabs["Map Info"] = create_map_intro
+panel_tabs["Info"] = create_map_intro
 
 local event = require 'utils.event'
 event.add(defines.events.on_player_joined_game, on_player_joined_game)

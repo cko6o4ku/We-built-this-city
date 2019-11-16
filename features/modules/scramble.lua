@@ -1,16 +1,11 @@
---divOresity
---Written by Mylon
---MIT licensed
---Inspired by Ore Chaos
+local DIVERSITY_QUOTA = 0.20
+local EXEMPT_AREA = 200 --This is the radius of the starting area that can't be affected.
+local STONE_BYPRODUCT = false --Delete patches of stone.  Stone only appears as a byproduct.
+local STONE_BYPRODUCT_RATIO = 0.25 --If math.random() is between DIVERSITY_QUOTA and this, it's stone.
 
-DIVERSITY_QUOTA = 0.20
-EXEMPT_AREA = 200 --This is the radius of the starting area that can't be affected.
-STONE_BYPRODUCT = false --Delete patches of stone.  Stone only appears as a byproduct.
-STONE_BYPRODUCT_RATIO = 0.25 --If math.random() is between DIVERSITY_QUOTA and this, it's stone.
-
-
+local Public = {}
 --Build a table of potential ores to pick from.  Uranium is exempt from popping up randomly.
-function divOresity_init()
+function Public.init()
 	global.diverse_ores = {}
 	for k,v in pairs(game.entity_prototypes) do
 		if v.type == "resource" and v.resource_category == "basic-solid" and v.mineable_properties.required_fluid == nil then
@@ -19,7 +14,7 @@ function divOresity_init()
 	end
 end
 
-function diversify(event)
+function Public.scramble(event)
 	local ores = event.surface.find_entities_filtered{type="resource", area=event.area}
 	for k,v in pairs(ores) do
 		if math.abs(v.position.x) > EXEMPT_AREA or math.abs(v.position.y) > EXEMPT_AREA then
@@ -39,4 +34,6 @@ function diversify(event)
 		end
 	end
 end
+
+return Public
 

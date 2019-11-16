@@ -2,6 +2,7 @@ local Gui = require 'utils.gui'
 local Global = require 'utils.global'
 local Event = require 'utils.event'
 local Game = require 'utils.game'
+local Server = require 'utils.server'
 local session = require 'utils.session_data'
 local Tabs = require 'features.gui.main'
 local m_gui = require "mod-gui"
@@ -151,7 +152,7 @@ local function send_poll_result_to_discord(poll)
     end
 
     local message = table.concat(result)
-    server_commands.to_discord_embed(message)
+    Server.to_discord_embed(message)
 end
 
 local function redraw_poll_viewer_content(data)
@@ -1302,7 +1303,7 @@ end
 
 function Class.send_poll_result_to_discord(id)
     if type(id) ~= 'number' then
-        server_commands.to_discord_embed('poll-id must be a number')
+        Server.to_discord_embed('poll-id must be a number')
         return
     end
 
@@ -1314,7 +1315,7 @@ function Class.send_poll_result_to_discord(id)
     end
 
     local message = table.concat {'poll #', id, ' not found'}
-    server_commands.to_discord_embed(message)
+    Server.to_discord_embed(message)
 end
 
 return Class
