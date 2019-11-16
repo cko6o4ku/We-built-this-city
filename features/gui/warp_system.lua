@@ -104,7 +104,7 @@ function Public.make_warp_point(position,surface,force,name)
 end
 
 function Public.create_warp_button(player)
-    local button = mod(player).warp_button
+    local button = mod(player).main_button_name
     if button then
         button.destroy()
     end
@@ -128,15 +128,15 @@ local function draw_main_frame(player, left)
     local trusted = Session.get_trusted_table()
     --local mod_gui = player_table[player.index].mod_gui
 
-    local subhead = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
-    subhead.style.left_margin = 10
-    subhead.style.right_margin = 10
-    subhead.style.top_margin = 4
-    subhead.style.bottom_margin = 4
-    subhead.style.padding = 5
-    subhead.style.horizontally_stretchable = true
+    local main_frame = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
+    main_frame.style.left_margin = 10
+    main_frame.style.right_margin = 10
+    main_frame.style.top_margin = 4
+    main_frame.style.bottom_margin = 4
+    main_frame.style.padding = 5
+    main_frame.style.horizontally_stretchable = true
 
-    local tbl = subhead.add{type = "table", column_count = 10}
+    local tbl = main_frame.add{type = "table", column_count = 10}
     local l = tbl.add{type = "label"}
     l.style.font_color = Color.success
     l.style.font = "default-listbox"
@@ -147,7 +147,7 @@ local function draw_main_frame(player, left)
 
     local _flows2 = tbl.add{type = 'flow'}
 
-    local ts = subhead.add{type = "table", column_count = 1}
+    local ts = main_frame.add{type = "table", column_count = 1}
 
     local f = ts.add{type = "frame", column_count = 2}
 
@@ -229,7 +229,7 @@ local function draw_main_frame(player, left)
                     end
                 end
 
-                local frame = subhead.add{
+                local frame = main_frame.add{
                 type = "frame",
                 name = "wp_name",
                 direction = "vertical"
@@ -271,7 +271,7 @@ local function draw_main_frame(player, left)
             end
         end
     end
-    local bottom_flow = subhead.add {type = 'flow', direction = 'horizontal'}
+    local bottom_flow = main_frame.add {type = 'flow', direction = 'horizontal'}
 
     local left_flow = bottom_flow.add {type = 'flow'}
     left_flow.style.horizontal_align = 'left'
@@ -352,14 +352,14 @@ local function on_gui_click(event)
     if not (event and event.element and event.element.valid) then return end
     local player = game.players[event.element.player_index]
     local left = player_table[player.index].left
-    local frame = event.element.parent.name
-    misc_table["frame"] = frame
-    local warp = warp_table[frame]
     local elem = event.element
     local name = elem.name
+    misc_table["frame"] = elem.parent.name
+    local warp = warp_table[elem.parent.name]
 
         if name == close_main_frame_name then
             Public.toggle(player)
+            return
         end
 
         if name == main_button_name then
@@ -380,8 +380,8 @@ local function on_gui_click(event)
         end
 
         if name == confirmed_button_name then
-        Public.remove_warp_point(frame)
-        game.print(player.name .. " removed warp: " .. frame, Color.warning)
+        Public.remove_warp_point(elem.parent.name)
+        game.print(player.name .. " removed warp: " .. elem.parent.name, Color.warning)
         if player_table[player.index].removing == true then
             player_table[player.index].removing = false
         end
@@ -394,13 +394,13 @@ local function on_gui_click(event)
         Public.refresh_gui()
         local position = player.position
         if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
-        player.print('Destination is source warp: ' .. frame, Color.fail)
+        player.print('Destination is source warp: ' .. elem.parent.name, Color.fail)
         return end
         if player.vehicle then player.vehicle.set_driver(nil) end
         if player.vehicle then player.vehicle.set_passenger(nil) end
         if player.vehicle then return end
         player.teleport(warp.surface.find_non_colliding_position('character',warp.position,32,1),warp.surface)
-        player.print('Warped you over to: ' .. frame, Color.success)
+        player.print('Warped you over to: ' .. elem.parent.name, Color.success)
         player_table[player.index].spam = game.tick + 900
         Public.close_gui_player(player)
         return

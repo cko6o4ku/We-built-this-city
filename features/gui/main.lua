@@ -1,6 +1,7 @@
 
-local event = require 'utils.event'
+local Event = require 'utils.event'
 local Global = require 'utils.global'
+local Gui = require 'utils.gui'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
 
@@ -12,14 +13,21 @@ local icons = {
 	  "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
 }
 
+local main_button_name = Gui.uid_name()
+local main_frame_name = Gui.uid_name()
+
 Global.register(
     {disabled_tabs=disabled_tabs, icons=icons},
-    function(tbl)
-        disabled_tabs = tbl.disabled_tabs
-        icons = tbl.icons
+    function(t)
+        disabled_tabs = t.disabled_tabs
+        icons = t.icons
     end
 )
 local Public = {}
+
+function Public.get_tabs_table()
+	return panel_tabs
+end
 
 Public.my_fixed_width_style = {
     minimal_width = 450,
@@ -189,7 +197,7 @@ end
 function Public.panel_clear_left_gui(player)
 	local left = player.gui.left
 	for _, child in pairs(left.children) do
-		if child.name ~= "panel_button" and child.name ~= "mod_gui_frame_flow" then
+		if child.name ~= main_button_name and child.name ~= "mod_gui_frame_flow" then
 			child.destroy()
 		end
 	end
@@ -209,24 +217,24 @@ end
 
 function Public.get_panel(player)
 	local left = player.gui.left
-    if (left.panel == nil) then
+    if (left[main_frame_name] == nil) then
         return nil
     else
-        return left.panel
+        return left[main_frame_name]
     end
 end
 
 function Public.panel_get_active_frame(player)
 	local left = player.gui.left
-	if not left.panel then return false end
-	if not left.panel.next.tabbed_pane.selected_tab_index then return left.panel.next.tabbed_pane.tabs[1].content end
-	return left.panel.next.tabbed_pane.tabs[left.panel.next.tabbed_pane.selected_tab_index].content
+	if not left[main_frame_name] then return false end
+	if not left[main_frame_name].next.tabbed_pane.selected_tab_index then return left[main_frame_name].next.tabbed_pane.tabs[1].content end
+	return left[main_frame_name].next.tabbed_pane.tabs[left[main_frame_name].next.tabbed_pane.selected_tab_index].content
 end
 
 function Public.get_content(player)
 	local left = player.gui.left
-	if not left.panel then return false end
-	return left.panel.next.tabbed_pane
+	if not left[main_frame_name] then return false end
+	return left[main_frame_name].next.tabbed_pane
 end
 
 function Public.panel_refresh_active_tab(player)
@@ -237,9 +245,18 @@ end
 
 local function top_button(player)
 	if mod(player)["panel_top_button"] then return end
-	local b = mod(player).add({type = "sprite-button", name = "panel_top_button", sprite = "utility/expand_dots", style=m_gui.button_style})
+	local b = mod(player).add({type = "sprite-button", name = main_button_name, sprite = "utility/expand_dots", style=m_gui.button_style})
 	b.style.padding=2
 	b.style.width=20
+end
+
+local function shuffle(tbl)
+	local size = #tbl
+		for i = size, 1, -1 do
+			local rand = math.random(size)
+			tbl[i], tbl[rand] = tbl[rand], tbl[i]
+		end
+	return tbl
 end
 
 local function main_frame(player)
@@ -247,54 +264,48 @@ local function main_frame(player)
 	local tabs = panel_tabs
 
 	Public.panel_clear_left_gui(player)
+    local frame =left.add{type = 'frame', name = main_frame_name, direction = "vertical"}
+	frame.style.padding = 5
+	shuffle(icons)
+    local inside_frame = frame.add{type = "frame", name = "next", style = "inside_deep_frame", direction = "vertical"}
+    local subhead = inside_frame.add{type = "frame", name = "sub_header", style = "changelog_subheader_frame"}
 
-    if (left.panel == nil) then
+    Public.AddLabel(subhead, "scen_info", "We built this city ", "subheader_caption_label")
+    for i = 1, 14, 1 do
+    local e = subhead.add({type = "sprite", sprite = icons[i]})
+    e.style.maximal_width = 24
+    e.style.maximal_height = 24
+    e.style.padding = 0
+    end
 
+    local t = inside_frame.add{name="tabbed_pane", type="tabbed-pane", style="tabbed_pane"}
+	t.style.top_padding = 8
 
-
-        local frame =left.add{type = 'frame', name = "panel", direction = "vertical"}
-		frame.style.padding = 5
-		table.shuffle_table(icons)
-        local inside_frame = frame.add{type = "frame", name = "next", style = "inside_deep_frame", direction = "vertical"}
-        local subhead = inside_frame.add{type = "frame", name = "sub_header", style = "changelog_subheader_frame"}
-
-        Public.AddLabel(subhead, "scen_info", "We built this city ", "subheader_caption_label")
-        for i = 1, 14, 1 do
-        local e = subhead.add({type = "sprite", sprite = icons[i]})
-        e.style.maximal_width = 24
-        e.style.maximal_height = 24
-        e.style.padding = 0
-        end
-
-        local t = inside_frame.add{name="tabbed_pane", type="tabbed-pane", style="tabbed_pane"}
-		t.style.top_padding = 8
-
-		for name, _ in pairs(tabs) do
-			if name == "Admin" then
-				if player.admin then
-					local tab = t.add({type = "tab", caption = name})
-					if disabled_tabs[name] == false then tab.enabled = false end
-					local frame = t.add({type = "frame", name = name, direction = "vertical"})
-					frame.style.left_margin = 10
-					frame.style.right_margin = 10
-					frame.style.top_margin = 4
-					frame.style.bottom_margin = 4
-					frame.style.padding = 5
-					frame.style.horizontally_stretchable = true
-					t.add_tab(tab, frame)
-				end
-			else
+	for name, _ in pairs(tabs) do
+		if name == "Admin" then
+			if player.admin then
 				local tab = t.add({type = "tab", caption = name})
-				if disabled_tabs[name] == false then tab.enabled = false end
-				local frame = t.add({type = "frame", name = name, direction = "vertical"})
-				frame.style.left_margin = 10
-				frame.style.right_margin = 10
-				frame.style.top_margin = 4
-				frame.style.bottom_margin = 4
-				frame.style.padding = 5
-				frame.style.horizontally_stretchable = true
-				t.add_tab(tab, frame)
+				if disabled_tabs[player.index][name] == false then tab.enabled = false end
+				local f1 = t.add({type = "frame", name = name, direction = "vertical"})
+				f1.style.left_margin = 10
+				f1.style.right_margin = 10
+				f1.style.top_margin = 4
+				f1.style.bottom_margin = 4
+				f1.style.padding = 5
+				f1.style.horizontally_stretchable = true
+				t.add_tab(tab, f1)
 			end
+		else
+			local tab = t.add({type = "tab", caption = name})
+			if disabled_tabs[player.index][name] == false then tab.enabled = false end
+			local f2 = t.add({type = "frame", name = name, direction = "vertical"})
+			f2.style.left_margin = 10
+			f2.style.right_margin = 10
+			f2.style.top_margin = 4
+			f2.style.bottom_margin = 4
+			f2.style.padding = 5
+			f2.style.horizontally_stretchable = true
+			t.add_tab(tab, f2)
 		end
 	end
 	Public.panel_refresh_active_tab(player)
@@ -302,7 +313,7 @@ end
 
 function Public.visible(player)
 	local left = player.gui.left
-    local frame = left.panel
+    local frame = left[main_frame_name]
     if (frame ~= nil) then
         frame.visible = not frame.visible
     end
@@ -311,7 +322,7 @@ end
 function Public.panel_call_tab(player, name)
 	local left = player.gui.left
 	main_frame(player)
-	local tabbed_pane = left.panel.next.tabbed_pane
+	local tabbed_pane = left[main_frame_name].next.tabbed_pane
 	for key, v in pairs(tabbed_pane.tabs) do
 		if v.tab.caption == name then
 			tabbed_pane.selected_tab_index = key
@@ -324,40 +335,52 @@ local function on_player_joined_game(event)
 	top_button(game.players[event.player_index])
 end
 
-function Public.set_tab_on_init(tab_name, status)
-       disabled_tabs[tab_name] = status
-       return
-end
-
 function Public.set_tab(player, tab_name, status)
 	local left = player.gui.left
+	local name = tab_name
 	--Public.panel_call_tab(player, tab_name)
     local frame = Public.panel_get_active_frame(player)
-    if not frame then disabled_tabs[tab_name] = status return end
+    if not disabled_tabs[player.index] then
+		disabled_tabs[player.index] = {}
+    end
+    if not frame then disabled_tabs[player.index][name] = status end
 
-    disabled_tabs[tab_name] = status
-    if left.panel then
-		left.panel.destroy()
+    disabled_tabs[player.index][tab_name] = status
+    if left[main_frame_name] then
+		left[main_frame_name].destroy()
 		main_frame(player)
 		return
     end
     Public.panel_refresh_active_tab(player)
 end
 
+function Public.close_gui_player(player)
+    local left = player.gui.left
+    local menu_frame = left[main_frame_name]
+    if (menu_frame) then
+        menu_frame.destroy()
+    end
+end
+
+function Public.toggle(player)
+    local left = player.gui.left
+    local frame = left[main_frame_name]
+
+    if frame then
+        Public.close_gui_player(player)
+    else
+        Public.panel_clear_left_gui(player)
+        main_frame(player)
+    end
+end
+
 local function on_gui_click(event)
     if not (event and event.element and event.element.valid) then return end
     local name = event.element.name
 	local player = game.players[event.player_index]
-	local left = player.gui.left
 
-	if name == "panel_top_button" then
-		if left.panel then
-			left.panel.destroy()
-			return
-		else
-			main_frame(player)
-			return
-		end
+	if name == main_button_name then
+		Public.toggle(player)
 	end
 
 	if not event.element.caption then return end
@@ -366,7 +389,7 @@ local function on_gui_click(event)
 	Public.refresh(player)
 end
 
-event.add(defines.events.on_player_joined_game, on_player_joined_game)
-event.add(defines.events.on_gui_click, on_gui_click)
+Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+Event.add(defines.events.on_gui_click, on_gui_click)
 
 return Public

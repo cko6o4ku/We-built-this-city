@@ -229,9 +229,6 @@ function Public.SetupAndClearSpawnAreas(surface, chunkArea)
                 Utils.RemoveDecorationsArea(surface, chunkArea)
 
                 local fill_tile = "stone-path"
-                if (game.active_mods["oarc-restricted-build"]) then
-                    fill_tile = "tutorial-grid"
-                end
 
                 if (global.scenario_config.gen_settings.tree_circle) then
                     Utils.CreateCropCircle(surface, spawn.pos, chunkArea, global.scenario_config.gen_settings.land_area_tiles, fill_tile)

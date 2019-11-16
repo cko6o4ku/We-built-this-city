@@ -62,12 +62,6 @@ commands.add_command ("trigger-map-cleanup",
 ----------------------------------------
 local function on_start()
 
-    ----------------------------
-    --- Tabs options here!
-    ----------------------------
-    Tabs.set_tab_on_init("Spawn Controls", false)
-    --Tabs.set_tab_on_init("Rockets", false)
-
     if global.enable_scramble then
     Ores.init()
     end
@@ -417,15 +411,16 @@ event.add(defines.events.on_character_corpse_expired, function(event)
     Utils.DropGravestoneChestFromCorpse(event.corpse)
 end)
 
---[[setmetatable(_G, {
+--[[
+setmetatable(_G, {
     __newindex = function(_, n, v)
-        log 'Desync warning: attempt to write to undeclared var " .. n)
-        -- game.print 'Attempt to write to undeclared var " .. n)
+        log ("Desync warning: attempt to write to undeclared var " .. n)
+        --game.print ("Attempt to write to undeclared var " .. n)
         global[n] = v;
     end,
     __index = function(_, n)
         return global[n];
     end
 })
+]]--
 
---]]

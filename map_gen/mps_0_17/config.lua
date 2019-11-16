@@ -143,7 +143,7 @@ global.far_max_dist = 300
 global.vanilla_spawn_count = 60
 
 -- Num tiles between each spawn. (I recommend at least 1000)
-global.vanilla_spawn_distance = 2000
+global.vanilla_spawn_distance = 1000
 
 ---------------------------------------
 -- Resource & Spawn Circle Options
@@ -364,7 +364,7 @@ global.enable_silo_radar = false
 
 -- Allow silos to be built by the player, but forces them to build in
 -- the fixed locations. If this is false, silos are built and assigned
--- only to the main force. 
+-- only to the main force.
 global.enable_silo_player_build = true
 
 
