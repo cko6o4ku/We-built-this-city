@@ -2,7 +2,7 @@
 -- Factorio module by Mylon, 2018
 -- MIT License
 
-local event = require "utils.event"
+local Event = require "utils.event"
 
 
 global.zombies = {}
@@ -28,6 +28,12 @@ function Public.splitters(event)
 		for i=0, 5, 1 do
 			local pos = event.entity.surface.find_non_colliding_position("medium-biter", event.entity.position, 10, 3)
 			event.entity.surface.create_entity{name="medium-worm-turret", position=pos}
+		end
+	end
+	if event.entity.name == "small-worm-turret" and math.random() < 0.25 then
+		for i=0, 5, 1 do
+			local pos = event.entity.surface.find_non_colliding_position("small-biter", event.entity.position, 10, 3)
+			event.entity.surface.create_entity{name="small-worm-turret", position=pos}
 		end
 	end
 	if event.entity.name == "medium-worm-turret" and math.random(1,2) == 2 then
@@ -90,7 +96,7 @@ function Public.tech_nerf(event)
 	game.forces.enemy.set_ammo_damage_modifier("melee", 0.5 + (2 * scale + game.tick) / (2 * scale) )
 end
 
-event.add(defines.events.on_entity_died, Public.splitters)
-event.add(defines.events.on_tick, Public.delayed_spawn)
+Event.add(defines.events.on_entity_died, Public.splitters)
+Event.add(defines.events.on_tick, Public.delayed_spawn)
 
 return Public
