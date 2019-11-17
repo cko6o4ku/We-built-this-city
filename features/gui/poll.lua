@@ -330,7 +330,7 @@ end
 
 local function draw_main_frame(left, player)
     local trusted = session.get_trusted_table()
-    local frame = left.add {type = 'frame', name = main_frame_name, caption = 'Polls', direction = 'vertical', style = "changelog_subheader_frame"}
+    local frame = left.add {type = 'frame', name = main_frame_name, caption = 'Polls', direction = 'vertical', style = "changelog_subheader_frame", tooltip = "Let your question be heard!"}
     --frame.style.maximal_width = 640
 
     local poll_viewer_top_flow = frame.add {type = 'table', column_count = 5}

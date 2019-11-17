@@ -83,7 +83,7 @@ end
 
 local function draw_gui_char_button(player)
 	if mod(player).rpg_button then return end
-	local b = mod(player).add{type = "sprite-button", name = "rpg_button", caption = "[RPG]"}
+	local b = mod(player).add{type = "sprite-button", name = "rpg_button", caption = "[RPG]", tooltip = "Which class are you?"}
 	b.style.font_color = {165,165,165}
 	b.style.font = "heading-1"
 	b.style.minimal_height = 38

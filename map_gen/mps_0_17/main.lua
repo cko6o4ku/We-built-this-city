@@ -1,9 +1,9 @@
-local event = require 'utils.event'
+local Event = require 'utils.event'
 local market_items = require "features.modules.map_market_items"
 local Tabs = require 'features.gui.main'
 local RPG = require 'features.modules.rpg'
 local fish = require 'features.modules.launch_fish_to_win'
-local Ores = require 'features.modules.scramble'
+require 'features.modules.ores_are_mixed'
 --local Map = require 'features.modules.map_info'
 require 'features.modules.enhancedbiters'
 --require 'features.modules.bp'
@@ -19,7 +19,7 @@ require 'features.modules.biters_double_damage'
 require 'features.modules.infinity_chest'
 require 'features.modules.custom_death_messages'
 require 'features.modules.explosive_biters'
-require 'features.modules.fish_respawner'
+--require 'features.modules.fish_respawner'
 require 'features.modules.spawn_area'
 --require 'features.modules.dangerous_nights'
 --require 'features.modules.satellite_score'
@@ -62,9 +62,6 @@ commands.add_command ("trigger-map-cleanup",
 ----------------------------------------
 local function on_start()
 
-    if global.enable_scramble then
-    Ores.init()
-    end
 --[[
     local T = Map.Pop_info()
         T.main_caption = "Multiplayer Spawn"
@@ -113,14 +110,14 @@ local function on_start()
     --log ("Vanilla spawns:")
     --log(serpent.block(global.vanillaSpawns))
 end
-event.on_init(on_start)
+Event.on_init(on_start)
 
 
 ----------------------------------------
 -- Rocket launch event
 -- Used for end game win conditions / unlocking late game stuff
 ----------------------------------------
-event.add(defines.events.on_rocket_launched, function(event)
+Event.add(defines.events.on_rocket_launched, function(event)
     if global.frontier_rocket_silo_mode then
         R_launch.RocketLaunchEvent(event)
     end
@@ -130,11 +127,8 @@ end)
 ----------------------------------------
 -- Chunk Generation
 ----------------------------------------
-event.add(defines.events.on_chunk_generated, function(event)
+Event.add(defines.events.on_chunk_generated, function(event)
     if event.surface.index == 1 then return end
-    if global.enable_scramble then
-    Ores.scramble(event)
-    end
 
     if global.enable_regrowth then
         Regrowth.RegrowthChunkGenerate(event)
@@ -143,9 +137,7 @@ event.add(defines.events.on_chunk_generated, function(event)
         Utils.UndecorateOnChunkGenerate(event)
     end
 
-    if global.frontier_rocket_silo_mode then
-        Silo.GenerateRocketSiloChunk(event)
-    end
+    Silo.GenerateRocketSiloChunk(event)
 
     SS.SeparateSpawnsGenerateChunk(event)
 
@@ -156,7 +148,7 @@ end)
 ----------------------------------------
 -- Gui Click
 ----------------------------------------
-event.add(defines.events.on_gui_click, function(event)
+Event.add(defines.events.on_gui_click, function(event)
 
     -- Don't interfere with other mod related stuff.
 
@@ -170,7 +162,7 @@ event.add(defines.events.on_gui_click, function(event)
     SS.SharedSpawnJoinWaitMenuClick(event)
 end)
 
-event.add(defines.events.on_gui_checked_state_changed, function (event)
+Event.add(defines.events.on_gui_checked_state_changed, function (event)
     SS.SpawnOptsRadioSelect(event)
     SS.SpawnCtrlGuiOptionsSelect(event)
 end)
@@ -178,15 +170,16 @@ end)
 ----------------------------------------
 -- Player Events
 ----------------------------------------
-event.add(defines.events.on_player_joined_game, function(event)
+Event.add(defines.events.on_player_joined_game, function(event)
     Utils.PlayerJoinedMessages(event)
 end)
 
-event.add(defines.events.on_player_created, function(event)
+Event.add(defines.events.on_player_created, function(event)
     local player = game.players[event.player_index]
 
     -- Move the player to the game surface immediately.
-    player.teleport({x=0,y=0}, Surface)
+    local pos = game.surfaces[Surface].find_non_colliding_position("character", {x=0,y=0}, 3, 0,5)
+    player.teleport(pos, Surface)
 
     if global.enable_longreach then
         Utils.GivePlayerLongReach(player)
@@ -199,7 +192,7 @@ event.add(defines.events.on_player_created, function(event)
     SS.SeparateSpawnsPlayerCreated(event.player_index)
 end)
 
-event.add(defines.events.on_player_respawned, function(event)
+Event.add(defines.events.on_player_respawned, function(event)
     SS.SeparateSpawnsPlayerRespawned(event)
 
     Utils.PlayerRespawnItems(event)
@@ -209,14 +202,14 @@ event.add(defines.events.on_player_respawned, function(event)
     end
 end)
 
-event.add(defines.events.on_player_left_game, function(event)
+Event.add(defines.events.on_player_left_game, function(event)
     SS.FindUnusedSpawns(game.players[event.player_index], true)
 end)
 
 ----------------------------------------
 -- On BUILD entity. Don't forget on_robot_built_entity too!
 ----------------------------------------
-event.add(defines.events.on_built_entity, function(event)
+Event.add(defines.events.on_built_entity, function(event)
     if global.enable_autofill then
         Utils.Autofill(event)
     end
@@ -244,7 +237,7 @@ end)
 -- place items that don't count as player_built and robot_built.
 -- Specifically FARL.
 ----------------------------------------
-event.add(defines.events.script_raised_built, function(event)
+Event.add(defines.events.script_raised_built, function(event)
     if global.enable_regrowth then
         local s_index = event.entity.surface.index
         if (global.rg[s_index] == nil) then return end
@@ -262,7 +255,7 @@ end)
 -- On tick events. Stuff that needs to happen at regular intervals.
 -- Delayed events, delayed spawns, ...
 ----------------------------------------
-event.add(defines.events.on_tick, function()
+Event.add(defines.events.on_tick, function()
     if global.enable_regrowth then
         Regrowth.RegrowthOnTick()
         Regrowth.RegrowthForceRemovalOnTick()
@@ -301,26 +294,26 @@ event.add(defines.events.on_tick, function()
 end)
 
 
-event.add(defines.events.on_sector_scanned, function (event)
+Event.add(defines.events.on_sector_scanned, function (event)
     if global.enable_regrowth then
         Regrowth.RegrowthSectorScan(event)
     end
 end)
 
-event.add(defines.events.on_player_mined_entity, function(event)
+Event.add(defines.events.on_player_mined_entity, function(event)
     local e = event.entity
     if e and e.valid and math_random(1, 10) == 1 then
       e.surface.spill_item_stack(game.players[event.player_index].position,{name = "raw-fish", count = math_random(1,2)},true)
     end
 end)
--- event.add(defines.events.on_sector_scanned, function (event)
+-- Event.add(defines.events.on_sector_scanned, function (event)
 
 -- end)
 
 ----------------------------------------
 --
 ----------------------------------------
-event.add(defines.events.on_robot_built_entity, function (event)
+Event.add(defines.events.on_robot_built_entity, function (event)
     if global.enable_regrowth then
         local s_index = event.created_entity.surface.index
         if (global.rg[s_index] == nil) then return end
@@ -336,7 +329,7 @@ event.add(defines.events.on_robot_built_entity, function (event)
     end
 end)
 
-event.add(defines.events.on_player_built_tile, function (event)
+Event.add(defines.events.on_player_built_tile, function (event)
     if global.enable_regrowth then
         local s_index = event.surface_index
         if (global.rg[s_index] == nil) then return end
@@ -358,7 +351,7 @@ end)
 -- Shared chat, so you don't have to type /s
 -- But you do lose your player colors across forces.
 ----------------------------------------
-event.add(defines.events.on_console_chat, function(event)
+Event.add(defines.events.on_console_chat, function(event)
     if (global.team_chat) then
         if (event.player_index ~= nil) then
             Utils.ShareChatBetweenForces(game.players[event.player_index], event.message)
@@ -370,7 +363,7 @@ end)
 -- On Research Finished
 -- This is where you can permanently remove researched techs
 ----------------------------------------
-event.add(defines.events.on_research_finished, function(event)
+Event.add(defines.events.on_research_finished, function(event)
     local research = event.research
     local force_name = research.force.name
     if research.name == "rocket-silo" then
@@ -392,12 +385,12 @@ end)
 -- On Entity Spawned and On Biter Base Built
 -- This is where I modify biter spawning based on location and other factors.
 ----------------------------------------
-event.add(defines.events.on_entity_spawned, function(event)
+Event.add(defines.events.on_entity_spawned, function(event)
     if (global.modded_enemy) then
         SS.ModifyEnemySpawnsNearPlayerStartingAreas(event)
     end
 end)
-event.add(defines.events.on_biter_base_built, function(event)
+Event.add(defines.events.on_biter_base_built, function(event)
     if (global.modded_enemy) then
         SS.ModifyEnemySpawnsNearPlayerStartingAreas(event)
     end
@@ -407,7 +400,7 @@ end)
 -- On Corpse Timed Out
 -- Save player's stuff so they don't lose it if they can't get to the corpse fast enough.
 ----------------------------------------
-event.add(defines.events.on_character_corpse_expired, function(event)
+Event.add(defines.events.on_character_corpse_expired, function(event)
     Utils.DropGravestoneChestFromCorpse(event.corpse)
 end)
 

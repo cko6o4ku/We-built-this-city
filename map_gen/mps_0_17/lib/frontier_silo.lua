@@ -208,7 +208,7 @@ function Public.GenerateRocketSiloChunk(event)
         local chunkAreaCenter = {x=chunkArea.left_top.x+(global_data.chunk_size/2),
                                  y=chunkArea.left_top.y+(global_data.chunk_size/2)}
 
-        for _, siloPos in pairs(global.siloPosition) do
+        for i, siloPos in pairs(global.siloPosition) do
             local safeArea = {left_top=
                                 {x=siloPos.x-(global_data.chunk_size*4),
                                  y=siloPos.y-(global_data.chunk_size*4)},

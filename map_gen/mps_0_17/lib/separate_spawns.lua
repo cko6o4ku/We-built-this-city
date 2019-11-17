@@ -623,11 +623,17 @@ function Public.SendPlayerToNewSpawnAndCreateIt(delayedSpawn)
 end
 
 function Public.SendPlayerToSpawn(player)
+    local dest = global.playerSpawns[player.name]
+    local pos = player.surface.find_non_colliding_position("character", dest, 3, 0,5)
     if (Public.DoesPlayerHaveCustomSpawn(player)) then
-        player.teleport(global.playerSpawns[player.name], surface_name)
+        if pos then
+            player.teleport(pos, player.surface)
+        else
+            player.teleport(global.playerSpawns[player.name], player.surface)
+        end
         game.permissions.get_group("Default").add_player(player)
     else
-        player.teleport(game.forces[global.main_force_name].get_spawn_position(surface_name), surface_name)
+        player.teleport(player.surface.find_non_colliding_position("character", dest, 3, 0,5), player.surface)
         game.permissions.get_group("Default").add_player(player)
     end
 end
@@ -1289,6 +1295,7 @@ function Public.SharedSpwnOptsGuiClick(event)
 
                 -- Tell other player they are requesting a response.
                 game.players[spawnName].print({"oarc-player-requesting-join-you", player.name})
+                Tabs.refresh(game.players[spawnName])
                 break
             end
         end
@@ -1497,7 +1504,6 @@ function Public.SpawnCtrlGuiClick(event)
 
     -- Accept or reject pending player join requests to a shared base
     if ((elemName == "accept_player_request") or (elemName == "reject_player_request")) then
-
         if ((event.element.parent.join_queue_dropdown == nil) or
             (event.element.parent.join_queue_dropdown.selected_index == 0)) then
             player.print({"oarc-selected-player-not-wait"})
@@ -1542,7 +1548,7 @@ function Public.SpawnCtrlGuiClick(event)
                     table.remove(global.sharedSpawns[player.name].joinQueue, index)
                 end
             end
-
+            Tabs.refresh(player)
             -- If player exists, then do stuff.
             if (game.players[joinQueuePlayerChoice]) then
                 -- Send an announcement

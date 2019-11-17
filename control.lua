@@ -9,31 +9,32 @@ _DUMP_ENV = false
 -- other stuff
 local Event = require 'utils.event'
 require 'utils.server'
-require "utils.server_commands"
-require "utils.utils"
-require "utils.table"
-require "utils.color_data"
-require "utils.session_data"
-require "utils.player_modifiers"
-require "utils.surface"
+require 'utils.server_commands'
+require 'utils.utils'
+require 'utils.table'
+require 'utils.color_data'
+require 'utils.session_data'
+require 'utils.player_modifiers'
+require 'utils.surface'
 
-require "features.gui.main"
-require "features.gui.player_list"
-require "features.gui.admin"
-require "features.gui.group"
-require "features.gui.poll"
-require "features.gui.score"
-require "features.gui.config"
-require "features.gui.warp_system"
-require "features.functions.chatbot"
-require "features.functions.antigrief"
-require "features.modules.corpse_markers"
-require "features.modules.floaty_chat"
-require "features.modules.autohotbar"
-require "features.modules.autostash"
-require "features.commands.misc"
+require 'features.gui.main'
+require 'features.gui.player_list'
+require 'features.gui.admin'
+--require 'features.gui.group'
+require 'features.gui.poll'
+require 'features.gui.score'
+require 'features.gui.config'
+require 'features.gui.tag'
+require 'features.gui.warp_system'
+require 'features.functions.chatbot'
+require 'features.functions.antigrief'
+require 'features.modules.corpse_markers'
+require 'features.modules.floaty_chat'
+require 'features.modules.autohotbar'
+require 'features.modules.autostash'
+require 'features.commands.misc'
 
-require "features.modules.rpg"
+require 'features.modules.rpg'
 
 
 -- load from config/map

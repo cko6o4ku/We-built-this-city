@@ -285,7 +285,9 @@ local function main_frame(player)
 		if name == "Admin" then
 			if player.admin then
 				local tab = t.add({type = "tab", caption = name})
-				if disabled_tabs[player.index][name] == false then tab.enabled = false end
+				if disabled_tabs[player.index] then
+					if disabled_tabs[player.index][name] == false then tab.enabled = false end
+				end
 				local f1 = t.add({type = "frame", name = name, direction = "vertical"})
 				f1.style.left_margin = 10
 				f1.style.right_margin = 10
@@ -297,7 +299,9 @@ local function main_frame(player)
 			end
 		else
 			local tab = t.add({type = "tab", caption = name})
-			if disabled_tabs[player.index][name] == false then tab.enabled = false end
+			if disabled_tabs[player.index] then
+				if disabled_tabs[player.index][name] == false then tab.enabled = false end
+			end
 			local f2 = t.add({type = "frame", name = name, direction = "vertical"})
 			f2.style.left_margin = 10
 			f2.style.right_margin = 10
@@ -332,7 +336,16 @@ function Public.panel_call_tab(player, name)
 end
 
 local function on_player_joined_game(event)
-	top_button(game.players[event.player_index])
+	local player = game.players[event.player_index]
+    top_button(player)
+end
+
+local function on_player_created(event)
+	local player = game.players[event.player_index]
+
+    if not disabled_tabs[player.index] then
+		disabled_tabs[player.index] = {}
+    end
 end
 
 function Public.set_tab(player, tab_name, status)
@@ -340,9 +353,6 @@ function Public.set_tab(player, tab_name, status)
 	local name = tab_name
 	--Public.panel_call_tab(player, tab_name)
     local frame = Public.panel_get_active_frame(player)
-    if not disabled_tabs[player.index] then
-		disabled_tabs[player.index] = {}
-    end
     if not frame then disabled_tabs[player.index][name] = status end
 
     disabled_tabs[player.index][tab_name] = status
@@ -389,6 +399,7 @@ local function on_gui_click(event)
 	Public.refresh(player)
 end
 
+Event.add(defines.events.on_player_created, on_player_created)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_gui_click, on_gui_click)
 

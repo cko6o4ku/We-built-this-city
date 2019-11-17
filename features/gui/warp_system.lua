@@ -129,10 +129,6 @@ local function draw_main_frame(player, left)
     --local mod_gui = player_table[player.index].mod_gui
 
     local main_frame = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
-    main_frame.style.left_margin = 10
-    main_frame.style.right_margin = 10
-    main_frame.style.top_margin = 4
-    main_frame.style.bottom_margin = 4
     main_frame.style.padding = 5
     main_frame.style.horizontally_stretchable = true
 
