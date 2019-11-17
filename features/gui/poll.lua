@@ -330,7 +330,7 @@ end
 
 local function draw_main_frame(left, player)
     local trusted = session.get_trusted_table()
-    local frame = left.add {type = 'frame', name = main_frame_name, caption = 'Polls', direction = 'vertical', style = "changelog_subheader_frame", tooltip = "Let your question be heard!"}
+    local frame = left.add {type = 'frame', name = main_frame_name, caption = 'Polls', direction = 'vertical', style = "changelog_subheader_frame"}
     --frame.style.maximal_width = 640
 
     local poll_viewer_top_flow = frame.add {type = 'table', column_count = 5}
@@ -821,7 +821,7 @@ local function player_joined(event)
             update_poll_viewer(data)
         end
     else
-       mod(player).add {type = 'sprite-button', name = main_button_name, sprite = 'item/programmable-speaker'}
+       mod(player).add {type = 'sprite-button', name = main_button_name, sprite = 'item/programmable-speaker', tooltip = "Let your question be heard!"}
     end
 end
 
