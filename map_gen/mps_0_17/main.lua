@@ -69,8 +69,6 @@ local function on_start()
         T.main_caption_color = {r = 150, g = 150, b = 0}
         T.sub_caption_color = {r = 0, g = 150, b = 0}
 ]]--
-    -- Regrowth (always init so we can enable during play.)
-    Regrowth.RegrowthInit()
 
     -- Create new game surface
     Utils.CreateGameSurface()

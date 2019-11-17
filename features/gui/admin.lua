@@ -2,6 +2,8 @@
 
 local event = require 'utils.event'
 local Tabs = require 'features.gui.main'
+local Surface = require 'utils.surface'.get_surface_name()
+
 
 local function admin_only_message(str)
 	for _, player in pairs(game.connected_players) do
@@ -16,7 +18,7 @@ local jail_messages = {
 	"Busted!"
 }
 local function jail(player, source_player)
-	local permission_group = game.permissions.get_group("prisoner")		
+	local permission_group = game.permissions.get_group("prisoner")
 	if not permission_group then
 		permission_group = game.permissions.create_group("prisoner")
 		for action_name, _ in pairs(defines.input_action) do
@@ -24,7 +26,7 @@ local function jail(player, source_player)
 		end
 		permission_group.set_allows_action(defines.input_action.write_to_console, true)
 		permission_group.set_allows_action(defines.input_action.gui_click, true)
-		permission_group.set_allows_action(defines.input_action.gui_selection_state_changed, true)		
+		permission_group.set_allows_action(defines.input_action.gui_selection_state_changed, true)
 	end
 	permission_group.add_player(player.name)
 	game.print(player.name .. " has been jailed. " .. jail_messages[math.random(1, #jail_messages)], { r=0.98, g=0.66, b=0.22})
@@ -109,7 +111,10 @@ local function kill(player, source_player)
 end
 
 local function respawn_player(player)
-	SeparateSpawnsPlayerCreated(player.index)
+	local SS = require 'map_gen.mps_0_17.lib.separate_spawns'
+	local pos = game.surfaces[Surface].find_non_colliding_position("character", {x=0,y=0}, 3, 0,5)
+	player.teleport(pos, Surface)
+	SS.SeparateSpawnsPlayerCreated(player.index)
 	log("Resetting and respawning " .. player.name)
 end
 
