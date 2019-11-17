@@ -5,6 +5,7 @@ local Event = require 'utils.event'
 local Global = require 'utils.global'
 local Game = require 'utils.game'
 local Tabs = require 'features.gui.main'
+local Session = require 'utils.session_data'
 
 local default_verb = 'expanded'
 
@@ -145,6 +146,7 @@ local function player_joined(event)
 end
 
 local function draw_main_frame_content(parent)
+    local trusted = Session.get_trusted_table()
     local player = parent.gui.player
     local grid = parent.add {type = 'table', column_count = 1}
     grid.style.vertical_spacing = 0
@@ -159,7 +161,7 @@ local function draw_main_frame_content(parent)
         local row = grid.add {type = 'table', column_count = 4}
         row.style.horizontal_spacing = 0
 
-        if player.admin or global.trusted_players[player.name] then
+        if player.admin or trusted[player.name] then
             local edit_button =
                 row.add {
                 type = 'sprite-button',
@@ -209,6 +211,7 @@ local function draw_main_frame_content(parent)
 end
 
 local function draw_main_frame(player)
+    local trusted = Session.get_trusted_table()
     local left = player.gui.left
     local main_frame =
         left.add {type = 'frame', name = main_frame_name, caption = 'Choose your tag', direction = 'vertical', style = "changelog_subheader_frame"}
@@ -250,7 +253,7 @@ local function draw_main_frame(player)
 
     right_flow.add {type = 'button', name = clear_button_name, caption = 'Clear Tag'}
 
-    if player.admin or global.trusted_players[player.name] then
+    if player.admin or trusted[player.name] then
         right_flow.add {type = 'button', name = create_tag_button_name, caption = 'Create Tag'}
     end
 end
