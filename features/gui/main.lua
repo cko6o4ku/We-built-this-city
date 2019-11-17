@@ -399,6 +399,8 @@ local function on_gui_click(event)
 	Public.refresh(player)
 end
 
+--Gui.allow_player_to_toggle_top_element_visibility(main_button_name)
+
 Event.add(defines.events.on_player_created, on_player_created)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_gui_click, on_gui_click)

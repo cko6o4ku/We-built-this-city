@@ -19,7 +19,7 @@ require 'features.modules.biters_double_damage'
 require 'features.modules.infinity_chest'
 require 'features.modules.custom_death_messages'
 require 'features.modules.explosive_biters'
---require 'features.modules.fish_respawner'
+--require 'features.modules.fish_respawner' --- VERY HEAVY
 require 'features.modules.spawn_area'
 --require 'features.modules.dangerous_nights'
 --require 'features.modules.satellite_score'

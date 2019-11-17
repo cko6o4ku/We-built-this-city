@@ -97,6 +97,6 @@ function Public.tech_nerf(event)
 end
 
 Event.add(defines.events.on_entity_died, Public.splitters)
-Event.add(defines.events.on_tick, Public.delayed_spawn)
+--Event.add(defines.events.on_tick, Public.delayed_spawn)
 
 return Public
