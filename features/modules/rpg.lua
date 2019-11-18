@@ -204,7 +204,7 @@ local function draw_gui(player)
 	local frame = left.add{type = "frame", name = "rpg", direction = "vertical", caption = "RPG", style = "changelog_subheader_frame"}
 
 	local scroll_pane = frame.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'always', horizontal_scroll_policy = 'never'}
-	scroll_pane.style.maximal_height = 600
+	--scroll_pane.style.maximal_height = 600
 	scroll_pane.style.minimal_width = 425
 	scroll_pane.style.maximal_width = 425
 	scroll_pane.style.minimal_height = 600

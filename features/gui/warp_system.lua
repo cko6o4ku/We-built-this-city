@@ -69,7 +69,7 @@ function Public.remove_warp_point(name)
     warp_table[name] = nil
 end
 
-function Public.make_warp_point(position,surface,force,name)
+function Public.make_warp_point(player, position,surface,force,name)
     local warp = warp_table[name]
     if warp then return end
     local offset = {x=math.floor(position.x),y=math.floor(position.y)}
@@ -84,6 +84,7 @@ function Public.make_warp_point(position,surface,force,name)
             end
         end
     end
+    local last_edited = player.name
     surface.set_tiles(base_tiles)
     -- player_table adds the patterns and entities
     for _,p in pairs(warp_tiles) do
@@ -99,7 +100,7 @@ function Public.make_warp_point(position,surface,force,name)
         text='Warp: '..name,
         icon={type='item',name=warp_item}
     })
-    warp_table[name] = {tag=tag,position=tag.position,surface=surface,old_tile=old_tile}
+    warp_table[name] = {tag=tag,position=tag.position,surface=surface,old_tile=old_tile, last_edited=last_edited}
 end
 
 function Public.make_tag(name, pos)
@@ -110,12 +111,13 @@ function Public.make_tag(name, pos)
     for k, v in pairs (game.forces) do
         data.forces = v
     end
+    local last_edited = "script"
     local v = data.forces.add_chart_tag(surface,{
          position=pos,
          text='Warp: '..name,
          icon={type='item',name=warp_item}
      })
-    warp_table[name] = {tag=v,position=pos,surface=surface}
+    warp_table[name] = {tag=v,position=pos,surface=surface, last_edited=last_edited}
     return data
 end
 
@@ -155,16 +157,10 @@ local function draw_create_warp(parent, player, p)
         end
     end
 
-    local child_frame = parent.add{
-    type = "frame",
-    name = "wp_name",
-    direction = "vertical"
-    }
-
-    local x = child_frame.add{
+    local x = parent.add{
     type = "table",
     name = "wp_table",
-    column_count = 4
+    column_count = 2
     }
 
     local textfield = x.add{
@@ -175,13 +171,14 @@ local function draw_create_warp(parent, player, p)
     allow_decimal = false,
     allow_negative = false
     }
-    textfield.style.minimal_width = 30
+    textfield.style.minimal_width = 10
     textfield.style.height = 24
-    textfield.style.horizontally_stretchable = true
+    --textfield.style.horizontally_stretchable = true
 
     local _flow = x.add{
     type = 'flow'
     }
+    Tabs.AddSpacerLine(_flow)
 
     local btn = _flow.add{
     type = "sprite-button",
@@ -221,7 +218,7 @@ local function draw_main_frame(player, left, p)
     frame.style.maximal_width = 500
     frame.style.minimal_width = 320
 
-    local tbl = frame.add{type = "table", column_count = 10}
+    local tbl = frame.add{type = "table", column_count = 1}
     tbl.style.vertical_spacing = 0
 
     local _flows1 = tbl.add{type = 'flow'}
@@ -235,8 +232,10 @@ local function draw_main_frame(player, left, p)
     warp_list.style.right_padding = 0
 
     local table = warp_list.add{type = 'table', column_count = 3}
-    table.style.vertical_spacing = 0
+    --table.style.vertical_spacing = 0
 
+    local sub_table = warp_list.add{type = 'table', column_count = 3}
+    p.sub_table = sub_table
 
     for name,warp in pairs(warp_table) do
         if not warp.tag or not warp.tag then
@@ -248,7 +247,7 @@ local function draw_main_frame(player, left, p)
                 })
             end
         end
-        local warps_table_name = table.add{type='label', caption=name, style='caption_label'}
+        local warps_table_name = table.add{type='label', caption=name, style='caption_label', tooltip="Created by: " .. warp.last_edited}
         --lb.style.minimal_width = 120
 
         local _flows3 = table.add{type='flow'}
@@ -270,7 +269,7 @@ local function draw_main_frame(player, left, p)
             remove_warp_flow.style.width = 20
         end
         if p.creating == true then
-            draw_create_warp(frame, player, p)
+            draw_create_warp(sub_table, player, p)
             p.creating = false
         end
 
@@ -475,14 +474,13 @@ Gui.on_click(
     create_warp_func_name,
     function(event)
         local p = player_table[event.player_index]
-        local left = p.left
         local player = event.player
         p.frame = event.element.parent.name
-        local new = left[main_frame_name].wp_name.wp_table.wp_text.text
+        local new = p.sub_table.wp_table.wp_text.text
         if new ~= "" and new ~= "Spawn" and new ~= "Name:" and new ~= "Warp name:" then
             local position = player.position
             if warp_table[new] then player.print("Warp name already exists!", Color.fail) return end
-            Public.make_warp_point(position,player.surface,player.force,new)
+            Public.make_warp_point(player,position,player.surface,player.force,new)
             p.spam = game.tick + 900
             game.print(player.name .. " created warp: " .. new, Color.success)
         end

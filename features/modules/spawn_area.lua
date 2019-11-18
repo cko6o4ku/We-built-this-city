@@ -1,4 +1,5 @@
-local event = require 'utils.event' 
+local Event = require 'utils.event'
+local Surface = require 'utils.surface'
 
 local Public = {}
 
@@ -7,7 +8,7 @@ local tile_positions = {
     {-2,-3},{-1,-3},{0,-3},{1,-3},{2,-3},{-2,3},{-1,3},{0,3},{1,3},{2,3}
 }
 
-local entitys = {
+local place_blocks = {
     {'small-lamp',-3,-2},{'small-lamp',-3,2},{'small-lamp',3,-2},{'small-lamp',3,2},
     {'small-lamp',-2,-3},{'small-lamp',2,-3},{'small-lamp',-2,3},{'small-lamp',2,3},
     {'small-electric-pole',-3,-3},{'small-electric-pole',3,3},{'small-electric-pole',-3,3},{'small-electric-pole',3,-3},
@@ -22,9 +23,10 @@ local p_radius = 20
 local p_tile = 'stone-path'
 
 
-function Public.spawn_on_chunk_generated(event)
+function Public.spawn_on_chunk_generated()
+    local get_surface = Surface.get_surface()
     if not global.spawn_generated then
-        local surface = game.surfaces[2]
+        local surface = game.surfaces[get_surface]
         local offset = {x=-0,y=0}
         local base_tiles = {}
         local tiles = {}
@@ -44,17 +46,17 @@ function Public.spawn_on_chunk_generated(event)
                 table.insert(tiles,{name=p_tile,position={position[1]+offset.x+global_offset.x,position[2]+offset.y+global_offset.y}})
             end
             surface.set_tiles(tiles)
-            for _,entity in pairs(entitys) do
-                local entity = surface.create_entity{name=entity[1],position={entity[2]+offset.x+global_offset.x,entity[3]+offset.y+global_offset.y},force='neutral'}
+            for _, name in pairs(place_blocks) do
+                local entity = surface.create_entity{name=name[1],position={name[2]+offset.x+global_offset.x,name[3]+offset.y+global_offset.y},force='neutral'}
                 entity.destructible = false; entity.health = 0; entity.minable = false; entity.rotatable = false
             end
         global.spawn_generated = true
     end
 end
-event.add(defines.events.on_chunk_generated, function(event)
-    if event.tick > 4 then
+Event.add(defines.events.on_chunk_generated, function(event)
+    --if event.tick > 4 then
         Public.spawn_on_chunk_generated(event)
-    end
+    --end
 end)
 
 return Public
