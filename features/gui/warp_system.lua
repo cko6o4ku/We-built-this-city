@@ -31,6 +31,7 @@ local confirmed_button_name = Gui.uid_name()
 local create_warp_func_name = Gui.uid_name()
 local remove_warp_button_name = Gui.uid_name()
 local close_main_frame_name = Gui.uid_name()
+local cancel_button_name = Gui.uid_name()
 
 local warp_table = {}
 local player_table = {}
@@ -169,7 +170,10 @@ local function draw_create_warp(parent, player, p)
     local textfield = x.add{
     type = "textfield",
     name = "wp_text",
-    text = "Warp name:"
+    text = "Warp name:",
+    numeric = false,
+    allow_decimal = false,
+    allow_negative = false
     }
     textfield.style.minimal_width = 30
     textfield.style.height = 24
@@ -190,16 +194,22 @@ local function draw_create_warp(parent, player, p)
 end
 
 local function draw_remove_warp(parent, player)
+    parent.clear()
     local trusted = Session.get_trusted_table()
     if player.admin or trusted[player.name] then
         local btn = parent.add{type = "sprite-button", name = confirmed_button_name, tooltip = "Do you really want to remove: " .. parent.name, sprite='utility/confirm_slot'}
         btn.style.height = 20
         btn.style.width = 20
+        btn.focus()
     else
         local btn = parent.add{type = "sprite-button", name = confirmed_button_name, enabled = "false", tooltip = "Sorry, you need to be trusted to remove warps..", sprite='utility/set_bar_slot'}
         btn.style.height = 20
         btn.style.width = 20
     end
+    local btn = parent.add{type = "sprite-button", name = cancel_button_name, tooltip = "Cancel deletion of : " .. parent.name, sprite='utility/reset'}
+        btn.style.height = 20
+        btn.style.width = 20
+        btn.focus()
 end
 
 local function draw_main_frame(player, left, p)
@@ -390,6 +400,15 @@ Gui.on_click(
             p.removing = true
             Public.refresh_gui_player(player)
         end
+    end
+)
+
+Gui.on_click(
+    cancel_button_name,
+    function(event)
+        local player = event.player
+        Public.refresh_gui_player(player)
+        Public.clear_player_table(player)
     end
 )
 
