@@ -202,7 +202,7 @@ local function draw_remove_warp(parent, player)
         btn.style.width = 20
         btn.focus()
     else
-        local btn = parent.add{type = "sprite-button", name = confirmed_button_name, enabled = "false", tooltip = "Sorry, you need to be trusted to remove warps..", sprite='utility/set_bar_slot'}
+        local btn = parent.add{type = "sprite-button", name = confirmed_button_name, enabled = "false", tooltip = "You have not grown accustomed to this technology yet. Ask and admin to /trust " .. player.name.. ".", sprite='utility/set_bar_slot'}
         btn.style.height = 20
         btn.style.width = 20
     end
@@ -215,20 +215,28 @@ end
 local function draw_main_frame(player, left, p)
     local trusted = Session.get_trusted_table()
     local frame = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
-    frame.style.padding = 5
+    --frame.style.padding = 5
     frame.style.horizontally_stretchable = true
+    frame.style.maximal_height = 500
+    frame.style.maximal_width = 500
+    frame.style.minimal_width = 320
 
     local tbl = frame.add{type = "table", column_count = 10}
+    tbl.style.vertical_spacing = 0
 
     local _flows1 = tbl.add{type = 'flow'}
     --_flows1.style.minimal_width = 150
     _flows1.style.horizontally_stretchable = true
 
-    local warp_list = _flows1.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'auto', horizontal_scroll_policy = 'never'}
-    warp_list.vertical_scroll_policy = 'auto'
+    local warp_list = _flows1.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'always', horizontal_scroll_policy = 'never'}
     warp_list.style.maximal_height = 200
+    warp_list.style.horizontally_stretchable = true
+    warp_list.style.minimal_height = 200
+    warp_list.style.right_padding = 0
 
     local table = warp_list.add{type = 'table', column_count = 3}
+    table.style.vertical_spacing = 0
+
 
     for name,warp in pairs(warp_table) do
         if not warp.tag or not warp.tag then
@@ -245,6 +253,7 @@ local function draw_main_frame(player, left, p)
 
         local _flows3 = table.add{type='flow'}
         _flows3.style.minimal_width = 125
+        Tabs.AddSpacerLine(_flows3)
 
         local bottom_warp_flow = table.add{type='flow', name = name}
 
@@ -256,7 +265,7 @@ local function draw_main_frame(player, left, p)
             remove_warp_flow.style.height = 20
             remove_warp_flow.style.width = 20
         else
-            local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Disabled.", sprite='utility/remove'}
+            local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Default spawn can't be removed.", sprite='utility/remove'}
             remove_warp_flow.style.height = 20
             remove_warp_flow.style.width = 20
         end
@@ -292,7 +301,7 @@ local function draw_main_frame(player, left, p)
         Tabs.apply_button_style(button)
     else
         local button =
-            button_flow.add {type = 'button', name = create_warp_button_name, caption = 'Create Warp.', enabled = false, tooltip = 'Sorry, you need to be trusted to create warps..'}
+            button_flow.add {type = 'button', name = create_warp_button_name, caption = 'Create Warp.', enabled = false, tooltip = 'You have not grown accustomed to this technology yet. Ask and admin to /trust ' .. player.name .. '.'}
         Tabs.apply_button_style(button)
     end
 end
@@ -356,7 +365,7 @@ local function on_player_joined_game(event)
         removing=false,
         left=player.gui.left,
         frame=nil,
-        spam = 200
+        spam = 100
         }
     end
     Public.create_warp_button(player)
@@ -436,7 +445,7 @@ Gui.on_click(
         Public.refresh_gui()
         local position = player.position
         if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
-        player.print('Destination is source warp: ' .. p.frame, Color.fail)
+            player.print('Destination is source warp: ' .. p.frame, Color.fail)
         return end
         if player.vehicle then player.vehicle.set_driver(nil) end
         if player.vehicle then player.vehicle.set_passenger(nil) end
