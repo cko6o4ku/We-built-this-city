@@ -33,12 +33,10 @@ local remove_warp_button_name = Gui.uid_name()
 local close_main_frame_name = Gui.uid_name()
 
 local warp_table = {}
-local misc_table = {}
 local player_table = {}
 
 Global.register({
     warp_table=warp_table,
-    misc_table=misc_table,
     player_table=player_table
 },function(t)
     warp_table = t.warp_table
@@ -103,6 +101,24 @@ function Public.make_warp_point(position,surface,force,name)
     warp_table[name] = {tag=tag,position=tag.position,surface=surface,old_tile=old_tile}
 end
 
+function Public.make_tag(name, pos)
+    local get_surface = Surface.get_surface_name()
+    local surface = game.surfaces[get_surface]
+    local data = {}
+    if data.forces then data.forces = nil end
+    for k, v in pairs (game.forces) do
+        data.forces = v
+    end
+    local v = data.forces.add_chart_tag(surface,{
+         position=pos,
+         text='Warp: '..name,
+         icon={type='item',name=warp_item}
+     })
+    warp_table[name] = {tag=v,position=pos,surface=surface}
+    return data
+end
+
+
 function Public.create_warp_button(player)
     local button = mod(player).main_button_name
     if button then
@@ -124,36 +140,86 @@ function Public.create_warp_button(player)
     b.style.bottom_padding = 2
 end
 
-local function draw_main_frame(player, left)
+local function draw_create_warp(parent, player, p)
+    local position = player.position
+    local posx = position.x
+    local posy = position.y
+    local dist2 = 100^2
+    for name,warp in pairs(warp_table) do
+        local pos = warp.position
+        if (posx-pos.x)^2+(posy-pos.y)^2 < dist2 then
+            player.print('Too close to another warp: ' .. name , Color.fail)
+            p.creating = false
+            return
+        end
+    end
+
+    local child_frame = parent.add{
+    type = "frame",
+    name = "wp_name",
+    direction = "vertical"
+    }
+
+    local x = child_frame.add{
+    type = "table",
+    name = "wp_table",
+    column_count = 4
+    }
+
+    local textfield = x.add{
+    type = "textfield",
+    name = "wp_text",
+    text = "Warp name:"
+    }
+    textfield.style.minimal_width = 30
+    textfield.style.height = 24
+    textfield.style.horizontally_stretchable = true
+
+    local _flow = x.add{
+    type = 'flow'
+    }
+
+    local btn = _flow.add{
+    type = "sprite-button",
+    name = create_warp_func_name,
+    tooltip = "Creates a new warp point.",
+    sprite='utility/downloaded'
+    }
+    btn.style.height = 20
+    btn.style.width = 20
+end
+
+local function draw_remove_warp(parent, player)
     local trusted = Session.get_trusted_table()
-    --local mod_gui = player_table[player.index].mod_gui
+    if player.admin or trusted[player.name] then
+        local btn = parent.add{type = "sprite-button", name = confirmed_button_name, tooltip = "Do you really want to remove: " .. parent.name, sprite='utility/confirm_slot'}
+        btn.style.height = 20
+        btn.style.width = 20
+    else
+        local btn = parent.add{type = "sprite-button", name = confirmed_button_name, enabled = "false", tooltip = "Sorry, you need to be trusted to remove warps..", sprite='utility/set_bar_slot'}
+        btn.style.height = 20
+        btn.style.width = 20
+    end
+end
 
-    local main_frame = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
-    main_frame.style.padding = 5
-    main_frame.style.horizontally_stretchable = true
+local function draw_main_frame(player, left, p)
+    local trusted = Session.get_trusted_table()
+    local frame = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
+    frame.style.padding = 5
+    frame.style.horizontally_stretchable = true
 
-    local tbl = main_frame.add{type = "table", column_count = 10}
-    local l = tbl.add{type = "label"}
-    l.style.font_color = Color.success
-    l.style.font = "default-listbox"
+    local tbl = frame.add{type = "table", column_count = 10}
 
     local _flows1 = tbl.add{type = 'flow'}
-    _flows1.style.minimal_width = 150
+    --_flows1.style.minimal_width = 150
     _flows1.style.horizontally_stretchable = true
 
-    local _flows2 = tbl.add{type = 'flow'}
-
-    local ts = main_frame.add{type = "table", column_count = 1}
-
-    local f = ts.add{type = "frame", column_count = 2}
-
-    local t = f.add{type = "table", column_count = 10}
-
-    local warp_list = t.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'auto', horizontal_scroll_policy = 'never'}
+    local warp_list = _flows1.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'auto', horizontal_scroll_policy = 'never'}
     warp_list.vertical_scroll_policy = 'auto'
     warp_list.style.maximal_height = 200
 
     local table = warp_list.add{type = 'table', column_count = 3}
+
     for name,warp in pairs(warp_table) do
         if not warp.tag or not warp.tag then
             for k, v in pairs (game.forces) do
@@ -164,48 +230,29 @@ local function draw_main_frame(player, left)
                 })
             end
         end
-        local lb = table.add{type='label', caption=name, style='caption_label'}
+        local warps_table_name = table.add{type='label', caption=name, style='caption_label'}
+        --lb.style.minimal_width = 120
 
         local _flows3 = table.add{type='flow'}
-        _flows3.style.minimal_width = 105
+        _flows3.style.minimal_width = 125
 
-        local _flows = table.add{type='flow', name=name}
-        local btn = _flows.add{type = "sprite-button", name = go_to_warp_name, tooltip = "Goto!", sprite='utility/export_slot'}
-        btn.style.height = 20
-        btn.style.width = 20
-        if _flows.name ~= "Spawn" then
-            btn = _flows.add{type = "sprite-button", name = remove_warp_button_name, tooltip = "Remove!", sprite='utility/remove'}
-            btn.style.height = 20
-            btn.style.width = 20
+        local bottom_warp_flow = table.add{type='flow', name = name}
+
+        local go_to_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = go_to_warp_name, sprite='utility/export_slot', tooltip = "Warps you over to: ".. bottom_warp_flow.name }
+        go_to_warp_flow.style.height = 20
+        go_to_warp_flow.style.width = 20
+        if bottom_warp_flow.name ~= "Spawn" then
+            local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, tooltip = "Removes warp: " .. bottom_warp_flow.name, sprite='utility/remove'}
+            remove_warp_flow.style.height = 20
+            remove_warp_flow.style.width = 20
         else
-            local btn = _flows.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Disabled.", sprite='utility/remove'}
-            btn.style.height = 20
-            btn.style.width = 20
+            local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Disabled.", sprite='utility/remove'}
+            remove_warp_flow.style.height = 20
+            remove_warp_flow.style.width = 20
         end
-        if player_table[player.index].removing == true then
-            if _flows.name == misc_table["frame"] then
-                if player.admin or trusted[player.name] then
-                    local btn = _flows.add{
-                    type = "sprite-button",
-                    name = confirmed_button_name,
-                    tooltip = "Are you sure?",
-                    sprite='utility/confirm_slot'
-                    }
-                    btn.style.height = 20
-                    btn.style.width = 20
-                else
-                    local btn = _flows.add{
-                    type = "sprite-button",
-                    name = confirmed_button_name,
-                    enabled = "false",
-                    tooltip = "Sorry, you need to be trusted to remove warps..",
-                    sprite='utility/set_bar_slot'
-                    }
-                    btn.style.height = 20
-                    btn.style.width = 20
-                end
-                player_table[player.index].removing = false
-            end
+        if p.creating == true then
+            draw_create_warp(frame, player, p)
+            p.creating = false
         end
 
         if p.removing == true then
@@ -216,7 +263,7 @@ local function draw_main_frame(player, left)
         end
 
     end
-    local bottom_flow = main_frame.add {type = 'flow', direction = 'horizontal'}
+    local bottom_flow = frame.add {type = 'flow', direction = 'horizontal'}
 
     local left_flow = bottom_flow.add {type = 'flow'}
     left_flow.style.horizontal_align = 'left'
@@ -241,42 +288,53 @@ local function draw_main_frame(player, left)
 end
 
 function Public.toggle(player)
-    local left = player_table[player.index].left
+    local p = player_table[player.index]
+    local left = p.left
     local main_frame = left[main_frame_name]
 
     if main_frame then
-        Public.close_gui_player(player)
+        Public.close_gui_player(main_frame)
     else
         Tabs.panel_clear_left_gui(player)
-        draw_main_frame(player, left)
+        draw_main_frame(player, left, p)
     end
 end
 
 function Public.refresh_gui_player(player)
-    local left = player_table[player.index].left
+    local p = player_table[player.index]
+    local left = p.left
     local main_frame = left[main_frame_name]
     if main_frame then
-        Public.close_gui_player(player)
-        draw_main_frame(player, left)
+        Public.close_gui_player(main_frame)
+    end
+    draw_main_frame(player, left, p)
+end
+
+function Public.close_gui_player(frame)
+    if frame then
+        frame.destroy()
     end
 end
 
-function Public.close_gui_player(player)
-    local left = player_table[player.index].left
-    local menu_frame = left[main_frame_name]
-    if (menu_frame) then
-        menu_frame.destroy()
+function Public.clear_player_table(player)
+    local p = player_table[player.index]
+    if p.removing == true then
+        p.removing = false
+    end
+    if p.creating == true then
+        p.creating = false
     end
 end
 
 function Public.refresh_gui()
     for _, player in pairs(game.connected_players) do
-        local left = player_table[player.index].left
-        local menu_frame = left[main_frame_name]
-        if (menu_frame) then
-            Public.close_gui_player(player)
-            draw_main_frame(player, left)
+        local p = player_table[player.index]
+        local left = p.left
+        local main_frame = left[main_frame_name]
+        if main_frame then
+            Public.close_gui_player(main_frame)
         end
+        draw_main_frame(player, left, p)
     end
 end
 
@@ -308,6 +366,10 @@ Gui.on_click(
             player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
             return
         end
+        Public.toggle(player)
+        Public.clear_player_table(player)
+    end
+)
 
 Gui.on_click(
     close_main_frame_name,
@@ -328,6 +390,8 @@ Gui.on_click(
             p.removing = true
             Public.refresh_gui_player(player)
         end
+    end
+)
 
 Gui.on_click(
     confirmed_button_name,
@@ -391,7 +455,7 @@ Gui.on_click(
             local position = player.position
             if warp_table[new] then player.print("Warp name already exists!", Color.fail) return end
             Public.make_warp_point(position,player.surface,player.force,new)
-            player_table[player.index].spam = game.tick + 900
+            p.spam = game.tick + 900
             game.print(player.name .. " created warp: " .. new, Color.success)
         end
         Public.refresh_gui()
