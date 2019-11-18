@@ -200,88 +200,90 @@ local function draw_gui(player)
 	if not player.character then return end
 
 	Tabs.panel_clear_left_gui(player)
-	
+
 	local frame = left.add{type = "frame", name = "rpg", direction = "vertical", caption = "RPG", style = "changelog_subheader_frame"}
-	frame.style.maximal_width = 425
-	frame.style.minimal_width = 425
-	frame.style.margin = 6
 
-	local subhead = frame.add{type = "frame", name = "sub_header", style = "changelog_subheader_frame"}
+	local scroll_pane = frame.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'always', horizontal_scroll_policy = 'never'}
+	scroll_pane.style.maximal_height = 600
+	scroll_pane.style.minimal_width = 425
+	scroll_pane.style.maximal_width = 425
+	scroll_pane.style.minimal_height = 600
+	scroll_pane.style.right_padding = 0
 
-	
-	add_separator(frame, 400)
-	
-	local t = frame.add({type = "table", column_count = 2})
+	local t = scroll_pane.add({type = "table", column_count = 2})
+	t.style.vertical_spacing = 0
 	local e = add_gui_stat(t, player.name, 200)
 	e.style.font_color = player.chat_color
 	e.style.font = "default-large-bold"
 	local e = add_gui_stat(t, get_class(player), 200)
 	e.style.font = "default-large-bold"
-	
-	add_separator(frame, 400)
-	
-	local t = frame.add({type = "table", column_count = 4})
+
+	add_separator(scroll_pane, 400)
+
+	local t = scroll_pane.add({type = "table", column_count = 4})
 	t.style.cell_padding = 1
-	
+	t.style.vertical_spacing = 0
+
 	add_gui_description(t, "LEVEL", 80)
 	add_gui_stat(t, rpg_t[player.index].level, 80)
 
 	add_gui_description(t, "EXPERIENCE", 100)
 	local e = add_gui_stat(t, math.floor(rpg_t[player.index].xp), 125)
 	e.tooltip = gain_info_tooltip
-	
+
 	add_gui_description(t, " ", 75)
 	add_gui_description(t, " ", 75)
-	
+
 	add_gui_description(t, "NEXT LEVEL", 100)
 	local e = add_gui_stat(t, experience_levels[rpg_t[player.index].level + 1], 125)
 	e.tooltip = gain_info_tooltip
-	
-	add_separator(frame, 400)
-	
-	local t = frame.add({type = "table", column_count = 2})
+
+	add_separator(scroll_pane, 400)
+
+	local t = scroll_pane.add({type = "table", column_count = 2})
+	t.style.vertical_spacing = 0
 	local tt = t.add({type = "table", column_count = 3})
 	tt.style.cell_padding = 1
 	local w1 = 85
 	local w2 = 63
-	
+
 	local tip = "Increases inventory slots and mining speed.\nIncreases melee damage."
 	local e = add_gui_description(tt, "STRENGTH", w1)
 	e.tooltip = tip
 	local e = add_gui_stat(tt, rpg_t[player.index].strength, w2)
 	e.tooltip = tip
 	add_gui_increase_stat(tt, "strength", player)
-	
+
 	local tip = "Increases reach distance."
 	local e = add_gui_description(tt, "MAGIC", w1)
 	e.tooltip = tip
 	local e = add_gui_stat(tt, rpg_t[player.index].magic, w2)
 	e.tooltip = tip
 	add_gui_increase_stat(tt, "magic", player)
-	
+
 	local tip = "Increases running and crafting speed."
 	local e = add_gui_description(tt, "DEXTERITY", w1)
 	e.tooltip = tip
 	local e = add_gui_stat(tt, rpg_t[player.index].dexterity, w2)
 	e.tooltip = tip
 	add_gui_increase_stat(tt, "dexterity", player)
-	
+
 	local tip = "Increases health.\nIncreases melee life on-hit."
 	local e = add_gui_description(tt, "VITALITY", w1)
 	e.tooltip = tip
 	local e = add_gui_stat(tt, rpg_t[player.index].vitality, w2)
 	e.tooltip = tip
 	add_gui_increase_stat(tt, "vitality", player)
-	
+
 	add_gui_description(tt, "POINTS TO\nDISTRIBUTE", w1)
 	local e = add_gui_stat(tt, rpg_t[player.index].points_to_distribute, w2)
 	e.style.font_color = {200, 0, 0}	
 	add_gui_description(tt, " ", w2)
-	
+
 	add_gui_description(tt, " ", w1)
 	add_gui_description(tt, " ", w2)
 	add_gui_description(tt, " ", w2)
-	
+
 	add_gui_description(tt, "LIFE", w1)
 	add_gui_stat(tt, math.floor(player.character.health), w2)
 	add_gui_stat(tt, math.floor(player.character.prototype.max_health + player.character_health_bonus + player.force.character_health_bonus), w2)
@@ -298,42 +300,41 @@ local function draw_gui(player)
 	add_gui_description(tt, "SHIELD", w1)
 	add_gui_stat(tt, shield, w2)
 	add_gui_stat(tt, shield_max, w2)
-	
-	
+
 	local tt = t.add({type = "table", column_count = 3})
 	tt.style.cell_padding = 1
 	local w0 = 2
 	local w1 = 80
 	local w2 = 80
-	
+
 	add_gui_description(tt, " ", w0)
 	add_gui_description(tt, "MINING\nSPEED", w1)
 	local value = (player.force.manual_mining_speed_modifier + player.character_mining_speed_modifier + 1) * 100 .. "%"
 	add_gui_stat(tt, value, w2)
-	
+
 	add_gui_description(tt, " ", w0)
 	add_gui_description(tt, "SLOT\nBONUS", w1)
 	local value = "+ " .. player.force.character_inventory_slots_bonus + player.character_inventory_slots_bonus
 	add_gui_stat(tt, value, w2)
-	
+
 	add_gui_description(tt, " ", w0)
 	add_gui_description(tt, "MELEE\nDAMAGE", w1)
 	local value = 100 * (1 + get_melee_modifier(player)) .. "%"
 	local e = add_gui_stat(tt, value, w2)
 	e.tooltip = "Life on-hit: " .. get_life_on_hit(player) .. "\nOne punch chance: " .. get_one_punch_chance(player) .. "%"
-	
+
 	local e = add_gui_description(tt, "", w0)
 	e.style.maximal_height = 10
 	local e = add_gui_description(tt, "", w0)
 	e.style.maximal_height = 10
 	local e = add_gui_description(tt, "", w0)
 	e.style.maximal_height = 10
-	
+
 	local value = "+ " .. (player.force.character_reach_distance_bonus + player.character_reach_distance_bonus)
 	local tooltip = ""
 	tooltip = tooltip .. "Reach distance bonus: " .. player.character_reach_distance_bonus
 	tooltip = tooltip .. "\nBuild distance bonus: " .. player.character_build_distance_bonus
-	tooltip = tooltip .. "\nItem drop distance bonus: " .. player.character_item_drop_distance_bonus	
+	tooltip = tooltip .. "\nItem drop distance bonus: " .. player.character_item_drop_distance_bonus
 	tooltip = tooltip .. "\nLoot pickup distance bonus: " .. player.character_loot_pickup_distance_bonus
 	tooltip = tooltip .. "\nItem pickup distance bonus: " .. player.character_item_pickup_distance_bonus
 	tooltip = tooltip .. "\nResource reach distance bonus: " .. player.character_resource_reach_distance_bonus
@@ -342,14 +343,14 @@ local function draw_gui(player)
 	e.tooltip = tooltip
 	local e = add_gui_stat(tt, value, w2)
 	e.tooltip = tooltip
-	
+
 	local e = add_gui_description(tt, "", w0)
 	e.style.maximal_height = 10
 	local e = add_gui_description(tt, "", w0)
 	e.style.maximal_height = 10
 	local e = add_gui_description(tt, "", w0)
 	e.style.maximal_height = 10
-	
+
 	add_gui_description(tt, " ", w0)
 	add_gui_description(tt, "CRAFTING\nSPEED", w1)
 	local value = (player.force.manual_crafting_speed_modifier + player.character_crafting_speed_modifier + 1) * 100 .. "%"
@@ -372,15 +373,15 @@ local function draw_gui(player)
 	local value = "+ " .. (player.force.character_health_bonus + player.character_health_bonus)
 	add_gui_stat(tt, value, w2)
 	
-	add_separator(frame, 400)
-	local t = frame.add({type = "table", column_count = 14})
+	add_separator(scroll_pane, 400)
+	local t = scroll_pane.add({type = "table", column_count = 14})
 	for i = 1, 14, 1 do
 		local e = t.add({type = "sprite", sprite = rpg_frame_icons[i]})
 		e.style.maximal_width = 24
 		e.style.maximal_height = 24
 		e.style.padding = 0
 	end
-	add_separator(frame, 400)
+	add_separator(scroll_pane, 400)
 	
 	rpg_t[player.index].gui_refresh_delay = game.tick + 60
 	update_char_button(player)
