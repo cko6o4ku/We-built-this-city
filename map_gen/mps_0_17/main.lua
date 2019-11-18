@@ -208,13 +208,14 @@ end)
 -- On BUILD entity. Don't forget on_robot_built_entity too!
 ----------------------------------------
 Event.add(defines.events.on_built_entity, function(event)
+    local rg = Regrowth.get_table()
     if global.enable_autofill then
         Utils.Autofill(event)
     end
 
     if global.enable_regrowth then
         local s_index = event.created_entity.surface.index
-        if (global.rg[s_index] == nil) then return end
+        if (rg[s_index] == nil) then return end
 
         remote.call ("oarc_regrowth",
                     "area_offlimits_tilepos",
@@ -236,9 +237,10 @@ end)
 -- Specifically FARL.
 ----------------------------------------
 Event.add(defines.events.script_raised_built, function(event)
+    local rg = Regrowth.get_table()
     if global.enable_regrowth then
         local s_index = event.entity.surface.index
-        if (global.rg[s_index] == nil) then return end
+        if (rg[s_index] == nil) then return end
 
         remote.call ("oarc_regrowth",
                     "area_offlimits_tilepos",
@@ -312,9 +314,10 @@ end)
 --
 ----------------------------------------
 Event.add(defines.events.on_robot_built_entity, function (event)
+    local rg = Regrowth.get_table()
     if global.enable_regrowth then
         local s_index = event.created_entity.surface.index
-        if (global.rg[s_index] == nil) then return end
+        if (rg[s_index] == nil) then return end
 
         remote.call ("oarc_regrowth",
                     "area_offlimits_tilepos",
@@ -328,9 +331,10 @@ Event.add(defines.events.on_robot_built_entity, function (event)
 end)
 
 Event.add(defines.events.on_player_built_tile, function (event)
+    local rg = Regrowth.get_table()
     if global.enable_regrowth then
         local s_index = event.surface_index
-        if (global.rg[s_index] == nil) then return end
+        if (rg[s_index] == nil) then return end
 
         for k,v in pairs(event.tiles) do
             remote.call ("oarc_regrowth",

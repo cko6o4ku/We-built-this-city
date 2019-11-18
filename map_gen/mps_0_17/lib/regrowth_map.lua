@@ -34,6 +34,10 @@ Global.register(
 )
 local Public = {}
 
+function Public.get_table()
+    return regrowth
+end
+
 function Public.TriggerCleanup()
     regrowth.force_removal_flag = game.tick
 end
