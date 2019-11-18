@@ -1717,6 +1717,7 @@ function Public.BuddySpawnOptsGuiClick(event)
         (elemName == "buddy_spawn_request_far")) then
 
         local buddySpawnGui = player.gui.screen.buddy_spawn_opts.spawn_buddy_flow
+        Score.init_player_table(player)
 
         local dropDownIndex = buddySpawnGui.waiting_buddies_dropdown.selected_index
         if ((dropDownIndex > 0) and (dropDownIndex <= #buddySpawnGui.waiting_buddies_dropdown.items)) then
@@ -1990,7 +1991,7 @@ function Public.BuddySpawnRequestMenuClick(event)
         --game.permissions.get_group("Default").add_player(player)
         --game.permissions.get_group("Default").add_player(requesterName)
         Score.init_player_table(player)
-        Score.init_player_table(requesterName)
+        --Score.init_player_table(requesterName)
 
     end
 

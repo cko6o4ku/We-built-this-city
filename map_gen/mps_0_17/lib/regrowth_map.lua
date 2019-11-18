@@ -29,7 +29,7 @@ local regrowth = {
 Global.register(
     {regrowth=regrowth},
     function(t)
-        regrowth = t
+        regrowth = t.regrowth
     end
 )
 local Public = {}

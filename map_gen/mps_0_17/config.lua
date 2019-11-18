@@ -127,8 +127,8 @@ global.near_max_dist = 50
 
 -- Far Distance in chunks
 -- When a player selects "far" spawn, they will be at least this distance away.
-global.far_min_dist = 200
-global.far_max_dist = 300
+global.far_min_dist = 150
+global.far_max_dist = 250
 
 ---------------------------------------
 -- Vanilla spawn point options
