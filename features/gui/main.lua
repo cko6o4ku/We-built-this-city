@@ -244,7 +244,7 @@ function Public.panel_refresh_active_tab(player)
 end
 
 local function top_button(player)
-	if mod(player)["panel_top_button"] then return end
+	if mod(player)[main_button_name] then return end
 	local b = mod(player).add({type = "sprite-button", name = main_button_name, sprite = "utility/expand_dots", style=m_gui.button_style, tooltip = "The panel of all the goodies!"})
 	b.style.padding=2
 	b.style.width=20
