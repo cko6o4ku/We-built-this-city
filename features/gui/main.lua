@@ -295,6 +295,7 @@ local function main_frame(player)
 				f1.style.bottom_margin = 4
 				f1.style.padding = 5
 				f1.style.horizontally_stretchable = true
+				f1.style.vertically_stretchable = true
 				t.add_tab(tab, f1)
 			end
 		else
@@ -309,6 +310,7 @@ local function main_frame(player)
 			f2.style.bottom_margin = 4
 			f2.style.padding = 5
 			f2.style.horizontally_stretchable = true
+			f2.style.vertically_stretchable = true
 			t.add_tab(tab, f2)
 		end
 	end

@@ -312,6 +312,7 @@ function Public.toggle(player)
         Public.close_gui_player(main_frame)
         Tabs.panel_clear_left_gui(player)
     else
+        Tabs.panel_clear_left_gui(player)
         draw_main_frame(player, left)
     end
 end

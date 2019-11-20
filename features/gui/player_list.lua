@@ -235,7 +235,7 @@ local function player_list_show(player, frame, sort_by)
 
 	-- List management
 	local player_list_panel_table = frame.add { type = "scroll-pane", name = "scroll_pane", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto"}
-	player_list_panel_table.style.maximal_height = 530
+	player_list_panel_table.style.maximal_height = 400
 
 	player_list_panel_table = player_list_panel_table.add { type = "table", name = "player_list_panel_table", column_count = 5 }
 	
