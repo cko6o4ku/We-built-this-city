@@ -1031,6 +1031,7 @@ end
 function Public.Autofill(event)
     local player = game.players[event.player_index]
     local eventEntity = event.created_entity
+    if not (eventEntity and eventEntity.valid) then return end
 
     -- Make sure player isn't dead?
     if (player.character == nil) then return end

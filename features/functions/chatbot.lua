@@ -1,4 +1,5 @@
-local event = require 'utils.event'
+local Event = require 'utils.event'
+local Server = require 'utils.server'
 local session = require 'utils.session_data'
 local Color = require 'utils.color_presets'
 local font = "default-game"
@@ -9,19 +10,21 @@ local brain = {
 }
 
 local links = {
-	["admin"] = brain[2],
-	["administrator"] = brain[2],
-	["discord"] = brain[1],
-	["greifer"] = brain[2],
-	["grief"] = brain[2],
-	["griefer"] = brain[2],
-	["griefing"] = brain[2],
-	["mod"] = brain[2],
-	["moderator"] = brain[2],
-	["stealing"] = brain[2],
-	["stole"] = brain[2],
-	["troll"] = brain[2],
-	["trolling"] = brain[2],
+    ["admin"] = brain[2],
+    ["administrator"] = brain[2],
+    ["discord"] = brain[1],
+    ["greifer"] = brain[2],
+    ["grief"] = brain[2],
+    ["griefer"] = brain[2],
+    ["griefing"] = brain[2],
+    ["mod"] = brain[2],
+    ["ban"] = brain[2],
+    ["mods"] = brain[2],
+    ["moderator"] = brain[2],
+    ["stealing"] = brain[2],
+    ["stole"] = brain[2],
+    ["troll"] = brain[2],
+    ["trolling"] = brain[2],
 }
 
 local function on_player_created(event)
@@ -34,15 +37,15 @@ commands.add_command(
     'Promotes a player to trusted!',
     function(cmd)
         local trusted = session.get_trusted_table()
-        local server = 'server'
+        local server = 'Server'
         local player = game.player
         local p
 
         if player then
             if player ~= nil then
                 p = player.print
-                if not player.admin then
-                    p("You're not admin!", {r = 1, g = 0.5, b = 0.1})
+                if not (player.admin or trusted[player.name]) then
+                    p("You're not admin nor trusted!", Color.fail)
                     return
                 end
             else
@@ -52,12 +55,14 @@ commands.add_command(
             if cmd.parameter == nil then return end
             local target_player = game.players[cmd.parameter]
             if target_player then
+                if target_player.name == player.name then game.print("You can't trust yourself ;)", Color.info) return end
                 if trusted[target_player.name] == true then game.print(target_player.name .. " is already trusted!") return end
                 trusted[target_player.name] = true
-                game.print(target_player.name .. " is now a trusted player.", {r=0.22, g=0.99, b=0.99})
+                game.print(target_player.name .. " is now a trusted player.", Color.success)
                 for _, a in pairs(game.connected_players) do
                     if a.admin == true and a.name ~= player.name then
-                        a.print("[ADMIN]: " .. player.name .. " trusted " .. target_player.name, {r = 1, g = 0.5, b = 0.1})
+                        a.print("[INFO]: " .. player.name .. " trusted " .. target_player.name, Color.info)
+                        Server.to_admin_embed(table.concat{'[Info] ', player.name, ' has trusted ', target_player.name, '.'})
                     end
                 end
             end
@@ -65,9 +70,10 @@ commands.add_command(
             if cmd.parameter == nil then return end
             local target_player = game.players[cmd.parameter]
             if target_player then
-                if trusted[target_player.name] == true then game.print(target_player.name .. " is already trusted!") return end
+                if trusted[target_player.name] == true then log(target_player.name .. " is already trusted!") return end
                 trusted[target_player.name] = true
-                game.print(target_player.name .. " is now a trusted player.", {r=0.22, g=0.99, b=0.99})
+                game.print(target_player.name .. " is now a trusted player.", Color.success)
+                Server.to_admin_embed(table.concat{'[Info] ', server, ' has trusted ', target_player.name, '.'})
             end
         end
     end
@@ -85,8 +91,8 @@ commands.add_command(
         if player then
             if player ~= nil then
                 p = player.print
-                if not player.admin then
-                    p("You're not admin!", {r = 1, g = 0.5, b = 0.1})
+                if not (player.admin or trusted[player.name]) then
+                    p("You're not admin nor trusted!", Color.fail)
                     return
                 end
             else
@@ -95,61 +101,56 @@ commands.add_command(
 
             if cmd.parameter == nil then return end
             local target_player = game.players[cmd.parameter]
-            if target_player then 
+            if target_player then
+                if target_player.name == player.name then game.print("You can't untrust yourself ;)", Color.info) return end
                 if trusted[target_player.name] == false then game.print(target_player.name .. " is already untrusted!") return end
                 trusted[target_player.name] = false
-                game.print(target_player.name .. " is now untrusted.", {r=0.22, g=0.99, b=0.99})
+                game.print(target_player.name .. " is now untrusted.", Color.success)
                 for _, a in pairs(game.connected_players) do
                     if a.admin == true and a.name ~= player.name then
-                        a.print("[ADMIN]: " .. player.name .. " untrusted " .. target_player.name, {r = 1, g = 0.5, b = 0.1})
+                        a.print("[ADMIN]: " .. player.name .. " untrusted " .. target_player.name, Color.info)
+                        Server.to_admin_embed(table.concat{'[Info] ', player.name, ' has untrusted ', target_player.name, '.'})
                     end
                 end
             end
         else
             if cmd.parameter == nil then return end
             local target_player = game.players[cmd.parameter]
-            if target_player then 
-                if trusted[target_player.name] == false then game.print(target_player.name .. " is already untrusted!") return end
+            if target_player then
+                if trusted[target_player.name] == false then log(target_player.name .. " is already untrusted!") return end
                 trusted[target_player.name] = false
-                game.print(target_player.name .. " is now untrusted.", {r=0.22, g=0.99, b=0.99})
+                game.print(target_player.name .. " is now untrusted.", Color.success)
+                Server.to_admin_embed(table.concat{'[Info] ', server,  ' has untrusted ', target_player.name, '.'})
             end
         end
     end
 )
 
 local function process_bot_answers(event)
-    local player = game.players[event.player_index]
-    if player.admin == true then return end 
     local message = event.message
     message = string.lower(message)
-    for word in string.gmatch(message, "%g+") do
-        if links[word] then
-            local player = game.players[event.player_index]
-            for _, bot_answer in pairs(links[word]) do
-                player.print("[font=" .. font .. "]" .. bot_answer .. "[/font]", Color.info)
-            end
-            return
+    if links[message] then
+        for _, bot_answer in pairs(links[message]) do
+            game.print("[font=" .. font .. "]" .. bot_answer .. "[/font]", Color.info)
         end
+        return
     end
 end
 
 local function on_console_chat(event)
     if not event.player_index then return end
-    process_bot_answers(event)  
+    process_bot_answers(event)
 end
 
 --share vision of silent-commands with other admins
-local function on_console_command(event)        
-    if event.command ~= "silent-command" then return end
+local function on_console_command(event)
+    local cmd = event.command
+    if not (cmd == "silent-command" or cmd == "sc") then return end
     if not event.player_index then return end
-    local player = game.players[event.player_index] 
-    for _, p in pairs(game.connected_players) do
-        if p.admin == true and p.name ~= player.name then
-            p.print(player.name .. " did a silent-command: " .. event.parameters, {r=0.22, g=0.99, b=0.99})
-        end
-    end     
+    local player = game.players[event.player_index]
+    Server.to_admin_embed(table.concat{'[Info] ', player.name, ' ran command: ', event.parameters, ' at game.tick: ', game.tick, '.'})
 end
 
-event.add(defines.events.on_player_created, on_player_created)
-event.add(defines.events.on_console_chat, on_console_chat)
-event.add(defines.events.on_console_command, on_console_command)
+Event.add(defines.events.on_player_created, on_player_created)
+Event.add(defines.events.on_console_chat, on_console_chat)
+Event.add(defines.events.on_console_command, on_console_command)

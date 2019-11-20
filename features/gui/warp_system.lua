@@ -67,7 +67,6 @@ function Public.remove_warp_point(name)
     if warp.old_tile then surface.set_tiles(tiles) end
     if warp.tag then warp.tag.destroy() end
     warp_table[name] = nil
-    Public.refresh_gui()
 end
 
 function Public.make_warp_point(player, position,surface,force,name)
@@ -102,7 +101,6 @@ function Public.make_warp_point(player, position,surface,force,name)
         icon={type='item',name=warp_item}
     })
     warp_table[name] = {tag=tag,position=tag.position,surface=surface,old_tile=old_tile, last_edited=last_edited}
-    Public.refresh_gui()
 end
 
 function Public.make_tag(name, pos)
@@ -208,7 +206,8 @@ local function draw_remove_warp(parent, player)
         btn.focus()
 end
 
-local function draw_main_frame(player, left, p)
+local function draw_main_frame(player, left)
+    local p = player_table[player.index]
     local trusted = Session.get_trusted_table()
     local frame = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
     --frame.style.padding = 5
@@ -305,30 +304,39 @@ local function draw_main_frame(player, left, p)
 end
 
 function Public.toggle(player)
-    local p = player_table[player.index]
-    local main_frame = player_table[player.index].left[main_frame_name]
+    local gui = player.gui
+    local left = gui.left
+    local main_frame = left[main_frame_name]
 
     if main_frame then
         Public.close_gui_player(main_frame)
-    else
         Tabs.panel_clear_left_gui(player)
-        draw_main_frame(player, p.left, p)
+    else
+        draw_main_frame(player, left)
     end
 end
 
 function Public.refresh_gui_player(player)
-    local p = player_table[player.index]
-    local main_frame = player_table[player.index].left[main_frame_name]
+    local gui = player.gui
+    local left = gui.left
+    local main_frame = left[main_frame_name]
+
     if main_frame then
         Public.close_gui_player(main_frame)
+        draw_main_frame(player, left)
     end
-    draw_main_frame(player, p.left, p)
+
 end
 
 function Public.close_gui_player(frame)
+    if not frame then
+        return
+    end
+
     if frame then
         frame.destroy()
     end
+
 end
 
 function Public.clear_player_table(player)
@@ -339,47 +347,71 @@ function Public.clear_player_table(player)
     if p.creating == true then
         p.creating = false
     end
+
 end
 
 function Public.refresh_gui()
     for _, player in pairs(game.connected_players) do
-    local p = player_table[player.index]
-    local main_frame = player_table[player.index].left[main_frame_name]
+        local gui = player.gui
+        local left = gui.left
+
+        if not player or not player.valid then
+            return
+        end
+
+        local main_frame = left[main_frame_name]
+
         if main_frame then
             Public.close_gui_player(main_frame)
+            draw_main_frame(player, left)
         end
-        draw_main_frame(player, p.left, p)
+
     end
+
 end
 
 local function on_player_joined_game(event)
-    local player = game.players[event.player_index]
+    local player = game.get_player(event.player_index)
+
     if not player_table[player.index] then
         player_table[player.index] = {
         creating=false,
         removing=false,
-        left=player.gui.left,
         frame=nil,
         spam = 100
         }
     end
+
     Public.create_warp_button(player)
+
 end
 
 local function on_player_died(event)
-    local p = player_table[event.player_index]
-    Public.close_gui_player(p.left[main_frame_name])
+    local player = game.get_player(event.player_index)
+
+    if not player or not player.valid then
+        return
+    end
+
+    local p = player.gui.left[main_frame_name]
+
+    if not p then
+        return
+    end
+
+    Public.close_gui_player(p)
+
 end
 
 Gui.on_click(
     main_button_name,
     function(event)
         local player = game.get_player(event.player_index)
-        local p = player_table[player.index]
-        if p.spam > game.tick then
-            player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
+
+        if not player or not player.valid then
             return
         end
+
         Public.toggle(player)
         Public.clear_player_table(player)
     end
@@ -389,6 +421,11 @@ Gui.on_click(
     close_main_frame_name,
     function(event)
         local player = game.get_player(event.player_index)
+
+        if not player or not player.valid then
+            return
+        end
+
         Public.toggle(player)
         Public.clear_player_table(player)
     end
@@ -398,7 +435,17 @@ Gui.on_click(
     remove_warp_button_name,
     function(event)
         local player = game.get_player(event.player_index)
+
+        if not player or not player.valid then
+            return
+        end
+
         local p = player_table[player.index]
+
+        if not p then
+            return
+        end
+
         p.frame = event.element.parent.name
         if not p.removing == true then
             p.removing = true
@@ -411,6 +458,11 @@ Gui.on_click(
     cancel_button_name,
     function(event)
         local player = game.get_player(event.player_index)
+
+        if not player or not player.valid then
+            return
+        end
+
         Public.refresh_gui_player(player)
         Public.clear_player_table(player)
     end
@@ -420,11 +472,22 @@ Gui.on_click(
     confirmed_button_name,
     function(event)
         local player = game.get_player(event.player_index)
+
+        if not player or not player.valid then
+            return
+        end
+
         local p = player_table[player.index]
+
+        if not p then
+            return
+        end
+
         p.frame = event.element.parent.name
         Public.remove_warp_point(p.frame)
         game.print(player.name .. " removed warp: " .. p.frame, Color.warning)
         Public.clear_player_table(player)
+        Public.refresh_gui()
     end
 )
 
@@ -432,22 +495,47 @@ Gui.on_click(
     go_to_warp_name,
     function(event)
         local player = game.get_player(event.player_index)
+        local gui = player.gui
+        local left = gui.left
+
+        if not player or not player.valid then
+            return
+        end
+
         local p = player_table[player.index]
+
+        if not p then
+            return
+        end
+
+        if p.spam > game.tick then
+            player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
+            return
+        end
+
         p.frame = event.element.parent.name
+
         local warp = warp_table[p.frame]
+
         Public.clear_player_table(player)
+
         local position = player.position
         if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
             player.print('Destination is source warp: ' .. p.frame, Color.fail)
-        return end
+            return
+        end
+
         Public.refresh_gui_player(player)
+
         if player.vehicle then player.vehicle.set_driver(nil) end
         if player.vehicle then player.vehicle.set_passenger(nil) end
         if player.vehicle then return end
+
         player.teleport(warp.surface.find_non_colliding_position('character',warp.position,32,1),warp.surface)
         player.print('Warped you over to: ' .. p.frame, Color.success)
         p.spam = game.tick + 900
-        Public.close_gui_player(p.left[main_frame_name])
+
+        Public.close_gui_player(left[main_frame_name])
         return
 end
 )
@@ -456,14 +544,24 @@ Gui.on_click(
     create_warp_button_name,
     function(event)
         local player = game.get_player(event.player_index)
+
+        if not player or not player.valid then
+            return
+        end
+
         local p = player_table[player.index]
-        p.frame = event.element.parent.name
+
         if p.spam > game.tick then
             player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
             return
         end
+
+        p.frame = event.element.parent.name
+
         Public.clear_player_table(player)
+
         if p.creating == false then p.creating = true end
+
         Public.refresh_gui_player(player)
         return
     end
@@ -473,12 +571,22 @@ Gui.on_click(
     create_warp_func_name,
     function(event)
         local player = game.get_player(event.player_index)
+
+        if not player or not player.valid then
+            return
+        end
+
         local p = player_table[player.index]
-        p.frame = event.element.parent.name
+
+
         if p.spam > game.tick then
             player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
             return
         end
+
+        p.frame = event.element.parent.name
+
+
         local new = p.sub_table.wp_table.wp_text.text
         if new ~= "" and new ~= "Spawn" and new ~= "Name:" and new ~= "Warp name:" then
             local position = player.position
@@ -486,6 +594,7 @@ Gui.on_click(
             p.spam = game.tick + 900
             Public.make_warp_point(player,position,player.surface,player.force,new)
             game.print(player.name .. " created warp: " .. new, Color.success)
+            Public.refresh_gui()
         end
         return
     end
