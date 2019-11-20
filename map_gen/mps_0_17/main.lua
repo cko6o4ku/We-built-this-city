@@ -302,6 +302,7 @@ end)
 
 Event.add(defines.events.on_player_mined_entity, function(event)
     local e = event.entity
+    if e.type ~= "tree" then return end
     if e and e.valid and math_random(1, 10) == 1 then
       e.surface.spill_item_stack(game.players[event.player_index].position,{name = "raw-fish", count = math_random(1,2)},true)
     end

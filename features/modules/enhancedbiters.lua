@@ -1,11 +1,7 @@
--- Enhanced Biters, a mod for more dangerous biters
--- Factorio module by Mylon, 2018
--- MIT License
 
 local Event = require "utils.event"
 
 
-global.zombies = {}
 global.capsules = {}
 
 local ENHANCED_SCALE = 1 --1 means 50% turret damage after 24h.  2 means 12h.
@@ -14,40 +10,49 @@ local Public = {}
 
 --Unique behaviors
 function Public.splitters(event)
-	if not global.zombies then
-		global.zombies = {}
-	end
-	if event.entity.force.name ~= "enemy" then
+	local entity = event.entity
+	local surface = entity.surface
+	local position = entity.position
+	local name = entity.name
+	local force = entity.force.name
+	local create = surface.create_entity
+	if not (entity or entity.valid or position) then return end
+
+	if force ~= "enemy" then
 		return
 	end
 
-	if event.entity.name == "behemoth-spitter" and math.random(1,10) == 10 then
-		event.entity.surface.create_entity{name="big-worm-turret", position=event.entity.position}
+	if name == "behemoth-spitter" and math.random(1,10) == 10 then
+		create{name="big-worm-turret", position=position}
 	end
-	if event.entity.name == "big-worm-turret" and math.random() < 0.25 then
+	if name == "big-worm-turret" and math.random(1,10) == 10 then
 		for i=0, 5, 1 do
-			local pos = event.entity.surface.find_non_colliding_position("medium-biter", event.entity.position, 10, 3)
-			event.entity.surface.create_entity{name="medium-worm-turret", position=pos}
+			create{name="medium-worm-turret", position=position}
 		end
 	end
-	if event.entity.name == "small-worm-turret" and math.random() < 0.25 then
+	if name == "medium-worm-turret" and math.random(1,10) == 10 then
 		for i=0, 5, 1 do
-			local pos = event.entity.surface.find_non_colliding_position("small-biter", event.entity.position, 10, 3)
-			event.entity.surface.create_entity{name="small-worm-turret", position=pos}
+			local pos = surface.find_non_colliding_position("medium-biter", position, 10, 2)
+			create{name="small-worm-turret", position=pos}
 		end
 	end
-	if event.entity.name == "medium-worm-turret" and math.random(1,2) == 2 then
-		for i=0, 5, 1 do
-			local pos = event.entity.surface.find_non_colliding_position("medium-biter", event.entity.position, 10, 2)
-			event.entity.surface.create_entity{name="small-worm-turret", position=pos}
+
+	if name == "medium-biter" and math.random(1,10) == 10 then
+		for i=0, 2, 1 do
+			local pos = surface.find_non_colliding_position("medium-biter", position, 10, 2)
+			create{name="medium-biter", position=pos}
 		end
 	end
-	if event.entity.name == "medium-biter" and math.random() < 0.5 then
-		table.insert(global.zombies, {tick=game.tick, position=event.entity.position, surface=event.entity.surface})
+
+	if name == "small-biter" and math.random(1,9) == 9 then
+		for i=0, 2, 1 do
+			local pos = surface.find_non_colliding_position("small-biter", position, 10, 2)
+			create{name="small-biter", position=pos}
+		end
 	end
-	if event.entity.name == "big-spitter" and math.random() < 0.2 then
+	if name == "big-spitter" and math.random(1,5) == 5  then
 		if event.cause and event.cause.valid then
-			local capsule = event.entity.surface.create_entity{name="acid-splash-fire-worm-big", position=event.entity.position, speed=0.5, target=event.cause}
+			local capsule = create{name="acid-splash-fire-worm-big", position=position, speed=0.5, target=event.cause}
 			table.insert(global.capsules, {entity = capsule, target=event.cause, type="medium-biter", count=2})
 		end
 	end

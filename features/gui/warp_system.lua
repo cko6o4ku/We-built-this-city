@@ -46,6 +46,15 @@ end)
 
 local Public = {}
 
+local function validate_player(player)
+  if not player then return false end
+  if not player.valid then return false end
+  if not player.character then return false end
+  if not player.connected then return false end
+  if not game.players[player.name] then return false end
+  return true
+end
+
 function Public.remove_warp_point(name)
     local warp = warp_table[name]
     if not warp then return end
@@ -308,6 +317,8 @@ function Public.toggle(player)
     local left = gui.left
     local main_frame = left[main_frame_name]
 
+    if not validate_player(player) then return end
+
     if main_frame then
         Public.close_gui_player(main_frame)
         Tabs.panel_clear_left_gui(player)
@@ -321,6 +332,8 @@ function Public.refresh_gui_player(player)
     local gui = player.gui
     local left = gui.left
     local main_frame = left[main_frame_name]
+
+    if not validate_player(player) then return end
 
     if main_frame then
         Public.close_gui_player(main_frame)
@@ -356,11 +369,14 @@ function Public.refresh_gui()
         local gui = player.gui
         local left = gui.left
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         local main_frame = left[main_frame_name]
+
+        if not player.connected then
+            Public.close_gui_player(main_frame)
+            return
+        end
 
         if main_frame then
             Public.close_gui_player(main_frame)
@@ -373,6 +389,8 @@ end
 
 local function on_player_joined_game(event)
     local player = game.get_player(event.player_index)
+
+    if not validate_player(player) then return end
 
     if not player_table[player.index] then
         player_table[player.index] = {
@@ -387,12 +405,19 @@ local function on_player_joined_game(event)
 
 end
 
+local function on_player_left_game(event)
+    local player = game.get_player(event.player_index)
+
+    if not validate_player(player) then return end
+
+    Tabs.panel_clear_left_gui(player)
+
+end
+
 local function on_player_died(event)
     local player = game.get_player(event.player_index)
 
-    if not player or not player.valid then
-        return
-    end
+    if not validate_player(player) then return end
 
     local p = player.gui.left[main_frame_name]
 
@@ -409,9 +434,7 @@ Gui.on_click(
     function(event)
         local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         Public.toggle(player)
         Public.clear_player_table(player)
@@ -423,9 +446,7 @@ Gui.on_click(
     function(event)
         local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         Public.toggle(player)
         Public.clear_player_table(player)
@@ -437,9 +458,7 @@ Gui.on_click(
     function(event)
         local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         local p = player_table[player.index]
 
@@ -460,9 +479,7 @@ Gui.on_click(
     function(event)
         local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         Public.refresh_gui_player(player)
         Public.clear_player_table(player)
@@ -474,9 +491,7 @@ Gui.on_click(
     function(event)
         local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         local p = player_table[player.index]
 
@@ -499,9 +514,7 @@ Gui.on_click(
         local gui = player.gui
         local left = gui.left
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         local p = player_table[player.index]
 
@@ -546,9 +559,7 @@ Gui.on_click(
     function(event)
         local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         local p = player_table[player.index]
 
@@ -573,9 +584,7 @@ Gui.on_click(
     function(event)
         local player = game.get_player(event.player_index)
 
-        if not player or not player.valid then
-            return
-        end
+        if not validate_player(player) then return end
 
         local p = player_table[player.index]
 
@@ -609,6 +618,7 @@ end)
 
 Event.add(defines.events.on_player_died, on_player_died)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
+Event.add(defines.events.on_player_left_game, on_player_left_game)
 
 
 return Public
