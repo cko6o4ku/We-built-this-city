@@ -157,7 +157,7 @@ local function gui_opened(event)
   local text =
       tbl.add {
       type = 'label',
-      caption = format('This chest stores unlimited quantity of items (up to 48 different item types).\nThe chest is best used with an inserter to add / remove items.\nThe chest is mineable if state is disabled or no items are stored.\nAll items are destroyed when mined.')
+      caption = format('This chest stores unlimited quantity of items (up to 48 different item types).\nThe chest is best used with an inserter to add / remove items.\nThe chest is mineable if state is disabled or no items are stored.\nAll items are destroyed when mined.\n')
   }
   text.style.single_line = false
 
@@ -216,7 +216,7 @@ local function update_gui()
 
 
     for item_name, item_count in pairs(items) do
-      local btn = tbl.add{ type = "sprite-button", sprite = "item/"..item_name ,style = "slot_button", number = item_count, name = item_name}
+      local btn = tbl.add{ type = "sprite-button", sprite = "item/"..item_name ,style = "slot_button", number = item_count, name = item_name, tooltip = "Withdrawal is possible when state is disabled! "}
     end
 
     while total < 48 do
@@ -272,7 +272,9 @@ local function gui_click(event)
 
   if ctrl then
     local count = storage[name]
+    if not count then return end
     local inserted = player.insert{ name = name, count = count}
+    if not inserted then return end
     if inserted == count then
       infinity_chests_storage[unit_number][name] = nil
     else
@@ -281,7 +283,8 @@ local function gui_click(event)
   elseif shift then
     local count = storage[name]
     local stack = game.item_prototypes[name].stack_size
-
+    if not count then return end
+    if not stack then return end
     if count > stack then
       local inserted = player.insert{ name = name, count = stack}
       infinity_chests_storage[unit_number][name] = infinity_chests_storage[unit_number][name] - inserted
@@ -290,8 +293,9 @@ local function gui_click(event)
       infinity_chests_storage[unit_number][name] = nil
     end
   else
-    player.insert{ name = name, count = 1 }
+    if not infinity_chests_storage[unit_number][name] then return end
     infinity_chests_storage[unit_number][name] = infinity_chests_storage[unit_number][name] - 1
+    player.insert{ name = name, count = 1 }
     if infinity_chests_storage[unit_number][name] <= 0 then
       infinity_chests_storage[unit_number][name] = nil
     end
