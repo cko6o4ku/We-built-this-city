@@ -46,7 +46,7 @@ global.enable_loaders = true
 global.enable_shared_team_vision = true
 
 -- Cleans up unused chunks periodically. Helps keep map size down.
-global.enable_regrowth = true
+global.enable_regrowth = false
 
 -- Only works if you have the Unused Chunk Removal mod installed.
 global.enable_base_removal = true
