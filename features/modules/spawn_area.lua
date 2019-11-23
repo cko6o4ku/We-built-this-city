@@ -13,7 +13,7 @@ local place_blocks = {
     {'small-lamp',-2,-3},{'small-lamp',2,-3},{'small-lamp',-2,3},{'small-lamp',2,3},
     {'small-electric-pole',-3,-3},{'small-electric-pole',3,3},{'small-electric-pole',-3,3},{'small-electric-pole',3,-3},
     {"iron-chest",-2,-6},{"iron-chest",-2,-5},{"iron-chest",2,-6},{"iron-chest",2,-5},{"iron-chest",2,5},{"iron-chest",2,6},{"iron-chest",-2,5},{"iron-chest",-2,6},
-    {"solar-panel",-5,-5},{"solar-panel",5,-5},{"solar-panel",5,5},{"solar-panel",-5,5}
+    {"solar-panel",-5,-5},{"solar-panel",5,-5},{"solar-panel",5,5},{"solar-panel",-5,5},{"accumulator",5,-2},{"accumulator",5,3},{"accumulator",-4,-2},{"accumulator",-4 ,3}
 }
 
 local global_offset = {x=0,y=0}
@@ -49,6 +49,7 @@ function Public.spawn_on_chunk_generated()
             for _, name in pairs(place_blocks) do
                 local entity = surface.create_entity{name=name[1],position={name[2]+offset.x+global_offset.x,name[3]+offset.y+global_offset.y},force='neutral'}
                 entity.destructible = false; entity.health = 0; entity.minable = false; entity.rotatable = false
+            if entity.energy then entity.energy = 100000000 end
             end
         global.spawn_generated = true
     end

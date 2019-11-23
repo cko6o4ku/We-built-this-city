@@ -221,24 +221,40 @@ function Public.SetupAndClearSpawnAreas(surface, chunkArea)
             -- If the chunk is within the main land area, then clear trees/resources
             -- and create the land spawn areas (guaranteed land with a circle of trees)
             if Utils.CheckIfInArea(chunkAreaCenter,landArea) then
+                if spawn.this then
+                    -- Remove trees/resources inside the spawn area
+                    if (spawn.layout == "classic") then
+                        Utils.RemoveInCircle(surface, chunkArea, "tree", spawn.pos, global.scenario_config.gen_settings.land_area_tiles)
+                    else
+                        Utils.RemoveInCircle(surface, chunkArea, "tree", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+5)
+                    end
+                    Utils.RemoveInCircle(surface, chunkArea, "resource", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+5)
+                    Utils.RemoveInCircle(surface, chunkArea, "cliff", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "simple-entity", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveDecorationsArea(surface, chunkArea)
+                else
+                    -- Remove trees/resources inside the spawn area
+                    Utils.RemoveInCircle(surface, chunkArea, "tree", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "resource", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "cliff", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "simple-entity", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveDecorationsArea(surface, chunkArea)
+                end
 
-                -- Remove trees/resources inside the spawn area
-                Utils.RemoveInCircle(surface, chunkArea, "tree", spawn.pos, global.scenario_config.gen_settings.land_area_tiles)
-                Utils.RemoveInCircle(surface, chunkArea, "resource", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+5)
-                Utils.RemoveInCircle(surface, chunkArea, "cliff", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+5)
-                Utils.RemoveDecorationsArea(surface, chunkArea)
+                local fill_tile = "dirt-" .. math.random(1, 6)
 
-                local fill_tile = "stone-path"
 
-                if (global.scenario_config.gen_settings.tree_circle) then
+
+                if (spawn.layout == "classic") then
                     Utils.CreateCropCircle(surface, spawn.pos, chunkArea, global.scenario_config.gen_settings.land_area_tiles, fill_tile)
-                end
-                if (global.scenario_config.gen_settings.tree_octagon) then
-                    Utils.CreateCropOctagon(surface, spawn.pos, chunkArea, global.scenario_config.gen_settings.land_area_tiles, fill_tile)
-                end
-                if (global.scenario_config.gen_settings.moat_choice_enabled) then
                     if (spawn.moat) then
                         Utils.CreateMoat(surface, spawn.pos, chunkArea, global.scenario_config.gen_settings.land_area_tiles, fill_tile)
+                    end
+                end
+                if (spawn.layout == "new") then
+                    Utils.CreateCropSquare(surface, spawn.pos, chunkArea, global.scenario_config.gen_settings.land_area_tiles, fill_tile)
+                    if (spawn.moat) then
+                        Utils.CreateMoatSquare(surface, spawn.pos, chunkArea, global.scenario_config.gen_settings.land_area_tiles, fill_tile)
                     end
                 end
             end
@@ -335,13 +351,45 @@ end
 --------------------------------------------------------------------------------
 
 -- Generate the basic starter resource around a given location.
-function Public.GenerateStartingResources(surface, pos)
+function Public.GenerateStartingResources_New(surface, pos)
+
+    local g_res = global.scenario_config.resource_tiles_new
+    local g_pos = global.scenario_config.pos
+
+    local ore_pos = Utils.shuffle(g_pos)
+    local _pos_1 = {x=pos.x+ore_pos[1].x, y=pos.y+ore_pos[1].y}
+    local _pos_2 = {x=pos.x+ore_pos[2].x, y=pos.y+ore_pos[2].y}
+    local _pos_3 = {x=pos.x+ore_pos[3].x, y=pos.y+ore_pos[3].y}
+    local _pos_4 = {x=pos.x+ore_pos[4].x, y=pos.y+ore_pos[4].y}
+
+    Utils.GenerateResourcePatch(surface, "iron-ore", g_res[1].size, _pos_1, g_res[1].amount)
+
+    Utils.GenerateResourcePatch(surface, "copper-ore", g_res[2].size, _pos_2, g_res[2].amount)
+
+    Utils.GenerateResourcePatch(surface, "stone", g_res[3].size, _pos_3, g_res[3].amount)
+
+    Utils.GenerateResourcePatch(surface, "coal", g_res[4].size, _pos_4, g_res[4].amount)
+
+    -- Generate special resource patches (oil)
+    for p_name,p_data in pairs (global.scenario_config.resource_patches_new) do
+        local oil_patch_x=pos.x+p_data.x_offset_start
+        local oil_patch_y=pos.y+p_data.y_offset_start
+        for i=1,p_data.num_patches do
+            surface.create_entity({name=p_name, amount=p_data.amount,
+                        position={oil_patch_x, oil_patch_y}})
+            oil_patch_x=oil_patch_x+p_data.x_offset_next
+            oil_patch_y=oil_patch_y+p_data.y_offset_next
+        end
+    end
+end
+
+function Public.GenerateStartingResources_Classic(surface, pos)
 
     local rand_settings = global.scenario_config.resource_rand_pos_settings
 
     -- Generate all resource tile patches
     if (not rand_settings.enabled) then
-        for t_name,t_data in pairs (global.scenario_config.resource_tiles) do
+        for t_name,t_data in pairs (global.scenario_config.resource_tiles_classic) do
             local pos = {x=pos.x+t_data.x_offset, y=pos.y+t_data.y_offset}
             Utils.GenerateResourcePatch(surface, t_name, t_data.size, pos, t_data.amount)
         end
@@ -349,17 +397,17 @@ function Public.GenerateStartingResources(surface, pos)
 
         -- Create list of resource tiles
         local r_list = {}
-        for k,_ in pairs(global.scenario_config.resource_tiles) do
+        for k,_ in pairs(global.scenario_config.resource_tiles_classic) do
             if (k ~= "") then
                 table.insert(r_list, k)
             end
         end
-        local shuffled_list = Utils.FYShuffle(r_list)
+        local shuffled_list = Utils.shuffle(r_list)
 
         -- This places resources in a semi-circle
         -- Tweak in config.lua
         local angle_offset = rand_settings.angle_offset
-        local num_resources = Utils.TableLength(global.scenario_config.resource_tiles)
+        local num_resources = Utils.TableLength(global.scenario_config.resource_tiles_classic)
         local theta = ((rand_settings.angle_final - rand_settings.angle_offset) / num_resources);
         local count = 0
 
@@ -370,13 +418,13 @@ function Public.GenerateStartingResources(surface, pos)
             local ty = (rand_settings.radius * math.sin(angle)) + pos.y
 
             local pos = {x=math.floor(tx), y=math.floor(ty)}
-            Utils.GenerateResourcePatch(surface, k_name, global.scenario_config.resource_tiles[k_name].size, pos, global.scenario_config.resource_tiles[k_name].amount)
+            Utils.GenerateResourcePatch(surface, k_name, global.scenario_config.resource_tiles_classic[k_name].size, pos, global.scenario_config.resource_tiles_classic[k_name].amount)
             count = count+1
         end
     end
 
     -- Generate special resource patches (oil)
-    for p_name,p_data in pairs (global.scenario_config.resource_patches) do
+    for p_name,p_data in pairs (global.scenario_config.resource_patches_classic) do
         local oil_patch_x=pos.x+p_data.x_offset_start
         local oil_patch_y=pos.y+p_data.y_offset_start
         for i=1,p_data.num_patches do
@@ -542,24 +590,25 @@ function Public.ChangePlayerSpawn(player, pos)
     global.playerCooldowns[player.name] = {setRespawn=game.tick}
 end
 
-function Public.QueuePlayerForDelayedSpawn(playerName, spawn, moatEnabled, vanillaSpawn)
-
+function Public.QueuePlayerForDelayedSpawn(playerName, spawn, classic, moatChoice, vanillaSpawn, this)
+    if not this then this = false end
     -- If we get a valid spawn point, setup the area
     if ((spawn.x ~= 0) or (spawn.y ~= 0)) then
-        global.uniqueSpawns[playerName] = {pos=spawn,moat=moatEnabled,vanilla=vanillaSpawn}
+        global.uniqueSpawns[playerName] = {pos=spawn,layout=classic,moat=moatChoice,vanilla=vanillaSpawn, this=this}
 
         local delay_spawn_seconds = 5*(math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size))
         game.players[playerName].surface.request_to_generate_chunks(spawn, 4)
         local delayedTick = game.tick + delay_spawn_seconds*global_data.ticks_per_second
-        table.insert(global.delayedSpawns, {playerName=playerName, pos=spawn, moat=moatEnabled, vanilla=vanillaSpawn, delayedTick=delayedTick})
+        table.insert(global.delayedSpawns, {playerName=playerName, layout=classic, pos=spawn, moat=moatChoice, vanilla=vanillaSpawn, delayedTick=delayedTick, this=this})
 
         Public.DisplayPleaseWaitForSpawnDialog(game.players[playerName], delay_spawn_seconds)
-
+        if global.enable_regrowth then
         remote.call("oarc_regrowth",
                     "area_offlimits_tilepos",
                     game.surfaces[surface_name].index,
                     spawn,
                     math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size))
+        end
 
     else
         log("THIS SHOULD NOT EVER HAPPEN! Spawn failed!")
@@ -593,18 +642,27 @@ function Public.SendPlayerToNewSpawnAndCreateIt(delayedSpawn)
 
     -- DOUBLE CHECK and make sure the area is super safe.
     Utils.ClearNearbyEnemies(delayedSpawn.pos, global.scenario_config.safe_area.safe_radius, game.surfaces[surface_name])
-
+    local water_data
+    game.print(serpent.block(delayedSpawn))
+    if delayedSpawn.layout == "classic" then
+        water_data = global.scenario_config.water_classic
+    elseif delayedSpawn.layout == "new" then
+        water_data = global.scenario_config.water_new
+    end
     if (not delayedSpawn.vanilla) then
 
         -- Create the spawn resources here
-        local water_data = global.scenario_config.water
         Utils.CreateWaterStrip(game.surfaces[surface_name],
                         {x=delayedSpawn.pos.x+water_data.x_offset, y=delayedSpawn.pos.y+water_data.y_offset},
                         water_data.length)
         Utils.CreateWaterStrip(game.surfaces[surface_name],
                         {x=delayedSpawn.pos.x+water_data.x_offset, y=delayedSpawn.pos.y+water_data.y_offset+1},
                         water_data.length)
-        Public.GenerateStartingResources(game.surfaces[surface_name], delayedSpawn.pos)
+        if delayedSpawn.layout == "classic" then
+            Public.GenerateStartingResources_Classic(game.surfaces[surface_name], delayedSpawn.pos)
+        elseif delayedSpawn.layout == "new" then
+            Public.GenerateStartingResources_New(game.surfaces[surface_name], delayedSpawn.pos)
+        end
 
     end
 
@@ -709,7 +767,7 @@ function Public.CreatePlayerCustomForce(player)
     return newForce
 end
 
--- function Public.to generate some map_gen_settings.starting_points
+-- function to generate some map_gen_settings.starting_points
 -- You should only use this at the start of the game really.
 function Public.CreateVanillaSpawns(count, spacing)
 
@@ -927,21 +985,32 @@ function Public.DisplaySpawnOptions(player)
     --UtilsGui.AddLabel(sGui, "spawn_msg_lbl1", SPWN1, UtilsGui.my_label_style)
 
     -- Button and message about the regular vanilla spawn
-    if global.enable_default_spawn then
-        sGui.add{name = "default_spawn_btn",
-                    type = "button",
-                    caption={"oarc-vanilla-spawn"}}
-        local normal_spawn_text = {"oarc-default-spawn-behavior"}
-        UtilsGui.AddLabel(sGui, "normal_spawn_lbl1", normal_spawn_text, UtilsGui.my_label_style)
-        -- UtilsGui.AddSpacerLine(sGui, "normal_spawn_spacer")
-    end
+
 
     -- The main spawning options. Solo near and solo far.
     -- If enable, you can also choose to be on your own team.
+    local layout_flow = sGui.add{name = "layout", type = "frame", direction="vertical", style = "bordered_frame"}
+    UtilsGui.AddLabel(layout_flow, "normal_spawn_lbl1", {"oarc-layout"}, UtilsGui.my_label_style)
+    layout_flow.add{name = "layout_classic", type = "radiobutton", caption={"oarc-layout-old"}, state=true}
+    layout_flow.add{name = "layout_new", type = "radiobutton", caption={"oarc-layout-new"}, state=false}
+
     local soloSpawnFlow = sGui.add{name = "spawn_solo_flow",
                                     type = "frame",
                                     direction="vertical",
                                     style = "bordered_frame"}
+
+    if global.enable_default_spawn then
+        local vanilla = sGui.add{name = "vanilla_flow",
+                                        type = "frame",
+                                        direction="vertical",
+                                        style = "bordered_frame"}
+        local normal_spawn_text = {"oarc-default-spawn-behavior"}
+        UtilsGui.AddLabel(vanilla, "normal_spawn_lbl1", normal_spawn_text, UtilsGui.my_label_style)
+
+        vanilla.add{name = "default_spawn_btn",
+                    type = "button",
+                    caption={"oarc-vanilla-spawn"}}
+    end
 
     -- Radio buttons to pick your team.
     if (global.enable_separate_teams) then
@@ -1061,6 +1130,12 @@ function Public.SpawnOptsRadioSelect(event)
         event.element.parent.isolated_spawn_main_team_radio.state=false
     end
 
+    if (elemName == "layout_new") then
+        event.element.parent.layout_classic.state=false
+    elseif (elemName == "layout_classic") then
+        event.element.parent.layout_new.state=false
+    end
+
     if (elemName == "buddy_spawn_main_team_radio") then
         event.element.parent.buddy_spawn_new_team_radio.state=false
         event.element.parent.buddy_spawn_buddy_team_radio.state=false
@@ -1079,6 +1154,7 @@ function Public.SpawnOptsGuiClick(event)
     if not (event and event.element and event.element.valid) then return end
     local player = game.players[event.player_index]
     local elemName = event.element.name
+    local layout
 
     if not player then
         log("Another gui click happened with no valid player...")
@@ -1091,7 +1167,18 @@ function Public.SpawnOptsGuiClick(event)
 
     local pgcs = player.gui.screen.spawn_opts
 
+    local classic = pgcs.layout.layout_classic.state
+    local new = pgcs.layout.layout_new.state
+
     local joinMainTeamRadio, joinOwnTeamRadio, moatChoice, vanillaChoice = false
+
+    if classic then
+        layout = "classic"
+    end
+    if new then
+        layout = "new"
+    end
+
 
     -- Check if a valid button on the gui was pressed
     -- and delete the GUI
@@ -1174,9 +1261,11 @@ function Public.SpawnOptsGuiClick(event)
         -- Create that player's spawn in the global vars
         Public.ChangePlayerSpawn(player, newSpawn)
 
+        local this = false
+
         -- Send the player there
         -- QueuePlayerForDelayedSpawn(player.name, newSpawn, moatChoice, vanillaChoice)
-        Public.QueuePlayerForDelayedSpawn(player.name, newSpawn, moatChoice, global.enable_vanilla_spawns)
+        Public.QueuePlayerForDelayedSpawn(player.name, newSpawn, layout, moatChoice, global.enable_vanilla_spawns, this)
         if (elemName == "isolated_spawn_near") then
             Utils.SendBroadcastMsg({"oarc-player-is-joining-near", player.name})
         elseif (elemName == "isolated_spawn_far") then
@@ -1593,6 +1682,11 @@ function Public.DisplayBuddySpawnOptions(player)
     UtilsGui.AddLabel(buddyGui, "buddy_info_msg", {"oarc-buddy-spawn-instructions"}, UtilsGui.my_label_style)
     UtilsGui.AddSpacer(buddyGui)
 
+    local layout_flow = buddyGui.add{name = "layout", type = "frame", direction="vertical", style = "bordered_frame"}
+    UtilsGui.AddLabel(layout_flow, "normal_spawn_lbl1", {"oarc-layout"}, UtilsGui.my_label_style)
+    layout_flow.add{name = "layout_classic", type = "radiobutton", caption={"oarc-layout-old"}, state=true}
+    layout_flow.add{name = "layout_new", type = "radiobutton", caption={"oarc-layout-new"}, state=false}
+
     -- The buddy spawning options.
     local buddySpawnFlow = buddyGui.add{name = "spawn_buddy_flow",
                                     type = "frame",
@@ -1630,12 +1724,12 @@ function Public.DisplayBuddySpawnOptions(player)
                         caption={"oarc-create-buddy-team"},
                         state=false}
     end
-    if (global.scenario_config.gen_settings.moat_choice_enabled) then
-        buddySpawnFlow.add{name = "buddy_spawn_moat_option_checkbox",
-                        type = "checkbox",
-                        caption={"oarc-moat-option"},
-                        state=false}
-    end
+    --if (global.scenario_config.gen_settings.moat_choice_enabled) then
+    --    buddySpawnFlow.add{name = "buddy_spawn_moat_option_checkbox",
+    --                    type = "checkbox",
+    --                    caption={"oarc-moat-option"},
+    --                    state=false}
+    --end
 
     -- UtilsGui.AddSpacerLine(buddySpawnFlow)
     buddySpawnFlow.add{name = "buddy_spawn_request_near",
@@ -1671,6 +1765,7 @@ function Public.BuddySpawnOptsGuiClick(event)
     if not (event and event.element and event.element.valid) then return end
     local player = game.players[event.player_index]
     local elemName = event.element.name
+    local layout
 
     if not player then
         log("Another gui click happened with no valid player...")
@@ -1680,6 +1775,8 @@ function Public.BuddySpawnOptsGuiClick(event)
     if (player.gui.screen.buddy_spawn_opts == nil) then
         return -- Gui event unrelated to this gui.
     end
+
+    local pgcs = player.gui.screen.buddy_spawn_opts
 
     local waiting_buddies_dropdown = player.gui.screen.buddy_spawn_opts.spawn_buddy_flow.waiting_buddies_dropdown
 
@@ -1693,6 +1790,16 @@ function Public.BuddySpawnOptsGuiClick(event)
             end
         end
         return
+    end
+
+    local classic = pgcs.layout.layout_classic.state
+    local new = pgcs.layout.layout_new.state
+
+    if classic then
+        layout = "classic"
+    end
+    if new then
+        layout = "new"
     end
 
     -- Handle the cancel button to exit this menu
@@ -1752,14 +1859,15 @@ function Public.BuddySpawnOptsGuiClick(event)
             joinOwnTeamRadio = false
             joinBuddyTeamRadio = false
         end
-        if (global.scenario_config.gen_settings.moat_choice_enabled) then
-            moatChoice =  buddySpawnGui.buddy_spawn_moat_option_checkbox.state
-        end
+        --if (global.scenario_config.gen_settings.moat_choice_enabled) then
+        --    moatChoice =  buddySpawnGui.buddy_spawn_moat_option_checkbox.state
+        --end
 
         -- Save the chosen spawn options somewhere for later use.
         global.buddySpawnOptions[player.name] = {joinMainTeamRadio=joinMainTeamRadio,
                                                     joinOwnTeamRadio=joinOwnTeamRadio,
                                                     joinBuddyTeamRadio=joinBuddyTeamRadio,
+                                                    layout=layout,
                                                     moatChoice=moatChoice,
                                                     buddyChoice=buddyChoice,
                                                     distChoice=elemName}
@@ -1911,8 +2019,6 @@ function Public.BuddySpawnRequestMenuClick(event)
         return -- Gui event unrelated to this gui.
     end
 
-
-
     -- Check if it's a button press and lookup the matching buddy info
     if ((elemName == "accept_buddy_request") or (elemName == "decline_buddy_request")) then
         for name,opts in pairs(global.buddySpawnOptions) do
@@ -1979,10 +2085,10 @@ function Public.BuddySpawnRequestMenuClick(event)
         end
         Public.ChangePlayerSpawn(player, newSpawn)
         Public.ChangePlayerSpawn(game.players[requesterName], global.buddySpawn)
-
+        local this = true
         -- Send the player there
-        Public.QueuePlayerForDelayedSpawn(player.name, newSpawn, requesterOptions.moatChoice, false)
-        Public.QueuePlayerForDelayedSpawn(requesterName, global.buddySpawn, requesterOptions.moatChoice, false)
+        Public.QueuePlayerForDelayedSpawn(player.name, newSpawn, requesterOptions.layout, requesterOptions.moatChoice, false, this)
+        Public.QueuePlayerForDelayedSpawn(requesterName, global.buddySpawn, requesterOptions.layout, requesterOptions.moatChoice, false, this)
         Utils.SendBroadcastMsg(requesterName .. " and " .. player.name .. " are joining the game together!")
 
         -- Unlock spawn control gui tab

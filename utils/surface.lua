@@ -20,7 +20,20 @@ Global.register(
 )
 
 function Public.create_surface()
-	local map_gen_settings =  game.surfaces["nauvis"].map_gen_settings
+	local map_gen_settings = {}
+	map_gen_settings.water = 0.5
+	map_gen_settings.starting_area = 0.5
+	map_gen_settings.cliff_settings = {cliff_elevation_interval = 35, cliff_elevation_0 = 35}
+	map_gen_settings.autoplace_controls = {
+		["coal"] = {frequency = 0.33, size = 1, richness = 1},
+		["stone"] = {frequency = 0.33, size = 1, richness = 1},
+		["copper-ore"] = {frequency = 0.33, size = 1, richness = 1},
+		["iron-ore"] = {frequency = 0.33, size = 1, richness = 1},
+		["crude-oil"] = {frequency = 0.33, size = 1, richness = 1},
+		["uranium-ore"] = {frequency = 0.33, size = 1, richness = 1},
+		["trees"] = {frequency = 1, size = 1, richness = 1},
+		["enemy-base"] = {frequency = 0.33, size = 0.33, richness = 1}
+	}
 
 	if (global_data.island) then
 	    map_gen_settings.property_expression_names.elevation = "0_17-island"

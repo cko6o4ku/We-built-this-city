@@ -3,9 +3,10 @@ local market_items = require "features.modules.map_market_items"
 local Tabs = require 'features.gui.main'
 local RPG = require 'features.modules.rpg'
 local fish = require 'features.modules.launch_fish_to_win'
-require 'features.modules.ores_are_mixed'
+require 'features.modules.scramble'
 --local Map = require 'features.modules.map_info'
 require 'features.modules.enhancedbiters'
+require 'features.modules.surrounded_by_worms'
 --require 'features.modules.bp'
 require 'features.modules.autodecon_when_depleted'
 require 'features.modules.spawners_contain_biters'
@@ -104,7 +105,7 @@ local function on_start()
     for k, v in pairs(defs) do p.set_allows_action(v, true) end
 
     -- Everyone do the shuffle. Helps avoid always starting at the same location.
-    global.vanillaSpawns = Utils.FYShuffle(global.vanillaSpawns)
+    global.vanillaSpawns = Utils.shuffle(global.vanillaSpawns)
     --log ("Vanilla spawns:")
     --log(serpent.block(global.vanillaSpawns))
 end
@@ -127,6 +128,21 @@ end)
 ----------------------------------------
 Event.add(defines.events.on_chunk_generated, function(event)
     if event.surface.index == 1 then return end
+    --[[local surface = event.surface
+    local table_insert = table.insert
+    local left_top = event.area.left_top
+    local tiles = {}
+    for x = 0, 31, 1 do
+        for y = 0, 31, 1 do
+            local pos = {x = left_top.x + x, y = left_top.y + y}
+            local t_name = surface.get_tile(pos).name == "dirt-" .. math.random(1, 6)
+            if t_name then
+                table_insert(tiles, {name = "dirt-" .. math.random(1, 6), position = pos})
+            end
+        end
+    end
+
+    surface.set_tiles(tiles, true)]]--
 
     if global.enable_regrowth then
         Regrowth.RegrowthChunkGenerate(event)
@@ -170,6 +186,7 @@ end)
 ----------------------------------------
 Event.add(defines.events.on_player_joined_game, function(event)
     Utils.PlayerJoinedMessages(event)
+    game.speed = 10
 end)
 
 Event.add(defines.events.on_player_created, function(event)
@@ -270,7 +287,9 @@ Event.add(defines.events.on_tick, function()
     if global.enable_market then
         if game.tick == 150 then
             local surface = game.surfaces[Surface]
-            local p = game.surfaces[Surface].find_non_colliding_position ("market",{-10,-10},60,2)
+            local pos = {{x=-10,y=-10},{x=10,y=10},{x=-10,y=-10},{x=10,y=-10}}
+            local _pos = Utils.shuffle(pos)
+            local p = game.surfaces[Surface].find_non_colliding_position ("market",{_pos[1].x,_pos[1].y},60,2)
 
             global.market = surface.create_entity {name = "market", position = p, force = "player"}
 

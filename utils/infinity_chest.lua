@@ -1,39 +1,31 @@
 local Event = require "utils.event"
 local Global = require "utils.global"
+local validate_player = require "utils.validate_player"
 
 local infinity_chests_storage = {}
 local infinity_chests = {}
 local infinity_chests_modes = {}
 local infinity_chest_gui = {}
 
-local format = string.format
-
-Global.register(
-    {infinity_chests = infinity_chests, infinity_chests_modes = infinity_chests_modes, infinity_chest_gui = infinity_chest_gui, infinity_chests_storage = infinity_chests_storage},
-    function(tbl)
-        infinity_chests = tbl.infinity_chests
-        infinity_chest_gui = tbl.infinity_chest_gui
-        infinity_chests_storage = tbl.infinity_chests_storage
-        infinity_chests_modes = tbl.infinity_chests_modes
-    end
-)
+Global.register({
+  infinity_chests = infinity_chests,
+  infinity_chests_modes = infinity_chests_modes,
+  infinity_chest_gui = infinity_chest_gui,
+  infinity_chests_storage = infinity_chests_storage
+  },function(global)
+  infinity_chests = global.infinity_chests
+  infinity_chest_gui = global.infinity_chest_gui
+  infinity_chests_storage = global.infinity_chests_storage
+  infinity_chests_modes = global.infinity_chests_modes
+end)
 
 local function sizeof(tbl)
   if not tbl then return 0 end
   local len = 0
-  for k, _ in pairs(tbl) do
+  for k, v in pairs(tbl) do
     len = len + 1
   end
   return len
-end
-
-local function validate_player(player)
-  if not player then return false end
-  if not player.valid then return false end
-  if not player.character then return false end
-  if not player.connected then return false end
-  if not game.players[player.name] then return false end
-  return true
 end
 
 local function built_entity(event)
@@ -41,7 +33,7 @@ local function built_entity(event)
   if not entity.valid then return end
   if entity.name ~= "infinity-chest" then return end
   entity.active = false
-  infinity_chests[entity.unit_number] = entity
+  infinity_chests[entity.unit_number]  = entity
   rendering.draw_text{
     text = "♾",
     surface = entity.surface,
@@ -147,24 +139,14 @@ local function gui_opened(event)
   local player = game.players[event.player_index]
   local frame = player.gui.center.add{ type = "frame", caption = "Infinity Chest", direction = "vertical", name = entity.unit_number}
   local controls = frame.add{ type = "flow", direction = "horizontal"}
-  local items = frame.add{ type = "flow", direction = "vertical"}
+  local items   = frame.add{ type = "flow", direction = "vertical"}
 
   local mode = infinity_chests_modes[entity.unit_number]
   local selected = mode and mode or 1
 
-  local tbl = controls.add{ type = "table", column_count = 1}
-
-  local text =
-      tbl.add {
-      type = 'label',
-      caption = format('This chest stores unlimited quantity of items (up to 48 different item types).\nThe chest is best used with an inserter to add / remove items.\nThe chest is mineable if state is disabled or no items are stored.\nAll items are destroyed when mined.\n')
-  }
-  text.style.single_line = false
-
-  local tbl_2 = tbl.add{ type = "table", column_count = 2}
-
-  tbl_2.add{ type = "label", caption = "Mode: " }
-  local drop_down = tbl_2.add{ type = "drop-down", items = {"Enabled", "Disabled"}, selected_index = selected, name = entity.unit_number }
+  local tbl = controls.add{ type = "table", column_count = 2}
+  tbl.add{ type = "label", caption = "Mode: " }
+  local drop_down = tbl.add{ type = "drop-down", items = {"Automatic", "Manual"}, selected_index = selected, name = entity.unit_number }
   infinity_chests_modes[entity.unit_number] = drop_down.selected_index
 
   player.opened = frame
@@ -216,7 +198,7 @@ local function update_gui()
 
 
     for item_name, item_count in pairs(items) do
-      local btn = tbl.add{ type = "sprite-button", sprite = "item/"..item_name ,style = "slot_button", number = item_count, name = item_name, tooltip = "Withdrawal is possible when state is disabled! "}
+      local btn = tbl.add{ type = "sprite-button", sprite = "item/"..item_name ,style = "slot_button", number = item_count, name = item_name}
     end
 
     while total < 48 do
@@ -248,11 +230,7 @@ end
 
 local function state_changed(event)
   local element = event.element
-  if not element.valid then return end
-  if not element.selected_index then return end
   local unit_number = tonumber(element.name)
-  if not unit_number then return end
-  if not infinity_chests_modes[unit_number] then return end
   infinity_chests_modes[unit_number] = element.selected_index
   local chest = infinity_chests[unit_number]
 end
@@ -276,9 +254,7 @@ local function gui_click(event)
 
   if ctrl then
     local count = storage[name]
-    if not count then return end
     local inserted = player.insert{ name = name, count = count}
-    if not inserted then return end
     if inserted == count then
       infinity_chests_storage[unit_number][name] = nil
     else
@@ -287,8 +263,7 @@ local function gui_click(event)
   elseif shift then
     local count = storage[name]
     local stack = game.item_prototypes[name].stack_size
-    if not count then return end
-    if not stack then return end
+
     if count > stack then
       local inserted = player.insert{ name = name, count = stack}
       infinity_chests_storage[unit_number][name] = infinity_chests_storage[unit_number][name] - inserted
@@ -297,9 +272,8 @@ local function gui_click(event)
       infinity_chests_storage[unit_number][name] = nil
     end
   else
-    if not infinity_chests_storage[unit_number][name] then return end
-    infinity_chests_storage[unit_number][name] = infinity_chests_storage[unit_number][name] - 1
     player.insert{ name = name, count = 1 }
+    infinity_chests_storage[unit_number][name] = infinity_chests_storage[unit_number][name] - 1
     if infinity_chests_storage[unit_number][name] <= 0 then
       infinity_chests_storage[unit_number][name] = nil
     end
@@ -318,11 +292,11 @@ local function tick()
   update_gui()
 end
 
-Event.add(defines.events.on_tick, tick)
-Event.add(defines.events.on_gui_click, gui_click)
-Event.add(defines.events.on_gui_opened, gui_opened)
-Event.add(defines.events.on_gui_closed, gui_closed)
-Event.add(defines.events.on_built_entity, built_entity)
-Event.add(defines.events.on_robot_built_entity, built_entity)
-Event.add(defines.events.on_player_mined_entity, mined_entity)
-Event.add(defines.events.on_gui_selection_state_changed, state_changed)
+Event.register(defines.events.on_tick, tick)
+Event.register(defines.events.on_gui_click, gui_click)
+Event.register(defines.events.on_gui_opened, gui_opened)
+Event.register(defines.events.on_gui_closed, gui_closed)
+Event.register(defines.events.on_built_entity, built_entity)
+Event.register(defines.events.on_robot_built_entity, built_entity)
+Event.register(defines.events.on_player_mined_entity, mined_entity)
+Event.register(defines.events.on_gui_selection_state_changed, state_changed)

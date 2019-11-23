@@ -373,7 +373,7 @@ local function on_gui_click(event)
 	
 	if not frame then return end
 	if not event.element.caption then return end
-	local position = get_position_from_string(event.element.caption)	
+	local position = get_position_from_string(tostring(event.element.caption))
 	if not position then return end
 	
 	if player.gui.center["mini_camera"] then

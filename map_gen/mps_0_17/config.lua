@@ -160,7 +160,7 @@ global.scenario_config = {
         -- THIS IS WHAT SETS THE SPAWN CIRCLE SIZE!
         -- Create a circle of land area for the spawn
         -- If you make this much bigger than a few chunks, good luck.
-        land_area_tiles = global_data.chunk_size*1.8,
+        land_area_tiles = global_data.chunk_size*2.5,
 
         -- Allow players to choose to spawn with a moat
         moat_choice_enabled = true,
@@ -175,8 +175,9 @@ global.scenario_config = {
         force_grass = true,
 
         -- Spawn a circle/octagon of trees around the base outline.
-        tree_circle = true,
+        tree_circle = false,
         tree_octagon = false,
+        tree_square = true,
     },
 
     -- Safe Spawn Area Options
@@ -203,9 +204,14 @@ global.scenario_config = {
     },
 
     -- Location of water strip (horizontal)
-    water = {
+    water_new = {
+        x_offset = -90,
+        y_offset = -55,
+        length = 10
+    },
+    water_classic = {
         x_offset = -4,
-        y_offset = -48,
+        y_offset = -65,
         length = 8
     },
 
@@ -217,7 +223,7 @@ global.scenario_config = {
         -- Only works for resource_tiles at the moment, not oil patches/water.
         enabled = true,
         -- Distance from center of spawn that resources are placed.
-        radius = 44,
+        radius = 60,
         -- At what angle (in radians) do resources start.
         -- 0 means starts directly east.
         -- Resources are placed clockwise from there.
@@ -226,76 +232,90 @@ global.scenario_config = {
         -- angle_offset and angle_final determine spacing and placement.
         angle_final = 4.46 -- 4.46 is approx NNW.
     },
-
+    -- Randomize positions
+    pos =
+        {{x=-5,y=-45},{x=20,y=-45},{x=-30,y=-45},{x=-56,y=-45}
+    },
     -- Resource tiles
     -- If you are running with mods like bobs/angels, you'll want to customize this.
-    resource_tiles =
+    resource_tiles_new =
+    {
+
+        [1] =
+        {
+            amount = 2500,
+            size = 18
+        },
+        [2] =
+        {
+            amount = 2500,
+            size = 18
+        },
+        [3] =
+        {
+            amount = 2500,
+            size = 18
+        },
+        [4] =
+        {
+            amount = 2500,
+            size = 18
+        }
+    },
+    -- Resource tiles
+    -- If you are running with mods like bobs/angels, you'll want to customize this.
+    resource_tiles_classic =
     {
         ["iron-ore"] =
         {
-            amount = 1800,
-            size = 16,
+            amount = 2500,
+            size = 18,
             x_offset = -29,
             y_offset = 16
         },
         ["copper-ore"] =
         {
-            amount = 1500,
-            size = 14,
+            amount = 2500,
+            size = 18,
             x_offset = -28,
             y_offset = -3
         },
         ["stone"] =
         {
-            amount = 1000,
-            size = 12,
+            amount = 2500,
+            size = 18,
             x_offset = -27,
             y_offset = -34
         },
         ["coal"] =
         {
-            amount = 1500,
-            size = 12,
+            amount = 2500,
+            size = 18,
             x_offset = -27,
             y_offset = -20
-        }--,
-        -- ["uranium-ore"] =
-        -- {
-        --     amount = 0,
-        --     size = 0,
-        --     x_offset = 17,
-        --     y_offset = -34
-        -- }
-
-        -- ####### Bobs + Angels #######
-        -- DISABLE STARTING OIL PATCHES!
-        -- Coal                = coal
-        -- Saphirite           = angels-ore1
-        -- Stiratite           = angels-ore3
-        -- Rubyte              = angels-ore5
-        -- Bobmonium           = angels-ore6
-
-        -- ########## Bobs Ore ##########
-        -- Iron                = iron-ore
-        -- Copper              = copper-ore
-        -- Coal                = coal
-        -- Stone               = stone
-        -- Tin                 = tin-ore
-        -- Lead (Galena)       = lead-ore
-
-        -- See https://github.com/Oarcinae/FactorioScenarioMultiplayerSpawn/issues/11#issuecomment-479724909
-        -- for full examples.
+        }
     },
-
     -- Special resource patches like oil
-    resource_patches =
+    resource_patches_new =
+    {
+        ["crude-oil"] =
+        {
+            num_patches = 2,
+            amount = 900000,
+            x_offset_start = 60,
+            y_offset_start = -50,
+            x_offset_next = 6,
+            y_offset_next = 0
+        }
+    },
+    resource_patches_classic =
     {
         ["crude-oil"] =
         {
             num_patches = 2,
             amount = 900000,
             x_offset_start = -3,
-            y_offset_start = 48,
+            y_offset_start = 60,
             x_offset_next = 6,
             y_offset_next = 0
         }

@@ -43,9 +43,9 @@ end
 
 -- Useful for displaying game time in mins:secs format
 function Public.formattime(ticks)
-  local seconds = ticks / 60
-  local minutes = math.floor((seconds)/60)
-  local seconds = math.floor(seconds - 60*minutes)
+  local secs = ticks / 60
+  local minutes = math.floor((secs)/60)
+  local seconds = math.floor(secs - 60*minutes)
   return string.format("%dm:%02ds", minutes, seconds)
 end
 
@@ -65,16 +65,13 @@ function Public.TableLength(T)
   return count
 end
 
--- Fisher-Yares shuffle
--- https://stackoverflow.com/questions/35572435/how-do-you-do-the-fisher-yates-shuffle-in-lua
-function Public.FYShuffle(tInput)
-    local tReturn = {}
-    for i = #tInput, 1, -1 do
-        local j = math.random(i)
-        tInput[i], tInput[j] = tInput[j], tInput[i]
-        table.insert(tReturn, tInput[i])
-    end
-    return tReturn
+function Public.shuffle(tbl)
+    local size = #tbl
+        for i = size, 1, -1 do
+            local rand = math.random(size)
+            tbl[i], tbl[rand] = tbl[rand], tbl[i]
+        end
+    return tbl
 end
 
 -- Simple function Public.to get distance between two positions.
@@ -851,6 +848,39 @@ function Public.CreateCropCircle(surface, centerPos, chunkArea, tileRadius, fill
             -- Create a circle of trees around the spawn point.
             if ((distVar < tileRadSqr-200) and
                 (distVar > tileRadSqr-400)) then
+                surface.create_entity({name="tree-02", amount=2, position={i, j}})
+            end
+        end
+    end
+
+    surface.set_tiles(dirtTiles)
+end
+
+function Public.CreateCropSquare(surface, centerPos, area, tileRadius, fillTile)
+    local left_top = area.left_top
+    local right_bottom = area.right_bottom
+
+    local dirtTiles = {}
+    for i=left_top.x,right_bottom.x-1,1 do
+        for j=left_top.y,right_bottom.y-1,1 do
+
+            -- This ( X^2 + Y^2 ) is used to calculate if something
+            -- is inside a circle area.
+
+            local distVar = math.floor(math.max(math.abs(centerPos.x - i)-20, math.abs(centerPos.y - j)+20))
+            --local distVar = math.floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
+
+            -- Fill in all unexpected water in a circle
+            if (distVar < tileRadius) then
+                if (surface.get_tile(i,j).collides_with("water-tile") or
+                    global.scenario_config.gen_settings.force_grass) then
+                    table.insert(dirtTiles, {name = fillTile, position ={i,j}})
+                end
+            end
+
+            -- Create a circle of trees around the spawn point.
+            if ((distVar < tileRadius) and 
+                (distVar > tileRadius-3)) then
                 surface.create_entity({name="tree-02", amount=1, position={i, j}})
             end
         end
@@ -891,11 +921,8 @@ function Public.CreateCropOctagon(surface, centerPos, chunkArea, tileRadius, fil
     surface.set_tiles(dirtTiles)
 end
 
--- Add a circle of water
-function Public.CreateMoat(surface, centerPos, chunkArea, tileRadius, fillTile)
-
+function Public.CreateMoat(surface, centerPos, chunkArea, tileRadius)
     local tileRadSqr = tileRadius^2
-
     local waterTiles = {}
     for i=chunkArea.left_top.x,chunkArea.right_bottom.x,1 do
         for j=chunkArea.left_top.y,chunkArea.right_bottom.y,1 do
@@ -909,16 +936,26 @@ function Public.CreateMoat(surface, centerPos, chunkArea, tileRadius, fillTile)
                 (distVar > tileRadSqr)) then
                 table.insert(waterTiles, {name = "water", position ={i,j}})
             end
-
-            -- Enforce land inside the edges of the circle to make sure it's
-            -- a clean transition
-            -- if ((distVar <= tileRadSqr) and
-            --     (distVar > tileRadSqr-10000)) then
-            --     table.insert(waterTiles, {name = fillTile, position ={i,j}})
-            -- end
         end
     end
+surface.set_tiles(waterTiles)
+end
 
+function Public.CreateMoatSquare(surface, centerPos, chunkArea, tileRadius)
+    local waterTiles = {}
+    local insert = table.insert
+        for i=chunkArea.left_top.x,chunkArea.right_bottom.x-1,1 do
+            for j=chunkArea.left_top.y,chunkArea.right_bottom.y-1,1 do
+
+           local distVar = math.floor(math.max(math.abs(centerPos.x - i)-22, math.abs(centerPos.y - j)+18))
+
+                -- Create a water ring
+                if ((distVar < tileRadius) and
+                    (distVar > tileRadius-3)) then
+                    insert(waterTiles, {name = "deepwater", position ={i,j}})
+                end
+            end
+        end
     surface.set_tiles(waterTiles)
 end
 

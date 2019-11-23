@@ -20,7 +20,7 @@ end
 
 local function on_chunk_generated(event)
 	local surface = event.surface
-	local starting_distance = surface.map_gen_settings.starting_area * 200
+	local starting_distance = surface.map_gen_settings.starting_area * 800
 	local left_top = event.area.left_top
 	local chunk_distance_to_center = math.sqrt(left_top.x ^ 2 + left_top.y ^ 2)
 	if starting_distance > chunk_distance_to_center then return end
