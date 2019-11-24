@@ -596,7 +596,7 @@ function Public.QueuePlayerForDelayedSpawn(playerName, spawn, classic, moatChoic
     if ((spawn.x ~= 0) or (spawn.y ~= 0)) then
         global.uniqueSpawns[playerName] = {pos=spawn,layout=classic,moat=moatChoice,vanilla=vanillaSpawn, this=this}
 
-        local delay_spawn_seconds = 5*(math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size))
+        local delay_spawn_seconds = 2*(math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size))
         game.players[playerName].surface.request_to_generate_chunks(spawn, 4)
         local delayedTick = game.tick + delay_spawn_seconds*global_data.ticks_per_second
         table.insert(global.delayedSpawns, {playerName=playerName, layout=classic, pos=spawn, moat=moatChoice, vanilla=vanillaSpawn, delayedTick=delayedTick, this=this})
@@ -643,7 +643,6 @@ function Public.SendPlayerToNewSpawnAndCreateIt(delayedSpawn)
     -- DOUBLE CHECK and make sure the area is super safe.
     Utils.ClearNearbyEnemies(delayedSpawn.pos, global.scenario_config.safe_area.safe_radius, game.surfaces[surface_name])
     local water_data
-    game.print(serpent.block(delayedSpawn))
     if delayedSpawn.layout == "classic" then
         water_data = global.scenario_config.water_classic
     elseif delayedSpawn.layout == "new" then
@@ -681,8 +680,12 @@ function Public.SendPlayerToNewSpawnAndCreateIt(delayedSpawn)
 end
 
 function Public.SendPlayerToSpawn(player)
+    local pos
     local dest = global.playerSpawns[player.name]
-    local pos = player.surface.find_non_colliding_position("character", dest, 3, 0,5)
+    if not dest then pos = player.surface.find_non_colliding_position("character", {x=0,y=0}, 3, 0,5)
+    else
+        pos = player.surface.find_non_colliding_position("character", dest, 3, 0,5)
+    end
     if (Public.DoesPlayerHaveCustomSpawn(player)) then
         if pos then
             player.teleport(pos, player.surface)
@@ -691,7 +694,11 @@ function Public.SendPlayerToSpawn(player)
         end
         game.permissions.get_group("Default").add_player(player)
     else
-        player.teleport(player.surface.find_non_colliding_position("character", dest, 3, 0,5), player.surface)
+        if not dest then
+            player.teleport(player.surface.find_non_colliding_position("character", {x=0,y=0}, 3, 0,5), player.surface)
+        else
+            player.teleport(player.surface.find_non_colliding_position("character", dest, 3, 0,5), player.surface)
+        end
         game.permissions.get_group("Default").add_player(player)
     end
 end

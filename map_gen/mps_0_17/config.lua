@@ -72,7 +72,7 @@ global.enable_power_armor = false
 -- more balanced based on your distance and makes the game a little easier.
 -- No behemoth worms everywhere just because you spawned far away.
 -- If you're trying out the vanilla spawning, you might want to disable this.
-global.modded_enemy = true
+global.modded_enemy = false
 
 ---------------------------------------
 -- Market

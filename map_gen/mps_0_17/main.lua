@@ -3,6 +3,7 @@ local market_items = require "features.modules.map_market_items"
 local Tabs = require 'features.gui.main'
 local RPG = require 'features.modules.rpg'
 local fish = require 'features.modules.launch_fish_to_win'
+--require 'features.modules.night_attacks'
 require 'features.modules.scramble'
 --local Map = require 'features.modules.map_info'
 require 'features.modules.enhancedbiters'
@@ -27,6 +28,7 @@ require 'features.modules.spawn_area'
 require 'features.modules.show_health'
 require 'features.modules.splice'
 require 'features.modules.afk'
+require 'features.modules.oarc_enemies.main'
 
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 
@@ -186,7 +188,6 @@ end)
 ----------------------------------------
 Event.add(defines.events.on_player_joined_game, function(event)
     Utils.PlayerJoinedMessages(event)
-    game.speed = 10
 end)
 
 Event.add(defines.events.on_player_created, function(event)

@@ -22,8 +22,10 @@ function Public.splitters(event)
 		return
 	end
 
-	if name == "behemoth-spitter" and math.random(1,10) == 10 then
-		create{name="big-worm-turret", position=position}
+	if name == "behemoth-worm-turret" and math.random(1,10) == 10 then
+		for i=0, 5, 1 do
+			create{name="big-worm-turret", position=position}
+		end
 	end
 	if name == "big-worm-turret" and math.random(1,10) == 10 then
 		for i=0, 5, 1 do
@@ -44,10 +46,10 @@ function Public.splitters(event)
 		end
 	end
 
-	if name == "small-biter" and math.random(1,9) == 9 then
+	if name == "big-biter" and math.random(1,9) == 9 then
 		for i=0, 2, 1 do
-			local pos = surface.find_non_colliding_position("small-biter", position, 10, 2)
-			create{name="small-biter", position=pos}
+			local pos = surface.find_non_colliding_position("big-biter", position, 10, 2)
+			create{name="big-biter", position=pos}
 		end
 	end
 	if name == "big-spitter" and math.random(1,5) == 5  then

@@ -5,8 +5,14 @@
 -- Also contains some constants and gui styles
 local Surface = require 'utils.surface'
 local Table = require 'map_gen.mps_0_17.lib.table'
-require("map_gen.mps_0_17.lib.oarc_gui_utils")
+local Gui = require 'map_gen.mps_0_17.lib.oarc_gui_utils'
 require("mod-gui")
+local table_insert = table.insert
+local table_remove = table.remove
+local math_random = math.random
+local math_floor = math.floor
+local format = string.format
+local abs = math.abs
 
 local Public = {}
 
@@ -23,6 +29,41 @@ function Public.FlyingText(msg, pos, color, surface)
         surface.create_entity({ name = "flying-text", position = pos, text = msg })
     else
         surface.create_entity({ name = "flying-text", position = pos, text = msg, color = color })
+    end
+end
+
+-- Requires having an on_tick handler.
+function Public.DisplaySpeechBubble(player, text, timeout_secs)
+    local global_data = Table.get_table()
+
+    if (global.oarc_speech_bubbles == nil) then
+        global.oarc_speech_bubbles = {}
+    end
+
+    if (player and player.character) then
+        local sp = player.surface.create_entity{name = "compi-speech-bubble",
+                                                position = player.position,
+                                                text = text,
+                                                source = player.character}
+        table_insert(global.oarc_speech_bubbles, {entity=sp,
+                        timeout_tick=game.tick+(timeout_secs*global_data.ticks_per_second)})
+    end
+end
+
+-- Every second, check a global table to see if we have any speech bubbles to kill.
+function Public.TimeoutSpeechBubblesOnTick()
+    local global_data = Table.get_table()
+    if ((game.tick % (global_data.ticks_per_second)) == 3) then
+        if (global.oarc_speech_bubbles and (#global.oarc_speech_bubbles > 0)) then
+            for k,sp in pairs(global.oarc_speech_bubbles) do
+                if (game.tick > sp.timeout_tick) then
+                    if (sp.entity ~= nil) and (sp.entity.valid) then
+                        sp.entity.start_fading_out()
+                    end
+                    table_remove(global.oarc_speech_bubbles, k)
+                end
+            end
+        end
     end
 end
 
@@ -44,18 +85,18 @@ end
 -- Useful for displaying game time in mins:secs format
 function Public.formattime(ticks)
   local secs = ticks / 60
-  local minutes = math.floor((secs)/60)
-  local seconds = math.floor(secs - 60*minutes)
-  return string.format("%dm:%02ds", minutes, seconds)
+  local minutes = math_floor((secs)/60)
+  local seconds = math_floor(secs - 60*minutes)
+  return format("%dm:%02ds", minutes, seconds)
 end
 
 -- Useful for displaying game time in mins:secs format
 function Public.formattime_hours_mins(ticks)
   local seconds = ticks / 60
-  local minutes = math.floor((seconds)/60)
-  local hours   = math.floor((minutes)/60)
-  local min = math.floor(minutes - 60*hours)
-  return string.format("%dh:%02dm", hours, minutes, min)
+  local minutes = math_floor((seconds)/60)
+  local hours   = math_floor((minutes)/60)
+  local min = math_floor(minutes - 60*hours)
+  return format("%dh:%02dm", hours, minutes, min)
 end
 
 -- Simple function Public.to get total number of items in table
@@ -68,10 +109,23 @@ end
 function Public.shuffle(tbl)
     local size = #tbl
         for i = size, 1, -1 do
-            local rand = math.random(size)
+            local rand = math_random(size)
             tbl[i], tbl[rand] = tbl[rand], tbl[i]
         end
     return tbl
+end
+
+-- Get a random KEY from a table.
+function Public.GetRandomKeyFromTable(t)
+    local keyset = {}
+    for k,_ in pairs(t) do
+        table.insert(keyset, k)
+    end
+    return keyset[math.random(#keyset)]
+end
+
+function Public.GetRandomValueFromTable(t)
+    return t[Public.GetRandomKeyFromTable(t)]
 end
 
 -- Simple function Public.to get distance between two positions.
@@ -86,8 +140,8 @@ end
 -- Given a table of positions, returns key for closest to given pos.
 function Public.GetClosestPosFromTable(pos, pos_table)
 
-    local closest_dist = nil
-    local closest_key = nil
+    local closest_dist
+    local closest_key
 
     for k,p in pairs(pos_table) do
         local new_dist = Public.getDistance(pos, p)
@@ -241,9 +295,30 @@ function Public.RemoveFish(surface, area)
     end
 end
 
+-- Render a path
+function Public.RenderPath(path, ttl, players)
+    local last_pos = path[1].position
+    local color = {r = 1, g = 0, b = 0, a = 0.5}
+
+    for i,v in pairs(path) do
+        if (i ~= 1) then
+
+            color={r = 1/(1+(i%3)), g = 1/(1+(i%5)), b = 1/(1+(i%7)), a = 0.5}
+            rendering.draw_line{color=color,
+                                width=2,
+                                from=v.position,
+                                to=last_pos,
+                                surface=game.surfaces[1],
+                                players=players,
+                                time_to_live=ttl}
+        end
+        last_pos = v.position
+    end
+end
+
 -- Get a random 1 or -1
 function Public.RandomNegPos()
-    if (math.random(0,1) == 1) then
+    if (math_random(0,1) == 1) then
         return 1
     else
         return -1
@@ -254,8 +329,8 @@ end
 function Public.GetRandomVector()
     local randVec = {x=0,y=0}
     while ((randVec.x == 0) and (randVec.y == 0)) do
-        randVec.x = math.random(-3,3)
-        randVec.y = math.random(-3,3)
+        randVec.x = math_random(-3,3)
+        randVec.y = math_random(-3,3)
     end
     log("direction: x=" .. randVec.x .. ", y=" .. randVec.y)
     return randVec
@@ -301,7 +376,7 @@ function Public.FindMapEdge(directionVec, surface)
     while(true) do
 
         -- Set some absolute limits.
-        if ((math.abs(chunkPos.x) > 1000) or (math.abs(chunkPos.y) > 1000)) then
+        if ((abs(chunkPos.x) > 1000) or (abs(chunkPos.y) > 1000)) then
             break
 
         -- If chunk is already generated, keep looking
@@ -342,8 +417,8 @@ function Public.FindUngeneratedCoordinates(minDistChunks, maxDistChunks, surface
     local maxDistSqr = maxDistChunks^2
 
     while(true) do
-        chunkPos.x = math.random(0,maxDistChunks) * Public.RandomNegPos()
-        chunkPos.y = math.random(0,maxDistChunks) * Public.RandomNegPos()
+        chunkPos.x = math_random(0,maxDistChunks) * Public.RandomNegPos()
+        chunkPos.y = math_random(0,maxDistChunks) * Public.RandomNegPos()
 
         local distSqrd = chunkPos.x^2 + chunkPos.y^2
 
@@ -415,7 +490,11 @@ end
 
 -- Gets chunk position of a tile.
 function Public.GetChunkPosFromTilePos(tile_pos)
-    return {x=math.floor(tile_pos.x/32), y=math.floor(tile_pos.y/32)}
+    return {x=math_floor(tile_pos.x/32), y=math_floor(tile_pos.y/32)}
+end
+
+function Public.GetCenterTilePosFromChunkPos(c_pos)
+    return {x=c_pos.x*32 + 16, y=c_pos.y*32 + 16}
 end
 
 -- Get the left_top
@@ -493,7 +572,7 @@ end
 -- Also removes all big and huge worms in that area
 function Public.ReduceAliensInArea(surface, area, reductionFactor)
     for _, entity in pairs(surface.find_entities_filtered{area = area, force = "enemy"}) do
-        if (math.random(0,reductionFactor) > 0) then
+        if (math_random(0,reductionFactor) > 0) then
             entity.destroy()
         end
     end
@@ -508,7 +587,7 @@ function Public.DowngradeWormsInArea(surface, area, small_percent, medium_percen
     for _, entity in pairs(surface.find_entities_filtered{area = area, name = worm_types}) do
 
         -- Roll a number between 0-100
-        local rand_percent = math.random(0,100)
+        local rand_percent = math_random(0,100)
         local worm_pos = entity.position
         local worm_name = entity.name
 
@@ -557,16 +636,16 @@ function Public.RemoveWormsInArea(surface, area, small, medium, big, behemoth)
     local worm_types = {}
 
     if (small) then
-        table.insert(worm_types, "small-worm-turret")
+        table_insert(worm_types, "small-worm-turret")
     end
     if (medium) then
-        table.insert(worm_types, "medium-worm-turret")
+        table_insert(worm_types, "medium-worm-turret")
     end
     if (big) then
-        table.insert(worm_types, "big-worm-turret")
+        table_insert(worm_types, "big-worm-turret")
     end
     if (behemoth) then
-        table.insert(worm_types, "behemoth-worm-turret")
+        table_insert(worm_types, "behemoth-worm-turret")
     end
 
     -- Destroy
@@ -591,7 +670,7 @@ function Public.CoverAreaInTiles(surface, area, tile_name)
     local tiles = {}
     for x = area.left_top.x,area.left_top.x+31 do
         for y = area.left_top.y,area.left_top.y+31 do
-            table.insert(tiles, {name = tile_name, position = {x=x, y=y}})
+            table_insert(tiles, {name = tile_name, position = {x=x, y=y}})
         end
     end
     surface.set_tiles(tiles, true)
@@ -663,7 +742,7 @@ function Public.DropGravestoneChests(player)
 
                         -- Create a chest when counter is reset
                         if (count == 0) then
-                            grave = DropEmptySteelChest(player)
+                            grave = Public.DropEmptySteelChest(player)
                             if (grave == nil) then
                                 -- player.print("Not able to place a chest nearby! Some items lost!")
                                 return
@@ -792,9 +871,9 @@ function Public.AutofillTurret(player, turret)
         -- Inserted ammo successfully
         -- FlyingText("Inserted ammo x" .. ret, turret.position, my_color_red, player.surface)
     elseif (ret == -1) then
-        Public.FlyingText("Out of ammo!", turret.position, my_color_red, player.surface)
+        Public.FlyingText("Out of ammo!", turret.position, Gui.my_color_red, player.surface)
     elseif (ret == -2) then
-        Public.FlyingText("Autofill ERROR! - Report this bug!", turret.position, my_color_red, player.surface)
+        Public.FlyingText("Autofill ERROR! - Report this bug!", turret.position, Gui.my_color_red, player.surface)
     end
 end
 
@@ -834,14 +913,14 @@ function Public.CreateCropCircle(surface, centerPos, chunkArea, tileRadius, fill
 
             -- This ( X^2 + Y^2 ) is used to calculate if something
             -- is inside a circle area.
-            local distVar = math.floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
+            local distVar = math_floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
 
             -- Fill in all unexpected water in a circle
             if (distVar < tileRadSqr) then
                 if (surface.get_tile(i,j).collides_with("water-tile") or
                     global.scenario_config.gen_settings.force_grass or
                     (game.active_mods["oarc-restricted-build"])) then
-                    table.insert(dirtTiles, {name = fillTile, position ={i,j}})
+                    table_insert(dirtTiles, {name = fillTile, position ={i,j}})
                 end
             end
 
@@ -867,19 +946,19 @@ function Public.CreateCropSquare(surface, centerPos, area, tileRadius, fillTile)
             -- This ( X^2 + Y^2 ) is used to calculate if something
             -- is inside a circle area.
 
-            local distVar = math.floor(math.max(math.abs(centerPos.x - i)-20, math.abs(centerPos.y - j)+20))
-            --local distVar = math.floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
+            local distVar = math_floor(math.max(abs(centerPos.x - i)-20, abs(centerPos.y - j)+20))
+            --local distVar = math_floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
 
             -- Fill in all unexpected water in a circle
             if (distVar < tileRadius) then
                 if (surface.get_tile(i,j).collides_with("water-tile") or
                     global.scenario_config.gen_settings.force_grass) then
-                    table.insert(dirtTiles, {name = fillTile, position ={i,j}})
+                    table_insert(dirtTiles, {name = fillTile, position ={i,j}})
                 end
             end
 
             -- Create a circle of trees around the spawn point.
-            if ((distVar < tileRadius) and 
+            if ((distVar < tileRadius) and
                 (distVar > tileRadius-3)) then
                 surface.create_entity({name="tree-02", amount=1, position={i, j}})
             end
@@ -898,8 +977,8 @@ function Public.CreateCropOctagon(surface, centerPos, chunkArea, tileRadius, fil
     for i=chunkArea.left_top.x,chunkArea.right_bottom.x,1 do
         for j=chunkArea.left_top.y,chunkArea.right_bottom.y,1 do
 
-            local distVar1 = math.floor(math.max(math.abs(centerPos.x - i), math.abs(centerPos.y - j)))
-            local distVar2 = math.floor(math.abs(centerPos.x - i) + math.abs(centerPos.y - j))
+            local distVar1 = math_floor(math.max(abs(centerPos.x - i), abs(centerPos.y - j)))
+            local distVar2 = math_floor(abs(centerPos.x - i) + abs(centerPos.y - j))
             local distVar = math.max(distVar1*1.1, distVar2 * 0.707*1.1);
 
             -- Fill in all unexpected water in a circle
@@ -907,7 +986,7 @@ function Public.CreateCropOctagon(surface, centerPos, chunkArea, tileRadius, fil
                 if (surface.get_tile(i,j).collides_with("water-tile") or
                     global.scenario_config.gen_settings.force_grass or
                     (game.active_mods["oarc-restricted-build"])) then
-                    table.insert(dirtTiles, {name = fillTile, position ={i,j}})
+                    table_insert(dirtTiles, {name = fillTile, position ={i,j}})
                 end
             end
 
@@ -929,12 +1008,12 @@ function Public.CreateMoat(surface, centerPos, chunkArea, tileRadius)
 
             -- This ( X^2 + Y^2 ) is used to calculate if something
             -- is inside a circle area.
-            local distVar = math.floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
+            local distVar = math_floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
 
             -- Create a circle of water
             if ((distVar < tileRadSqr+(1500*global.scenario_config.gen_settings.moat_size_modifier)) and
                 (distVar > tileRadSqr)) then
-                table.insert(waterTiles, {name = "water", position ={i,j}})
+                table_insert(waterTiles, {name = "water", position ={i,j}})
             end
         end
     end
@@ -943,11 +1022,11 @@ end
 
 function Public.CreateMoatSquare(surface, centerPos, chunkArea, tileRadius)
     local waterTiles = {}
-    local insert = table.insert
+    local insert = table_insert
         for i=chunkArea.left_top.x,chunkArea.right_bottom.x-1,1 do
             for j=chunkArea.left_top.y,chunkArea.right_bottom.y-1,1 do
 
-           local distVar = math.floor(math.max(math.abs(centerPos.x - i)-22, math.abs(centerPos.y - j)+18))
+           local distVar = math_floor(math.max(abs(centerPos.x - i)-22, abs(centerPos.y - j)+18))
 
                 -- Create a water ring
                 if ((distVar < tileRadius) and
@@ -963,14 +1042,14 @@ end
 function Public.CreateWaterStrip(surface, leftPos, length)
     local waterTiles = {}
     for i=0,length,1 do
-        table.insert(waterTiles, {name = "water", position={leftPos.x+i,leftPos.y}})
+        table_insert(waterTiles, {name = "water", position={leftPos.x+i,leftPos.y}})
     end
     surface.set_tiles(waterTiles)
 end
 
 -- function Public.to generate a resource patch, of a certain size/amount at a pos.
 function Public.GenerateResourcePatch(surface, resourceName, diameter, pos, amount)
-    local midPoint = math.floor(diameter/2)
+    local midPoint = math_floor(diameter/2)
     if (diameter == 0) then
         return
     end
@@ -1022,11 +1101,11 @@ function Public.CreateHoldingPen(surface, chunkArea, sizeTiles, sizeMoat)
                     -- Are we within the land area? Place land.
                     if ((i>-(sizeTiles)) and (i<((sizeTiles)-1)) and
                         (j>-(sizeTiles)) and (j<((sizeTiles)-1))) then
-                        table.insert(grassTiles, {name = "grass-1", position ={i,j}})
+                        table_insert(grassTiles, {name = "grass-1", position ={i,j}})
 
                     -- Else, surround with water.
                     else
-                        table.insert(waterTiles, {name = "water", position ={i,j}})
+                        table_insert(waterTiles, {name = "water", position ={i,j}})
                     end
                 end
             end
