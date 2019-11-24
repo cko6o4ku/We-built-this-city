@@ -108,13 +108,16 @@ function Public.OarcEnemiesOnTick()
         end
     end
 
-    --if ((game.tick % (global_data.ticks_per_second)) == 31) then
-    --    for k, group in pairs(gd.groups) do
-    --        if not group.valid then
-    --            table.remove(gd.groups, k)
-    --        end
-    --    end
-    --end
+    if ((game.tick % (global_data.ticks_per_second)) == 31) then
+        for _, p in ipairs(game.connected_players) do
+        if gd.buildings[p.name] == nil then return end
+            for k, v in pairs(gd.buildings[p.name]) do
+                if not v.valid then
+                    table.remove(gd.buildings[p.name], k)
+                end
+            end
+        end
+    end
 
     -- process_find_retry_path_calc -- WAIT FOR EVENT
     -- Event Function: ProcessAttackCheckPathComplete(event)
@@ -164,12 +167,12 @@ function Public.ProcessPlayerTimersEverySecond()
                 if (timer > 0) then
                     gd.player_timers[name][timer_name] = timer-1
                 else
-                    if (timer_name == "character") then
+                    if (timer_name == "next_wave_player") then
                         OE.OarcEnemiesPlayerAttackCharacter(name)
                         gd.player_timers[name][timer_name] =
                             Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
 
-                    elseif (timer_name == "generic") then
+                    elseif (timer_name == "next_wave_buildings") then
                         OE.OarcEnemiesBuildingAttack(name, Def.enemy_targets)
                         gd.player_timers[name][timer_name] =
                             Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
@@ -495,7 +498,7 @@ function Public.ProcessAttackCreateGroup(key, attack)
         if (attack.target_type == Def.type_target_player) and
            (not gd.player_sbubbles[attack.target_player].uh_oh) then
             Utils.DisplaySpeechBubble(game.players[attack.target_player],
-                                "Uh oh... I feel something comming after me!", 10)
+                                "I got the scent that biters are headed my way!", 15)
             gd.player_sbubbles[attack.target_player].uh_oh = true
         end
 

@@ -255,8 +255,8 @@ function Public.OarcEnemiesPlayerCreatedEvent(event)
     local p_name = game.players[event.player_index].name
 
     if not gd.player_timers[p_name] then
-        gd.player_timers[p_name] = {character=Evo.GetRandomizedPlayerTimer(0, 60*10),
-                                             generic=Evo.GetRandomizedPlayerTimer(0, 0)}
+        gd.player_timers[p_name] = {next_wave_player=Evo.GetRandomizedPlayerTimer(0, 60*20),
+                                             next_wave_buildings=Evo.GetRandomizedPlayerTimer(0, 0)}
     end
 
     if (gd.buildings[p_name] == nil) then
@@ -270,8 +270,7 @@ function Public.OarcEnemiesPlayerCreatedEvent(event)
 
     -- Setup tracking of first time chat bubble displays
     if (gd.player_sbubbles[p_name] == nil) then
-        gd.player_sbubbles[p_name] = {uh_oh=false,
-                                                        rocket=false}
+        gd.player_sbubbles[p_name] = {uh_oh=false, rocket=false}
     end
 end
 
@@ -532,11 +531,7 @@ function Public.OarcEnemiesTrackBuildings(e)
             gd.buildings[e.last_user.name] = {}
         end
 
-        if (gd.buildings[e.last_user.name][e.type] == nil) then
-            gd.buildings[e.last_user.name][e.type] = {}
-        end
-
-        insert(gd.buildings[e.last_user.name][e.type], e)
+        insert(gd.buildings[e.last_user.name], e)
 
     end
 end

@@ -675,7 +675,7 @@ function Public.SendPlayerToNewSpawnAndCreateIt(delayedSpawn)
     game.permissions.get_group("Default").add_player(player)
 
     -- Chart the area.
-    Utils.ChartArea(player.force, delayedSpawn.pos, math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size), player.surface)
+    --Utils.ChartArea(player.force, delayedSpawn.pos, math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size), player.surface)
 
     if (player.gui.screen.wait_for_spawn_dialog ~= nil) then
         player.gui.screen.wait_for_spawn_dialog.destroy()
@@ -991,8 +991,8 @@ function Public.DisplaySpawnOptions(player)
     sGui.auto_center=true
 
     -- Warnings and explanations...
-    local warn_msg = {"oarc-click-info-btn-help"}
-    UtilsGui.AddLabel(sGui, "warning_lbl1", warn_msg, UtilsGui.my_warning_style)
+    --local warn_msg = {"oarc-click-info-btn-help"}
+    --UtilsGui.AddLabel(sGui, "warning_lbl1", warn_msg, UtilsGui.my_warning_style)
     --UtilsGui.AddLabel(sGui, "spawn_msg_lbl1", SPWN1, UtilsGui.my_label_style)
 
     -- Button and message about the regular vanilla spawn
@@ -1000,6 +1000,7 @@ function Public.DisplaySpawnOptions(player)
 
     -- The main spawning options. Solo near and solo far.
     -- If enable, you can also choose to be on your own team.
+    UtilsGui.AddLabel(sGui, "warning_lbl1", "You can choose between the classic layout or the new one.", UtilsGui.my_label_style)
     local layout_flow = sGui.add{name = "layout", type = "frame", direction="vertical", style = "bordered_frame"}
     UtilsGui.AddLabel(layout_flow, "normal_spawn_lbl1", {"oarc-layout"}, UtilsGui.my_label_style)
     layout_flow.add{name = "layout_classic", type = "radiobutton", caption={"oarc-layout-old"}, state=true}
@@ -1057,16 +1058,14 @@ function Public.DisplaySpawnOptions(player)
     local soloSpawnbuttons = soloSpawnFlow.add{name = "spawn_solo_flow",
                                                 type = "flow",
                                                 direction="horizontal"}
-    soloSpawnbuttons.style.horizontal_align = "center"
+    --soloSpawnbuttons.style.horizontal_align = "center"
     soloSpawnbuttons.style.horizontally_stretchable = true
     soloSpawnbuttons.add{name = "isolated_spawn_near",
                     type = "button",
-                    caption={"oarc-solo-spawn-near"},
-                    style = "confirm_button"}
+                    caption={"oarc-solo-spawn-near"}}
     soloSpawnbuttons.add{name = "isolated_spawn_far",
                     type = "button",
-                    caption={"oarc-solo-spawn-far"},
-                    style = "confirm_button"}
+                    caption={"oarc-solo-spawn-far"}}
 
     if (global.enable_vanilla_spawns) then
         UtilsGui.AddLabel(soloSpawnFlow, "isolated_spawn_lbl1",
@@ -1125,8 +1124,8 @@ function Public.DisplaySpawnOptions(player)
                 {"oarc-max-players-shared-spawn", global.max_players-1},
                 UtilsGui.my_note_style)
     end
-    local spawn_distance_notes={"oarc-spawn-dist-notes", global.near_min_dist, global.near_max_dist, global.far_min_dist, global.far_max_dist}
-    UtilsGui.AddLabel(sGui, "note_lbl1", spawn_distance_notes, UtilsGui.my_note_style)
+    --local spawn_distance_notes={"oarc-spawn-dist-notes", global.near_min_dist, global.near_max_dist, global.far_min_dist, global.far_max_dist}
+    --UtilsGui.AddLabel(sGui, "note_lbl1", spawn_distance_notes, UtilsGui.my_note_style)
 end
 
 
@@ -1747,12 +1746,10 @@ function Public.DisplayBuddySpawnOptions(player)
     -- UtilsGui.AddSpacerLine(buddySpawnFlow)
     buddySpawnFlow.add{name = "buddy_spawn_request_near",
                     type = "button",
-                    caption={"oarc-buddy-spawn-near"},
-                    style = "confirm_button"}
+                    caption={"oarc-buddy-spawn-near"}}
     buddySpawnFlow.add{name = "buddy_spawn_request_far",
                     type = "button",
-                    caption={"oarc-buddy-spawn-far"},
-                    style = "confirm_button"}
+                    caption={"oarc-buddy-spawn-far"}}
 
     UtilsGui.AddSpacer(buddyGui)
     buddyGui.add{name = "buddy_spawn_cancel",
@@ -1817,6 +1814,7 @@ function Public.BuddySpawnOptsGuiClick(event)
 
     -- Handle the cancel button to exit this menu
     if (elemName == "buddy_spawn_cancel") then
+        Utils.SendBroadcastMsg({"oarc-not-looking-for-buddy", player.name})
         player.gui.screen.buddy_spawn_opts.destroy()
         Public.DisplaySpawnOptions(player)
 
