@@ -7,8 +7,9 @@
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 local UtilsGui = require 'map_gen.mps_0_17.lib.oarc_gui_utils'
 local Silo = require 'map_gen.mps_0_17.lib.frontier_silo'
-local global_data = require 'map_gen.mps_0_17.lib.table'.get_table()
+local Table = require 'map_gen.mps_0_17.lib.table'
 local surface_name = require 'utils.surface'.get_surface_name()
+local surface_index = require 'utils.surface'.get_surface()
 local Score = require 'features.gui.score'
 local Config = require 'map_gen.mps_0_17.config'
 local Tabs = require 'features.gui.main'
@@ -65,8 +66,31 @@ function Public.SeparateSpawnsGenerateChunk(event)
 end
 
 
+function Public.Remove_area(pos, chunk_radius)
+    local data = Table.get_table()
+    local c_pos = Utils.GetChunkPosFromTilePos(pos)
+    for i=-chunk_radius,chunk_radius do
+        for k=-chunk_radius,chunk_radius do
+            local x = c_pos.x+i
+            local y = c_pos.y+k
+            table.insert(data.removal_list, {pos={x=x,y=y}})
+        end
+    end
+end
+
+function Public.Init_remove()
+    local data = Table.get_table()
+    while (#data.removal_list > 0) do
+        local c_remove = table.remove(data.removal_list)
+        local c_pos = c_remove.pos
+        game.surfaces[surface_name].delete_chunk(c_pos)
+    end
+end
+
+
 -- Call this if a player leaves the game or is reset
 function Public.FindUnusedSpawns(player, remove_player)
+    local global_data = Table.get_table()
     if not player then
         log("ERROR - FindUnusedSpawns on NIL Player!")
         return
@@ -126,11 +150,6 @@ function Public.FindUnusedSpawns(player, remove_player)
                 end
             end
 
-            -- Unused Chunk Removal mod (aka regrowth)
-            if (global.enable_base_removal and
-                (not nearOtherSpawn) and
-                global.enable_regrowth) then
-
                 if (global.uniqueSpawns[player.name].vanilla) then
                     log("Returning a vanilla spawn back to available.")
                     table.insert(global.vanillaSpawns, {x=spawnPos.x,y=spawnPos.y})
@@ -139,21 +158,9 @@ function Public.FindUnusedSpawns(player, remove_player)
                 global.uniqueSpawns[player.name] = nil
 
                 log("Removing base: " .. spawnPos.x .. "," .. spawnPos.y)
-
-                remote.call("oarc_regrowth",
-                        "area_removal_tilepos",
-                        game.surfaces[surface_name].index,
-                        spawnPos,
-                        global.check_spawn_ungenerated_chunk_radius)
-                remote.call("oarc_regrowth",
-                        "trigger_immediate_cleanup")
-                Utils.SendBroadcastMsg(player.name .. "'s base was marked for immediate clean up because they left within "..global.min_online.." minutes of joining.")
-
-            else
-                -- table.insert(global.unusedSpawns, global.uniqueSpawns[player.name]) -- Not used/implemented right now.
-                global.uniqueSpawns[player.name] = nil
-                Utils.SendBroadcastMsg(player.name .. " base was freed up because they left within "..global.min_online.." minutes of joining.")
-            end
+                Public.Remove_area(spawnPos, global.check_spawn_ungenerated_chunk_radius)
+                Public.Init_remove()
+                Utils.SendBroadcastMsg("Press F for " .. player.name .. ". Their base was deleted because they left within " ..global.min_online.. "minutes of joining.")
         end
 
         -- remove that player's cooldown setting
@@ -188,6 +195,7 @@ end
 -- This clears enemies in the immediate area, creates a slightly safe area around it,
 -- It no LONGER generates the resources though as that is now handled in a delayed event!
 function Public.SetupAndClearSpawnAreas(surface, chunkArea)
+    local global_data = Table.get_table()
     for _, spawn in pairs(global.uniqueSpawns) do
 
         -- Create a bunch of useful area and position variables
@@ -591,6 +599,7 @@ function Public.ChangePlayerSpawn(player, pos)
 end
 
 function Public.QueuePlayerForDelayedSpawn(playerName, spawn, classic, moatChoice, vanillaSpawn, this)
+    local global_data = Table.get_table()
     if not this then this = false end
     -- If we get a valid spawn point, setup the area
     if ((spawn.x ~= 0) or (spawn.y ~= 0)) then
@@ -602,13 +611,6 @@ function Public.QueuePlayerForDelayedSpawn(playerName, spawn, classic, moatChoic
         table.insert(global.delayedSpawns, {playerName=playerName, layout=classic, pos=spawn, moat=moatChoice, vanilla=vanillaSpawn, delayedTick=delayedTick, this=this})
 
         Public.DisplayPleaseWaitForSpawnDialog(game.players[playerName], delay_spawn_seconds)
-        if global.enable_regrowth then
-        remote.call("oarc_regrowth",
-                    "area_offlimits_tilepos",
-                    game.surfaces[surface_name].index,
-                    spawn,
-                    math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size))
-        end
 
     else
         log("THIS SHOULD NOT EVER HAPPEN! Spawn failed!")
@@ -639,6 +641,7 @@ function Public.DelayedSpawnOnTick()
 end
 
 function Public.SendPlayerToNewSpawnAndCreateIt(delayedSpawn)
+    local global_data = Table.get_table()
 
     -- DOUBLE CHECK and make sure the area is super safe.
     Utils.ClearNearbyEnemies(delayedSpawn.pos, global.scenario_config.safe_area.safe_radius, game.surfaces[surface_name])
@@ -725,6 +728,7 @@ function Public.SendPlayerToRandomSpawn(player)
 end
 
 function Public.CreateForce(force_name)
+    local global_data = Table.get_table()
     local newForce = nil
 
     -- Check if force already exists
@@ -749,7 +753,7 @@ function Public.CreateForce(force_name)
         end
         Utils.SetCeaseFireBetweenAllForces()
         Utils.SetFriendlyBetweenAllForces()
-        newForce.friendly_fire=false
+        newForce.friendly_fire=true
         if (global.enable_antigrief) then
             Utils.AntiGriefing(newForce)
         end
@@ -1158,6 +1162,7 @@ end
 
 -- Handle the gui click of the spawn options
 function Public.SpawnOptsGuiClick(event)
+    local global_data = Table.get_table()
     if not (event and event.element and event.element.valid) then return end
     local player = game.players[event.player_index]
     local elemName = event.element.name
@@ -1483,6 +1488,7 @@ end
 
 -- This is a toggle function, it either shows or hides the spawn controls
 function Public.CreateSpawnCtrlGuiTab(player, frame)
+    local global_data = Table.get_table()
     frame.clear()
     local spwnCtrls = frame.add{
         type="scroll-pane",

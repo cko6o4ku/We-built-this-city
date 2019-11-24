@@ -3,8 +3,10 @@ local market_items = require "features.modules.map_market_items"
 local Tabs = require 'features.gui.main'
 local RPG = require 'features.modules.rpg'
 local fish = require 'features.modules.launch_fish_to_win'
+
 --require 'features.modules.night_attacks'
 require 'features.modules.scramble'
+require 'features.modules.dangerous_goods'
 --local Map = require 'features.modules.map_info'
 require 'features.modules.enhancedbiters'
 require 'features.modules.surrounded_by_worms'
@@ -12,7 +14,7 @@ require 'features.modules.surrounded_by_worms'
 require 'features.modules.autodecon_when_depleted'
 require 'features.modules.spawners_contain_biters'
 require 'features.modules.backpack_research'
-require 'features.modules.biter_noms_you'
+--require 'features.modules.biter_noms_you'
 --require 'features.modules.biters_avoid_damage'
 --require "features.modules.biters_yield_fish"
 require 'features.modules.biters_double_damage'
@@ -30,12 +32,13 @@ require 'features.modules.splice'
 require 'features.modules.afk'
 require 'features.modules.oarc_enemies.main'
 
+
+
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 
 -- Other soft-mod type features.
 local Silo = require 'map_gen.mps_0_17.lib.frontier_silo'
 local R_launch = require 'map_gen.mps_0_17.lib.rocket_launch'
-local Regrowth = require 'map_gen.mps_0_17.lib.regrowth_map'
 
 -- Main Configuration File
 local Config = require 'map_gen.mps_0_17.config'
@@ -45,19 +48,6 @@ local Surface = require 'utils.surface'.get_surface_name()
 local SS = require 'map_gen.mps_0_17.lib.separate_spawns'
 
 local math_random = math.random
-
-
--- I'm reverting my decision to turn the regrowth thing into a mod.
-remote.add_interface ("oarc_regrowth",
-            {area_offlimits_chunkpos = Regrowth.MarkAreaSafeGivenChunkPos,
-            area_offlimits_tilepos = Regrowth.MarkAreaSafeGivenTilePos,
-            area_removal_tilepos = Regrowth.MarkAreaForRemoval,
-            trigger_immediate_cleanup = Regrowth.TriggerCleanup,
-            add_surface = Regrowth.RegrowthAddSurface})
-
-commands.add_command ("trigger-map-cleanup",
-    "Force immediate removal of all expired chunks (unused chunk removal mod)",
-    Regrowth.ForceRemoveChunksCmd)
 
 ----------------------------------------
 -- On Init - only runs once the first
@@ -125,6 +115,13 @@ Event.add(defines.events.on_rocket_launched, function(event)
 end)
 
 
+Event.add(defines.events.on_marked_for_deconstruction, function(event)
+    if event.entity.name == "fish" then
+        event.entity.cancel_deconstruction(game.players[event.player_index].force.name)
+    end
+end)
+
+
 ----------------------------------------
 -- Chunk Generation
 ----------------------------------------
@@ -146,9 +143,6 @@ Event.add(defines.events.on_chunk_generated, function(event)
 
     surface.set_tiles(tiles, true)]]--
 
-    if global.enable_regrowth then
-        Regrowth.RegrowthChunkGenerate(event)
-    end
     if global.enable_undecorator then
         Utils.UndecorateOnChunkGenerate(event)
     end
@@ -226,21 +220,10 @@ end)
 -- On BUILD entity. Don't forget on_robot_built_entity too!
 ----------------------------------------
 Event.add(defines.events.on_built_entity, function(event)
-    local rg = Regrowth.get_table()
     if global.enable_autofill then
         Utils.Autofill(event)
     end
 
-    if global.enable_regrowth then
-        local s_index = event.created_entity.surface.index
-        if (rg[s_index] == nil) then return end
-
-        remote.call ("oarc_regrowth",
-                    "area_offlimits_tilepos",
-                    s_index,
-                    event.created_entity.position,
-                    2)
-    end
 
     if global.frontier_rocket_silo_mode then
         Silo.BuildSiloAttempt(event)
@@ -254,19 +237,9 @@ end)
 -- place items that don't count as player_built and robot_built.
 -- Specifically FARL.
 ----------------------------------------
-Event.add(defines.events.script_raised_built, function(event)
-    local rg = Regrowth.get_table()
-    if global.enable_regrowth then
-        local s_index = event.entity.surface.index
-        if (rg[s_index] == nil) then return end
-
-        remote.call ("oarc_regrowth",
-                    "area_offlimits_tilepos",
-                    s_index,
-                    event.entity.position,
-                    2)
-    end
-end)
+--Event.add(defines.events.script_raised_built, function(event)
+--
+--end)
 
 
 ----------------------------------------
@@ -274,11 +247,6 @@ end)
 -- Delayed events, delayed spawns, ...
 ----------------------------------------
 Event.add(defines.events.on_tick, function()
-    if global.enable_regrowth then
-        Regrowth.RegrowthOnTick()
-        Regrowth.RegrowthForceRemovalOnTick()
-    end
-
     SS.DelayedSpawnOnTick()
 
     if global.frontier_rocket_silo_mode then
@@ -314,11 +282,8 @@ Event.add(defines.events.on_tick, function()
 end)
 
 
-Event.add(defines.events.on_sector_scanned, function (event)
-    if global.enable_regrowth then
-        Regrowth.RegrowthSectorScan(event)
-    end
-end)
+--Event.add(defines.events.on_sector_scanned, function (event)
+--end)
 
 Event.add(defines.events.on_player_mined_entity, function(event)
     local e = event.entity
@@ -327,45 +292,16 @@ Event.add(defines.events.on_player_mined_entity, function(event)
       e.surface.spill_item_stack(game.players[event.player_index].position,{name = "raw-fish", count = math_random(1,2)},true)
     end
 end)
--- Event.add(defines.events.on_sector_scanned, function (event)
-
--- end)
 
 ----------------------------------------
 --
 ----------------------------------------
 Event.add(defines.events.on_robot_built_entity, function (event)
-    local rg = Regrowth.get_table()
-    if global.enable_regrowth then
-        local s_index = event.created_entity.surface.index
-        if (rg[s_index] == nil) then return end
-
-        remote.call ("oarc_regrowth",
-                    "area_offlimits_tilepos",
-                    s_index,
-                    event.created_entity.position,
-                    2)
-    end
     if global.frontier_rocket_silo_mode then
         Silo.BuildSiloAttempt(event)
     end
 end)
 
-Event.add(defines.events.on_player_built_tile, function (event)
-    local rg = Regrowth.get_table()
-    if global.enable_regrowth then
-        local s_index = event.surface_index
-        if (rg[s_index] == nil) then return end
-
-        for k,v in pairs(event.tiles) do
-            remote.call ("oarc_regrowth",
-                    "area_offlimits_tilepos",
-                    s_index,
-                    v.position,
-                    2)
-        end
-    end
-end)
 
 
 

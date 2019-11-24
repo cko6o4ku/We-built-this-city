@@ -3,6 +3,7 @@
 -- Stuff related to calculating group size and evo values.
 
 local Table = require 'map_gen.mps_0_17.lib.table'
+local OE_Table = require 'features.modules.oarc_enemies.table'
 
 local Public = {}
 
@@ -85,9 +86,10 @@ end
 
 -- Roll the dice on an enemy given the chance list created.
 function Public.GetEnemyFromChanceList(chance_list)
+    local gd = OE_Table.get_table()
 
     if ((chance_list == nil) or (#chance_list == 0)) then
-        if global.oe.debug then
+        if gd.debug then
             log("ERROR - need a valid chance list!")
         end
         return "small-biter"
@@ -106,8 +108,9 @@ end
 
 -- Gives evo and size contribution from play time (of a given player).
 function Public.GetPlayerTimeEvoSize(play_time_ticks)
+    local gd = OE_Table.get_table()
     local global_data = Table.get_table()
-    local p = global.oe_params
+    local p = gd.params
 
     local hrs = play_time_ticks/global_data.ticks_per_hour
     local hrs_factor = math.min(hrs/p.player_time_peak_hours, 1)
@@ -122,7 +125,8 @@ end
 
 -- Gives evo and size contribution from pollution (in target chunk)
 function Public.GetPollutionEvoSize(pollution_amount)
-    local p = global.oe_params
+    local gd = OE_Table.get_table()
+    local p = gd.params
 
     local pol_factor = math.min(pollution_amount/p.pollution_peak_amnt, 1)
 
@@ -136,8 +140,9 @@ end
 
 -- Gives evo and size contribution from pollution (in target chunk)
 function Public.GetTechLevelEvoSize(tech_level)
+    local gd = OE_Table.get_table()
     if not tech_level then tech_level = 0 end
-    local p = global.oe_params
+    local p = gd.params
     local tech_factor = math.min(tech_level/p.tech_peak_count, 1)
 
     local evo = math.min(tech_factor*p.tech_evo_factor,
@@ -151,6 +156,7 @@ end
 -- Get the evo and size given optional params
 -- args = {player, force_name, surface, target_pos, min_evo, max_eevo, min_size, max_size}
 function Public.GetEnemyGroup(args)
+    local gd = OE_Table.get_table()
 
     -- Default values
     local evo = 0
@@ -158,12 +164,12 @@ function Public.GetEnemyGroup(args)
 
     -- Temp holders
     local e,s = 0
-    local p = global.oe_params
+    local p = gd.params
 
     -- Given a player, use that for time played AND for player force.
     if (args.player and args.player.connected) then
         local ticks_online = args.player.online_time
-        local tech_levels = global.oe.tech_levels[args.player.force.name]
+        local tech_levels = gd.tech_levels[args.player.force.name]
 
         e,s = Public.GetPlayerTimeEvoSize(ticks_online)
         evo = evo + e
@@ -175,13 +181,13 @@ function Public.GetEnemyGroup(args)
 
     -- Support only force given, no player (should be RARE)
     elseif (args.force_name) then
-        local tech_levels = global.oe.tech_levels[args.force_name]
+        local tech_levels = gd.tech_levels[args.force_name]
 
         e,s = Public.GetTechLevelEvoSize(tech_levels)
         evo = evo + e
         size = size + s
     end
-    if global.oe.debug then
+    if gd.debug then
         log("First size=" .. string.format("%.3f", size) .. " evo=".. string.format("%.3f", evo))
     end
 
@@ -193,7 +199,7 @@ function Public.GetEnemyGroup(args)
         evo = evo + e
         size = size + s
     end
-    if global.oe.debug then
+    if gd.debug then
         log("Second size=" .. string.format("%.3f", size) .. " evo=".. string.format("%.3f", evo))
     end
 
@@ -223,7 +229,7 @@ function Public.GetEnemyGroup(args)
 
     -- Size should be an int.
     size = math.ceil(size)
-    if global.oe.debug then
+    if gd.debug then
         log("Final: size=" .. string.format("%.3f", size) .. " evo=".. string.format("%.3f", evo))
     end
 
@@ -232,7 +238,8 @@ end
 
 -- Returns a new timer in seconds scaled to given play time.
 function Public.GetRandomizedPlayerTimer(play_time_seconds, additional_offset)
-    local p = global.oe_params
+    local gd = OE_Table.get_table()
+    local p = gd.params
 
     -- More time played = Faster attacks
     local time_factor = play_time_seconds / (p.player_time_peak_hours*3600)

@@ -531,8 +531,6 @@ end
 
 -- Create another surface so that we can modify map settings and not have a screwy nauvis map.
 function Public.CreateGameSurface()
-    local get_surface = Surface.get_surface()
-
     -- Get starting surface settings.
     local nauvis_settings =  game.surfaces["nauvis"].map_gen_settings
 
@@ -544,15 +542,6 @@ function Public.CreateGameSurface()
         if (global.silo_island_mode) then
             nauvis_settings.property_expression_names.elevation = "0_17-island"
         end
-    end
-
-    -- Create new game surface
-    --local s = game.create_surface(surface_name, nauvis_settings)
-
-    -- Add surface and safe areas
-    if global.enable_regrowth then
-        remote.call("oarc_regrowth", "add_surface", get_surface)
-        remote.call("oarc_regrowth", "area_offlimits_chunkpos", get_surface, {x=0,y=0}, 5)
     end
 end
 

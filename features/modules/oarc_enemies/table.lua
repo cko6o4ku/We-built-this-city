@@ -32,8 +32,51 @@ local global_data = {
     process_find_retry_path_calc  = 11,
     process_find_build_base       = 12,
     enemy_targets = {"ammo-turret", "boiler", "electric-turret", "fluid-turret", "artillery-turret", "mining-drill", "furnace", "reactor", "assembling-machine", "generator"},
+    target_types = {
+        ["ammo-turret"] = true,
+        ["assembling-machine"] = true,
+        ["accumulator"] = true,
+        ["boiler"] = true,
+        ["furnace"] = true,
+        ["lab"] = true,
+        ["mining-drill"] = true,
+        ["radar"] = true,
+        ["reactor"] = true,
+        ["roboport"] = true,
+        ["rocket-silo"] = true,
+        ["solar-panel"] = true,
+    },
     debug = true,
+    wave = 0,
+    groups = {},
+    buildings = {},
+    tech_levels = {},
+    player_timers = {},
+    player_sbubbles = {},
+    attacks = {},
+    render_paths = true,
+    params = {
+        attack_size_min = 1,
+        attack_size_max = 150,
+        player_time_evo_factor = 0.5,
+        player_time_size_factor = 30,
+        player_time_peak_hours = 20,
+        pollution_evo_factor = 0.3,
+        pollution_size_factor = 80,
+        pollution_peak_amnt = 4000,
+        tech_evo_factor = 0.85,
+        tech_size_factor = 30,
+        tech_peak_count = 180,
+        rand_evo_amnt = 0.15, -- Up to + this amount
+        rand_size_amnt = 10, -- Up to + this amount
+        seconds_between_attacks_min = 5*6,
+        seconds_between_attacks_max = 30*6,
+        seconds_between_attacks_rand = 4*6,
+        radar_scan_attack_chance = 500, -- 1 in X change to trigger an attack due to a radar ping.
+    }
 }
+
+
 
 Global.register(
     global_data,

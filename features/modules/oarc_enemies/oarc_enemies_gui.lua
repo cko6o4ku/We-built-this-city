@@ -6,6 +6,7 @@ local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
 local OE = require 'features.modules.oarc_enemies.oarc_enemies'
 local Utils = require 'map_gen.mps_0_17.lib.oarc_gui_utils'
+local OE_Table = require 'features.modules.oarc_enemies.table'
 
 local Public = {}
 
@@ -17,6 +18,7 @@ function Public.OarcEnemiesCreateGui(event)
 end
 
 local function ExpandOarcEnemiesGui(player)
+    local gd = OE_Table.get_table()
     local frame = mod(player)["oe-panel"]
     if (frame) then
         frame.destroy()
@@ -31,11 +33,11 @@ local function ExpandOarcEnemiesGui(player)
         frame.add{type="button", caption="Turret Attack", name="oe_attack_turret"}
 
         local oe_info="General Info:" .. "\n" ..
-                        -- "Units: " .. #global.oe.units .. "\n" ..
-                        "Attacks: " .. #global.oe.attacks .. "\n" ..
-                        -- "Labs: " .. #global.oe.science_labs[player.name] .. "\n" ..
-                        "Next Player Attack: " .. global.oe.player_timers[player.name].character .. "\n" ..
-                        "Next Building Attack: " .. global.oe.player_timers[player.name].generic
+                        -- "Units: " .. #gd.units .. "\n" ..
+                        "Attacks: " .. #gd.attacks .. "\n" ..
+                        -- "Labs: " .. #gd.science_labs[player.name] .. "\n" ..
+                        "Next Player Attack: " .. gd.player_timers[player.name].character .. "\n" ..
+                        "Next Building Attack: " .. gd.player_timers[player.name].generic
         Utils.AddLabel(frame, "oe_info", oe_info, Utils.my_longer_label_style)
     end
 end

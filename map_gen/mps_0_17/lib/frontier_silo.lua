@@ -131,15 +131,6 @@ local function CreateRocketSilo(surface, siloPosition, force)
                                             {position=siloPosition, text="Rocket Silo",
                                                 icon={type="item",name="rocket-silo"}})
 
-    -- Make silo safe from being removed.
-    if global.enable_regrowth then
-        remote.call("oarc_regrowth",
-                        "area_offlimits_tilepos",
-                        surface.index,
-                        siloPosition,
-                        5)
-    end
-
     if global.enable_silo_beacon then
         Public.PhilipsBeacons(surface, siloPosition, game.forces[global.main_force_name])
     end

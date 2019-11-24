@@ -8,12 +8,12 @@ local Logic = require 'features.modules.oarc_enemies.oarc_enemies_tick_logic'
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 
 
-Event.on_init(function()
-    OE.InitOarcEnemies() -- Setup global tables and such
-end)
+--Event.on_init(function()
+--    OE.InitOarcEnemies() -- Setup global tables and such
+--end)
 
 Event.add(defines.events.on_player_created, function(event)
-    --OE.OarcEnemiesPlayerCreatedEvent(event)
+    OE.OarcEnemiesPlayerCreatedEvent(event)
 end)
 
 --Event.add(defines.events.on_player_joined_game, function(event)
@@ -25,22 +25,37 @@ end)
 --end)
 
 Event.add(defines.events.on_chunk_generated, function(event)
-    --OE.OarcEnemiesChunkGenerated(event)
+    OE.OarcEnemiesChunkGenerated(event)
 end)
 
-Event.add({defines.events.on_robot_built_entity,defines.events.on_built_entity}, function (event)
-    --local e = event.created_entity
-    --if ((e.type ~= "car") and
-    --    (e.type ~= "logistic-robot") and
-    --    (e.type ~= "construction-robot") and
-    --    (e.type ~= "combat-robot")) then
-    --    OE.OarcEnemiesChunkHasPlayerBuilding(e.position)
-    --end
-    --OE.OarcEnemiesTrackBuildings(e)
+Event.add(defines.events.on_built_entity, function (event)
+    local e = event.created_entity
+    if e and e.valid then
+        if ((e.type ~= "car") and
+            (e.type ~= "logistic-robot") and
+            (e.type ~= "construction-robot") and
+            (e.type ~= "combat-robot")) then
+            OE.OarcEnemiesChunkHasPlayerBuilding(e.position)
+        end
+        OE.OarcEnemiesTrackBuildings(e)
+    end
+end)
+
+Event.add(defines.events.on_robot_built_entity, function (event)
+    local e = event.created_entity
+    if e and e.valid then
+        if ((e.type ~= "car") and
+            (e.type ~= "logistic-robot") and
+            (e.type ~= "construction-robot") and
+            (e.type ~= "combat-robot")) then
+            OE.OarcEnemiesChunkHasPlayerBuilding(e.position)
+        end
+        OE.OarcEnemiesTrackBuildings(e)
+    end
 end)
 
 Event.add(defines.events.script_raised_built, function(event)
-    --OE.OarcEnemiesChunkHasPlayerBuilding(event.entity.position)
+    OE.OarcEnemiesChunkHasPlayerBuilding(event.entity.position)
 end)
 
 Event.add(defines.events.on_biter_base_built, function(event)
