@@ -255,9 +255,18 @@ function Public.OarcEnemiesPlayerCreatedEvent(event)
     local p_name = game.players[event.player_index].name
 
     if not gd.player_timers[p_name] then
-        gd.player_timers[p_name] = {next_wave_player=Evo.GetRandomizedPlayerTimer(0, 60*20),
-                                             next_wave_buildings=Evo.GetRandomizedPlayerTimer(0, 0)}
+        gd.player_timers[p_name] = {next_wave_player=Evo.GetRandomizedPlayerTimer(0, 60*20), next_wave_buildings=Evo.GetRandomizedPlayerTimer(0, 0)}
     end
+
+    if not gd.player_wave[p_name] then
+        gd.player_wave[p_name] = {}
+    end
+
+    if not gd.player_wave[p_name].wave_number then
+        gd.player_wave[p_name].wave_number = 1
+    end
+
+    gd.player_wave[p_name].grace = true
 
     if (gd.buildings[p_name] == nil) then
         gd.buildings[p_name] = {}

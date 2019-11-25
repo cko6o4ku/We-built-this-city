@@ -1,5 +1,6 @@
 local Global = require 'utils.global'
 local Tabs = require 'features.gui.main'
+local Validate = require 'utils.validate_player'
 
 local map_info = {
 	main_caption = "Insert Main Caption",
@@ -81,10 +82,12 @@ local function on_player_joined_game(event)
 end
 
 local function on_gui_click(event)
+	local player = game.players[event.player_index]
+	Validate(player)
 	if not event then return end
 	if not event.element then return end
 	if not event.element.valid then return end
-	if event.element.name == "close_map_intro" then game.players[event.player_index].gui.left.panel.destroy() return end
+	if event.element.name == "close_map_intro" then Tabs.panel_clear_left_gui(player) return end
 end
 
 panel_tabs["Info"] = create_map_intro

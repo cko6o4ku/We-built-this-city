@@ -238,6 +238,8 @@ function Public.SetupAndClearSpawnAreas(surface, chunkArea)
                     end
                     Utils.RemoveInCircle(surface, chunkArea, "resource", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+5)
                     Utils.RemoveInCircle(surface, chunkArea, "cliff", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "market", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "container", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
                     Utils.RemoveInCircle(surface, chunkArea, "simple-entity", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
                     Utils.RemoveDecorationsArea(surface, chunkArea)
                 else
@@ -245,6 +247,8 @@ function Public.SetupAndClearSpawnAreas(surface, chunkArea)
                     Utils.RemoveInCircle(surface, chunkArea, "tree", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
                     Utils.RemoveInCircle(surface, chunkArea, "resource", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
                     Utils.RemoveInCircle(surface, chunkArea, "cliff", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "market", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
+                    Utils.RemoveInCircle(surface, chunkArea, "container", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
                     Utils.RemoveInCircle(surface, chunkArea, "simple-entity", spawn.pos, global.scenario_config.gen_settings.land_area_tiles+50)
                     Utils.RemoveDecorationsArea(surface, chunkArea)
                 end
@@ -1003,8 +1007,8 @@ function Public.DisplaySpawnOptions(player)
     UtilsGui.AddLabel(sGui, "warning_lbl1", "You can choose between the classic layout or the new one.", UtilsGui.my_label_style)
     local layout_flow = sGui.add{name = "layout", type = "frame", direction="vertical", style = "bordered_frame"}
     UtilsGui.AddLabel(layout_flow, "normal_spawn_lbl1", {"oarc-layout"}, UtilsGui.my_label_style)
-    layout_flow.add{name = "layout_classic", type = "radiobutton", caption={"oarc-layout-old"}, state=true}
-    layout_flow.add{name = "layout_new", type = "radiobutton", caption={"oarc-layout-new"}, state=false}
+    layout_flow.add{name = "layout_classic", type = "radiobutton", caption={"oarc-layout-old"}, state=true, tooltip="The classic layout, a circle."}
+    layout_flow.add{name = "layout_new", type = "radiobutton", caption={"oarc-layout-new"}, state=false, tooltip="The new layout, rectangle-alike shape."}
 
     local soloSpawnFlow = sGui.add{name = "spawn_solo_flow",
                                     type = "frame",

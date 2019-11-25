@@ -1,4 +1,4 @@
-require 'util'
+	require 'util'
 local Global = require 'utils.global'
 local Event = require 'utils.event'
 local wbtc_surface_name = 'wbtc'
@@ -9,7 +9,8 @@ local global_data = {
     surface = nil,
     spawn_position = nil,
     island = false,
-    surface_name = wbtc_surface_name
+    surface_name = wbtc_surface_name,
+    water = 0
 }
 
 Global.register(
@@ -21,7 +22,7 @@ Global.register(
 
 function Public.create_surface()
 	local map_gen_settings = {}
-	map_gen_settings.water = 0.5
+	map_gen_settings.water = global_data.water
 	map_gen_settings.starting_area = 0.5
 	map_gen_settings.cliff_settings = {cliff_elevation_interval = 35, cliff_elevation_0 = 35}
 	map_gen_settings.autoplace_controls = {
@@ -75,6 +76,10 @@ end
 
 function Public.set_island(var)
     global_data.island = var
+end
+
+function Public.get()
+    return global_data
 end
 
 Event.on_init(Public.create_surface)

@@ -156,12 +156,18 @@ function Public.ProcessAttackCleanupInvalidGroups(key, attack)
     return false
 end
 
+local function next(name)
+    local gd = OE_Table.get_table()
+    gd.player_wave[name].wave_number = gd.player_wave[name].wave_number + 1
+end
+
 function Public.ProcessPlayerTimersEverySecond()
     local gd = OE_Table.get_table()
     local Def = OE_Table.get_table()
     local global_data = Table.get_table()
     for name,timer_table in pairs(gd.player_timers) do
         if (game.players[name] and game.players[name].connected) then
+            if gd.player_wave[name].grace then return end
 
             for timer_name,timer in pairs(timer_table) do
                 if (timer > 0) then
@@ -169,13 +175,12 @@ function Public.ProcessPlayerTimersEverySecond()
                 else
                     if (timer_name == "next_wave_player") then
                         OE.OarcEnemiesPlayerAttackCharacter(name)
-                        gd.player_timers[name][timer_name] =
-                            Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
+                        gd.player_timers[name][timer_name] = Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
+                        next(name)
 
                     elseif (timer_name == "next_wave_buildings") then
                         OE.OarcEnemiesBuildingAttack(name, Def.enemy_targets)
-                        gd.player_timers[name][timer_name] =
-                            Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
+                        gd.player_timers[name][timer_name] = Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
                     end
                 end
             end

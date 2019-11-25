@@ -55,9 +55,9 @@ function Public.spawn_on_chunk_generated()
     end
 end
 Event.add(defines.events.on_chunk_generated, function(event)
-    --if event.tick > 4 then
+    if event.tick > 4 then
         Public.spawn_on_chunk_generated(event)
-    --end
+    end
 end)
 
 return Public

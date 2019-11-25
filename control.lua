@@ -4,8 +4,6 @@ _LIFECYCLE = _STAGE.control -- Control stage
 _DEBUG = true
 _DUMP_ENV = false
 
-
-
 -- other stuff
 local Event = require 'utils.event'
 require 'utils.server'
@@ -20,11 +18,11 @@ require 'utils.surface'
 require 'features.gui.main'
 require 'features.gui.player_list'
 require 'features.gui.admin'
---require 'features.gui.group'
+require 'features.gui.group'
 require 'features.gui.poll'
 require 'features.gui.score'
 require 'features.gui.config'
-require 'features.gui.tag'
+--require 'features.gui.tag'
 require 'features.gui.warp_system'
 require 'features.functions.chatbot'
 require 'features.functions.antigrief'
@@ -36,9 +34,9 @@ require 'features.commands.misc'
 
 require 'features.modules.rpg'
 
-
 -- load from config/map
 require 'config'
+
 
 if _DUMP_ENV then
     require 'utils.dump_env'

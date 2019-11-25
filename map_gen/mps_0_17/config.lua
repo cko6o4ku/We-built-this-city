@@ -69,7 +69,7 @@ global.enable_power_armor = false
 -- more balanced based on your distance and makes the game a little easier.
 -- No behemoth worms everywhere just because you spawned far away.
 -- If you're trying out the vanilla spawning, you might want to disable this.
-global.modded_enemy = false
+global.modded_enemy = false -- disabled cause OE
 
 ---------------------------------------
 -- Market
@@ -104,7 +104,7 @@ global.player_spawn_start_items = {
 -- Items provided after EVERY respawn (disabled by default)
 global.player_respawn_start_items = {
      {name="pistol", count=1},
-     {name="firearm-magazine", count=30}
+     {name="firearm-magazine", count=8}
 }
 
 ---------------------------------------

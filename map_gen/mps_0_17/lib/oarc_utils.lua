@@ -297,8 +297,9 @@ end
 
 -- Render a path
 function Public.RenderPath(path, ttl, players)
+    local surface_name = Surface.get_surface_name()
     local last_pos = path[1].position
-    local color = {r = 1, g = 0, b = 0, a = 0.5}
+    local color
 
     for i,v in pairs(path) do
         if (i ~= 1) then
@@ -308,7 +309,7 @@ function Public.RenderPath(path, ttl, players)
                                 width=2,
                                 from=v.position,
                                 to=last_pos,
-                                surface=game.surfaces[1],
+                                surface=game.surfaces[surface_name],
                                 players=players,
                                 time_to_live=ttl}
         end

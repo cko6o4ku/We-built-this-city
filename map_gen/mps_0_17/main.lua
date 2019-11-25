@@ -22,20 +22,13 @@ require 'features.modules.splice'
 require 'features.modules.oarc_enemies.main'
 
 
-
+local Map = require 'features.modules.map_info'
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
-
--- Other soft-mod type features.
 local Silo = require 'map_gen.mps_0_17.lib.frontier_silo'
 local R_launch = require 'map_gen.mps_0_17.lib.rocket_launch'
-
--- Main Configuration File
 local Config = require 'map_gen.mps_0_17.config'
 local Surface = require 'utils.surface'.get_surface_name()
-
--- Scenario Specific Includes
 local SS = require 'map_gen.mps_0_17.lib.separate_spawns'
-
 local math_random = math.random
 
 ----------------------------------------
@@ -44,13 +37,33 @@ local math_random = math.random
 ----------------------------------------
 local function on_start()
 
---[[
+
     local T = Map.Pop_info()
-        T.main_caption = "Multiplayer Spawn"
+        T.main_caption = "Shrine of the Ancients"
         T.sub_caption =  "    launch the rocket!    "
+        T.text = table.concat({
+        "Choose between playing solo or joining the main-team.\n",
+        "If you don't feel like playing solo, join someones base.\n",
+        "\n",
+        "The main task is to launch a rocket, there are 5 designated areas.\n",
+        "Look at the minimap to find these.\n",
+        "\n",
+        "Launching a rocket will not be an easy task,\n",
+        "since worms are spawned everywhere,\n",
+        "their strength and numbers increase over time.\n",
+        "\n",
+        "Biters have gotten increased scent,\n",
+        "they will spawn some chunks outside your base and try to destroy you.\n",
+        "\n",
+        "Delve deep for greater treasures, but also face increased dangers.\n",
+        "Mining productivity research, will overhaul your mining equipment,\n",
+        "reinforcing your pickaxe as well as increasing the size of your backpack.\n",
+        "\n",
+        "Good luck, over and out!"
+        })
         T.main_caption_color = {r = 150, g = 150, b = 0}
         T.sub_caption_color = {r = 0, g = 150, b = 0}
-]]--
+
 
     -- Create new game surface
     Utils.CreateGameSurface()

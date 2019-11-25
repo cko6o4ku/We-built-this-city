@@ -31,7 +31,7 @@ function Public.add(surface, position, chest)
 		{{name = "defender-capsule", count = math_random(8,16)}, weight = 2, d_min = 0.0, d_max = 0.7},
 		{{name = "distractor-capsule", count = math_random(8,16)}, weight = 2, d_min = 0.2, d_max = 1},
 		{{name = "destroyer-capsule", count = math_random(8,16)}, weight = 2, d_min = 0.3, d_max = 1},
-		{{name = "atomic-bomb", count = 1}, weight = 1, d_min = 0.8, d_max = 1},
+		--{{name = "atomic-bomb", count = 1}, weight = 1, d_min = 0.8, d_max = 1},
 		{{name = "light-armor", count = 1}, weight = 3, d_min = 0, d_max = 0.1},
 		{{name = "heavy-armor", count = 1}, weight = 3, d_min = 0.1, d_max = 0.3},
 		{{name = "modular-armor", count = 1}, weight = 2, d_min = 0.2, d_max = 0.6},
