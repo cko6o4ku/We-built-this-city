@@ -47,7 +47,7 @@ local global_data = {
         ["solar-panel"] = true,
     },
     debug = false,
-    wave_grace_period = 500,
+    --wave_grace_period = 500,
     next_wave = 3600,
     groups = {},
     buildings = {},

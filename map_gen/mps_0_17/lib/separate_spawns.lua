@@ -923,6 +923,8 @@ function Public.DisplayWelcomeTextGui(player)
         return false
     end
 
+    if player.gui.screen.welcome_msg then player.gui.screen.welcome_msg.destroy() end
+
     local wGui = player.gui.screen.add{name = "welcome_msg",
                             type = "frame",
                             direction = "vertical",

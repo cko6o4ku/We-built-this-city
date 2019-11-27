@@ -19,7 +19,7 @@ require 'features.modules.custom_death_messages'
 require 'features.modules.explosive_biters'
 require 'features.modules.spawn_area'
 require 'features.modules.splice'
-require 'features.modules.oarc_enemies.main'
+--require 'features.modules.oarc_enemies.main'
 
 
 local Map = require 'features.modules.map_info'

@@ -1,7 +1,7 @@
 local Event = require 'utils.event'
 local Surface = require 'utils.surface'.get_surface_name()
 local Table = require 'utils.surface'
-require 'map_gen.shapes.metaconfig'
+--require 'map_gen.shapes.metaconfig'
 local Eval = require 'map_gen.shapes.evalpattern'
 
 local map_name = 'natural medium lakes'

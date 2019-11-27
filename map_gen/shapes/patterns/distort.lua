@@ -4,8 +4,8 @@
 -- The first version of this code took about 5 minutes to run when you started a new
 -- game. Be glad it's been sped up a lot.
 
-require 'map_gen.shapes.lib.perlin'
-require 'map_gen.shapes.lib.distortion_map'
+--require 'map_gen.shapes.lib.perlin'
+local Distort = require 'map_gen.shapes.lib.distortion_map'
 
 -- I hope this is the last time I have to implement Perlin noise in Lua. I did at
 -- least 3 totally different implementations here just trying to get it fast and
@@ -14,24 +14,27 @@ require 'map_gen.shapes.lib.distortion_map'
 -- Using relatively prime (or nearly relatively prime) wavelengths will greatly
 -- improve the randomness, which is why all of these are 1 more than a multiple
 -- of 10.
-distort_light = {
-        [21] = 1,
-        [51] = 1
-    }
-distort_heavy = {
-        [51] = 1,
-        [101] = 0.3,
-        [201] = 1,
-        [401] = 0.8,
-        [1601] = 0.5,
-        [5001] = 0.5
-    }
 
-distort_default = distort_light
+local Public = {}
 
-function Distort(pattern, distortion_map, wavelengths)
+local distort_light = {
+    [21] = 1,
+    [51] = 1
+}
+--local distort_heavy = {
+--    [51] = 1,
+--    [101] = 0.3,
+--    [201] = 1,
+--    [401] = 0.8,
+--    [1601] = 0.5,
+--    [5001] = 0.5
+--}
+
+--local distort_default = distort_light
+
+function Public.Distort(pattern, distortion_map, wavelengths)
     local pget = pattern.get
-    local dmap = distortion_map or DistortionMap()
+    local dmap = distortion_map or Distort.DistortionMap()
     local w = wavelengths or distort_light
 
     local data
@@ -42,7 +45,7 @@ function Distort(pattern, distortion_map, wavelengths)
         data.pattern = pattern.create()
         return data
     end
-    
+
     local function reload(d)
         data = d
         pattern.reload(data.pattern)
@@ -89,3 +92,5 @@ function Distort(pattern, distortion_map, wavelengths)
         output = pattern.output
     }
 end
+
+return Public

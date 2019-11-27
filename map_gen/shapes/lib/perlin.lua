@@ -11,7 +11,10 @@
 -- The result is immutable. It can be reused in multiple patterns.
 -- Creating an instance of PerlinNoise is computationally intensive, so if you need
 -- more than one you would do well to reuse the same one in multiple places.
-function PerlinNoise(N_)
+
+local Public = {}
+
+function Public.PerlinNoise(N_)
     -- The distortion repeats with a period of N
     local N = N_ or 47
     local NN = N * N
@@ -82,7 +85,6 @@ function PerlinNoise(N_)
                 (n[8] * sy + (n[7]*x+n[8]*y) * dsy) * sx
             }
     end
-    
     -- returns h(x, y)
     local function h(x, y)
         local ix = math.floor(x)
@@ -135,7 +137,7 @@ function PerlinNoise(N_)
 
         return data
     end
-    
+
     local function reload(d)
         data = d
     end
@@ -149,3 +151,5 @@ function PerlinNoise(N_)
         N = N
     }
 end
+
+return Public

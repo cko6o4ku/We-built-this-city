@@ -1,22 +1,24 @@
+local Public = {}
+
 local function noop()
     return nil
 end
 
-function AllLand()
+function Public.AllLand()
     local function get(x, y)
         return true
     end
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function NoLand()
+function Public.NoLand()
     local function get(x, y)
         return false
     end
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Square(radius)
+function Public.Square(radius)
     local r = radius or 32
     local function get(x, y)
         return x >= -r and y >= -r and x < r and y < r
@@ -25,14 +27,14 @@ function Square(radius)
 end
 
 -- Includes (x1, y1) and excludes (x1, y2)
-function Rectangle(x1, y1, x2, y2)
+function Public.Rectangle(x1, y1, x2, y2)
     local function get(x, y)
         return (x >= x1) and (x < x2) and (y >= y1) and (y < y2)
     end
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Circle(radius, centerx, centery)
+function Public.Circle(radius, centerx, centery)
     local r = radius or 32
     local r2 = r * r
     local cx = centerx or 0
@@ -43,21 +45,21 @@ function Circle(radius, centerx, centery)
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Halfplane()
+function Public.Halfplane()
     local function get(x, y)
         return (x >= 0)
     end
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Quarterplane()
+function Public.Quarterplane()
     local function get(x, y)
         return (x >= 0) and (y >= 0)
     end
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Strip(width)
+function Public.Strip(width)
     local n = width or 1
     local function get(x, y)
         return (math.abs(y) * 2) < n
@@ -65,7 +67,7 @@ function Strip(width)
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Cross(width)
+function Public.Cross(width)
     local n = width or 1
     local function get(x, y)
         return (math.abs(x) * 2 < n) or (math.abs(y) * 2 < n)
@@ -73,7 +75,7 @@ function Cross(width)
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Comb()
+function Public.Comb()
     local function get(x, y)
         if x < -1 then
             return false
@@ -84,14 +86,14 @@ function Comb()
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Grid()
+function Public.Grid()
     local function get(x, y)
         return ((x % 2) < 1) or ((y % 2) < 1)
     end
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function Checkerboard()
+function Public.Checkerboard()
     local function get(x, y)
         return ((x % 2) < 1) == ((y % 2) < 1)
     end
@@ -101,7 +103,7 @@ end
 -- 'ratio' is the ratio of the distance of consecutive spirals from the center
 -- 'land' is the proportion of terrain that is land
 -- Use the reciprocal of some ratio to make the spiral go the other way
-function Spiral(ratio, land)
+function Public.Spiral(ratio, land)
     local r = ratio or 1.4
     local l = land or 0.5
     local lr = math.log(r)
@@ -122,7 +124,7 @@ end
 
 -- 'ratio' is the ratio of the distance of consecutive circles from the center
 -- 'land' is the proportion of terrain that is land
-function ConcentricCircles(ratio, land)
+function Public.ConcentricCircles(ratio, land)
     local r = ratio or 1.4
     local l = land or 0.5
     local lr2 = 2 * math.log(r)
@@ -139,7 +141,7 @@ end
 
 -- 'dist' is the distance between consecutive spirals
 -- 'land' is the proportion of terrain that is land
-function ArithmeticSpiral(dist, land)
+function Public.ArithmeticSpiral(dist, land)
     local d = dist or 40
     local l = land or 0.5
     local function get(x, y)
@@ -155,7 +157,7 @@ end
 
 -- 'dist' is the distance between consecutive circles
 -- 'land' is the proportion of terrain that is land
-function ArithmeticConcentricCircles(dist, land)
+function Public.ArithmeticConcentricCircles(dist, land)
     local d = dist or 40
     local l = land or 0.5
     local function get(x, y)
@@ -165,7 +167,7 @@ function ArithmeticConcentricCircles(dist, land)
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
 
-function RectSpiral()
+function Public.RectSpiral()
     local function get(x, y)
         if math.abs(x) > math.abs(y) or (x + y > 0 and y < x + 2) then
             return ((x + 0.5) % 2) < 1
@@ -175,3 +177,5 @@ function RectSpiral()
     end
     return {create = noop, reload = noop, get = get, output = "bool"}
 end
+
+return Public

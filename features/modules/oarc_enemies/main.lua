@@ -1,16 +1,15 @@
 local Event = require 'utils.event'
-
-require 'features.modules.oarc_enemies.table'
-require 'features.modules.oarc_enemies.oarc_enemies_evo'
+--local Table = require 'features.modules.oarc_enemies.table'
+local Evo = require 'features.modules.oarc_enemies.oarc_enemies_evo'
 local OE = require 'features.modules.oarc_enemies.oarc_enemies'
 --local Gui = require 'features.modules.oarc_enemies.oarc_enemies_gui'
 local Logic = require 'features.modules.oarc_enemies.oarc_enemies_tick_logic'
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 
 
---Event.on_init(function()
---    OE.InitOarcEnemies() -- Setup global tables and such
---end)
+Event.on_init(function()
+    OE.init_all_the_tables()
+end)
 
 Event.add(defines.events.on_player_created, function(event)
     OE.OarcEnemiesPlayerCreatedEvent(event)

@@ -1,8 +1,10 @@
-require 'map_gen.shapes.lib.union-find'
+local UFind = require 'map_gen.shapes.lib.union-find'
+
+local Public = {}
 
 local append = table.insert
 
-function Maze1()
+function Public.Maze1()
     -- Small adjustment to connectedness of land. Values from 0 to 1 ok.
     local connectedness = 0.4
 
@@ -45,7 +47,7 @@ function Maze1()
 
     local function create()
         values = {}
-        group = UnionFind()
+        group = UFind.UnionFind()
         data = {
             values          = values,
             group_data      = group.data
@@ -66,7 +68,7 @@ function Maze1()
     local function reload(d)
         data = d
         values = data.values
-        group = UnionFind(data.group_data)
+        group = UFind.UnionFind(data.group_data)
         x1 = data.x1
         y1 = data.y1
         x2 = data.x2
@@ -154,7 +156,7 @@ function Maze1()
                 append(b, {p})
             end
         end
-        
+
         for k, b in pairs(a) do
             -- db("Group " .. k .. " has " .. #b .. " segments")
             local r
@@ -213,9 +215,9 @@ function Maze1()
     end
 
     local function geti(x, y)
-        k = key(x, y)
+        local k = key(x, y)
         while true do
-            v = values[k]
+            local v = values[k]
             if v == nil then
                 expand()
             else
@@ -235,3 +237,5 @@ function Maze1()
             output = "bool"
         }
 end
+
+return Public

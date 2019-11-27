@@ -1,5 +1,7 @@
-require 'simple'
-require 'map_gen.shapes.lib.fft'
+local Simple = require 'map_gen.shapes.patterns.simple'
+local FFT = require 'map_gen.shapes.lib.fft'
+
+local Public = {}
 
 local tau = 2 * math.pi
 
@@ -74,7 +76,7 @@ local function compute_grid(schema, idx, phasess, wmin, wmax, power)
         grid_dxy[i] = 0
     end
 
-    local w, dw, amp, theta
+    local w, amp, theta
     local i = 1
     for wx = 0, outer - 1 do
         for wy = 0, outer - 1 do
@@ -104,16 +106,16 @@ local function compute_grid(schema, idx, phasess, wmin, wmax, power)
         end
     end
 
-    fft2d(grid, grid_imag, M, scrap)
+    FFT.fft2d(grid, grid_imag, M, scrap)
 
     -- Normalize the mean
     local s = 0
-    for i = 0, MM - 1 do
-        s = s + grid[i]
+    for _i = 0, MM - 1 do
+        s = s + grid[_i]
     end
     s = s / MM
-    for i = 0, MM - 1 do
-        grid[i] = grid[i] - s
+    for _i = 0, MM - 1 do
+        grid[_i] = grid[_i] - s
     end
 
     -- Calculate differences for linear interpolation
@@ -154,13 +156,13 @@ local function binary_search(func, x0, x1, value, dx)
 end
 
 local function make_grid_schema(wmin)
-    local function inner(i)
+    local function inner()
         return 8
     end
     local function outer(i)
         return default({128, 32}, i, 32)
     end
-    local function M(i)
+    local function M()
         return 256
     end
     local inners = {inner(1)}
@@ -213,17 +215,17 @@ end
 --
 -- Multiplying "power" by a constant has no effect.
 
-function Noise(options)
+local function Noise(options)
     if options == nil then
         options = {}
     end
 
     local land_percent = default(options, "land_percent", 0.5)
     if land_percent > 0.999 then
-        return AllLand()
+        return Simple.AllLand()
     end
     if land_percent < 0.001 then
-        return NoLand()
+        return Simple.NoLand()
     end
     -- For a Gaussian distribution with mean 0 and variance 1, the fraction of
     -- the time it is above thresh equals land_pct.
@@ -256,8 +258,8 @@ function Noise(options)
     local ngrids = #Ms
     -- print(serpent.block(grid_schema))
 
-    local n1 = default(options, "n1", 1)
-    local n2 = default(options, "n2", -1)
+    --local n1 = default(options, "n1", 1)
+    --local n2 = default(options, "n2", -1)
     if n2 < n1 then
         n2 = ngrids
     end
@@ -360,7 +362,7 @@ function Noise(options)
     end
 
     local function verify_ok()
-        dh = height(0, 0) - thresh1
+        local dh = height(0, 0) - thresh1
         if start_on_beach then
             return dh > 0 and dh < 0.1
         end
@@ -430,7 +432,7 @@ function Noise(options)
     }
 end
 
-function NoiseExponent(options)
+function Public.NoiseExponent(options)
     if options == nil then
         options = {}
     end
@@ -449,7 +451,7 @@ end
 -- The "noise" array gives a relative amplitude for noise of various frequencies,
 -- with the first element corresponding to a wavelength of sqrt(10), and each
 -- successive element corresponding to a wavelength sqrt(10) times larger.
-function NoiseCustom(options)
+function Public.NoiseCustom(options)
     if options == nil then
         options = {}
     end
@@ -484,3 +486,5 @@ function NoiseCustom(options)
     options["power"] = power
     return Noise(options)
 end
+
+return Public

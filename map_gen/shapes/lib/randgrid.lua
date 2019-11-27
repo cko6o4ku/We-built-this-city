@@ -1,8 +1,10 @@
 -- Returns a random number from 0 to 1 for each (x, y) spot
 
+local Public = {}
+
 local M = math.pow(2, 12)
 
-function RandGrid()
+function Public.RandGrid()
     local data
 
     local function create()
@@ -40,3 +42,5 @@ function RandGrid()
         geti = geti
     }
 end
+
+return Public

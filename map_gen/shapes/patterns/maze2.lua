@@ -1,7 +1,9 @@
-require 'map_gen.shapes.lib.queue'
+local Q = require 'map_gen.shapes.lib.queue'
+
+local Public = {}
 
 -- Based on Wilson's algorithm
-function Maze2()
+function Public.Maze2()
     local dirs = {
         {dx = 1, dy = 0},
         {dx = -1, dy = 0},
@@ -127,7 +129,7 @@ function Maze2()
     end
 
     local function fill_shortest_path(path, x, y)
-        local q = Queue()
+        local q = Q.Queue()
         local visited = {}
 
         q.push({x = x, y = y})
@@ -157,19 +159,19 @@ function Maze2()
         local k
         local cx, cy
         cx, cy = x, y
-        
+
         while true do
             k = key(cx, cy)
             if data.nearland[k] then
                 break
             end
-            d = random_direction(cx, cy)
+            local d = random_direction(cx, cy)
             cx = cx + d.dx
             cy = cy + d.dy
             n[k] = key(cx, cy)
         end
 
-        path = {}
+        local path = {}
         k = key(x, y)
         while not (k == nil) do
             path[k] = true
@@ -181,7 +183,7 @@ function Maze2()
 
     local function diffuse()
         update_pending()
-        r = math.random() * data.pendingsum
+        local r = math.random() * data.pendingsum
 
         for k, v in pairs(data.pending) do
             r = r - v.w
@@ -210,3 +212,5 @@ function Maze2()
         output = "bool"
     }
 end
+
+return Public

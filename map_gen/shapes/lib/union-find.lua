@@ -1,17 +1,19 @@
-function UnionFind(data)
+local Public = {}
+
+function Public.UnionFind(data)
     local parents = data or {}
     local function get(key)
-        p = parents[key]
+        local p = parents[key]
         if p == nil or p == key then
             return key
         else
-            root = get(p)
+            local root = get(p)
             parents[key] = root
             return root
         end
     end
     local function set(key, newroot)
-        p = parents[key]
+        local p = parents[key]
         parents[key] = newroot
         if not (p == nil or p == key) then
             set(p, newroot)
@@ -30,3 +32,5 @@ function UnionFind(data)
         data = parents -- live access to data for serializing purposes
     }
 end
+
+return Public

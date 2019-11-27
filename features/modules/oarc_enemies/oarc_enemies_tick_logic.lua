@@ -109,11 +109,11 @@ function Public.OarcEnemiesOnTick()
     end
 
     if ((game.tick % (global_data.ticks_per_second)) == 31) then
-        for _, p in ipairs(game.connected_players) do
+        for _, p in pairs(game.connected_players) do
         if gd.buildings[p.name] == nil then return end
             for k, v in pairs(gd.buildings[p.name]) do
                 if not v.valid then
-                    table.remove(gd.buildings[p.name], k)
+                    gd.buildings[p.name][k] = nil
                 end
             end
         end
@@ -127,15 +127,14 @@ end
 
 function Public.ProcessAttackCleanupInvalidGroups(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
-    if (attack.process_stg ~= Def.process_find_group_active) and
-        (attack.process_stg ~= Def.process_find_build_base) then return false end
+    if (attack.process_stg ~= gd.process_find_group_active) and
+        (attack.process_stg ~= gd.process_find_build_base) then return false end
 
     if (not attack.group or not attack.group.valid) then
         if gd.debug then
             log("ProcessAttackCleanupInvalidGroups - Group killed?")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return true
 
     elseif (attack.group.state == defines.group_state.wander_in_group) then
@@ -143,31 +142,24 @@ function Public.ProcessAttackCleanupInvalidGroups(key, attack)
             log("ProcessAttackCleanupInvalidGroups - Group done (wandering)?")
         end
         OE.EnemyGroupBuildBaseThenWander(attack.group, attack.group.position)
-        gd.attacks[key].process_stg = Def.process_find_build_base
+        gd.attacks[key].process_stg = gd.process_find_build_base
         return true
     end
 
     for k, group in pairs(gd.groups) do
         if not group.valid then
-            table.remove(gd.groups, k)
+            gd.groups[k] = nil
         end
     end
 
     return false
 end
 
-local function next(name)
-    local gd = OE_Table.get_table()
-    gd.player_wave[name].wave_number = gd.player_wave[name].wave_number + 1
-end
-
 function Public.ProcessPlayerTimersEverySecond()
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
     local global_data = Table.get_table()
     for name,timer_table in pairs(gd.player_timers) do
         if (game.players[name] and game.players[name].connected) then
-            if gd.player_wave[name].grace then return end
 
             for timer_name,timer in pairs(timer_table) do
                 if (timer > 0) then
@@ -175,12 +167,11 @@ function Public.ProcessPlayerTimersEverySecond()
                 else
                     if (timer_name == "next_wave_player") then
                         OE.OarcEnemiesPlayerAttackCharacter(name)
-                        gd.player_timers[name][timer_name] = Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
-                        next(name)
+                        gd.player_timers[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
 
                     elseif (timer_name == "next_wave_buildings") then
-                        OE.OarcEnemiesBuildingAttack(name, Def.enemy_targets)
-                        gd.player_timers[name][timer_name] = Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0)
+                        OE.OarcEnemiesBuildingAttack(name, gd.enemy_targets)
+                        gd.player_timers[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
                     end
                 end
             end
@@ -190,9 +181,8 @@ end
 
 function Public.ProcessAttackFindTarget(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
 
-    if (attack.process_stg ~= Def.process_find_target) then return false end
+    if (attack.process_stg ~= gd.process_find_target) then return false end
 
     -- log("tick_log ProcessAttackFindTarget " .. game.tick)
 
@@ -200,7 +190,7 @@ function Public.ProcessAttackFindTarget(key, attack)
         if gd.debug then
             log("attack.attempts = 0 - ATTACK FAILURE")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 
@@ -209,7 +199,7 @@ function Public.ProcessAttackFindTarget(key, attack)
         local player = game.players[attack.target_player]
 
         -- Attack a building of the player, given a certain building type
-        if (attack.target_type == Def.type_target_building) then
+        if (attack.target_type == gd.type_target_building) then
 
             local random_building = OE.GetRandomBuildingAny(attack.target_player,
                                                             attack.building_types)
@@ -224,17 +214,17 @@ function Public.ProcessAttackFindTarget(key, attack)
 
                 gd.attacks[key].size = s
                 gd.attacks[key].evo = e
-                gd.attacks[key].process_stg = Def.process_find_spawn
+                gd.attacks[key].process_stg = gd.process_find_spawn
                 return true
             else
                 if gd.debug then
                     log("No building found to attack.")
                 end
-                table.remove(gd.attacks, key)
+                gd.attacks[key] = nil
             end
 
         -- Attack a player directly
-        elseif (attack.target_type == Def.type_target_player) then
+        elseif (attack.target_type == gd.type_target_player) then
 
             gd.attacks[key].target_entity = player.character
 
@@ -245,7 +235,7 @@ function Public.ProcessAttackFindTarget(key, attack)
 
             gd.attacks[key].size = s
             gd.attacks[key].evo = e
-            gd.attacks[key].process_stg = Def.process_find_spawn
+            gd.attacks[key].process_stg = gd.process_find_spawn
             return true
         end
 
@@ -261,9 +251,8 @@ end
 
 function Public.ProcessAttackFindSpawn(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
 
-    if (attack.process_stg ~= Def.process_find_spawn) then return false end
+    if (attack.process_stg ~= gd.process_find_spawn) then return false end
 
     -- log("tick_log ProcessAttackFindSpawn " .. game.tick)
 
@@ -271,7 +260,7 @@ function Public.ProcessAttackFindSpawn(key, attack)
         if gd.debug then
             log("attack.attempts = 0 - ProcessAttackFindSpawn FAILURE")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 
@@ -281,7 +270,7 @@ function Public.ProcessAttackFindSpawn(key, attack)
         if (attack.target_entity and not attack.target_entity.valid) then
             gd.attacks[key].target_entity = nil
             gd.attacks[key].attempts = attack.attempts - 1
-            gd.attacks[key].process_stg = Def.process_find_target
+            gd.attacks[key].process_stg = gd.process_find_target
             return false
         end
 
@@ -293,18 +282,18 @@ function Public.ProcessAttackFindSpawn(key, attack)
         elseif (attack.target_chunk) then
             c_pos = attack.target_chunk
         end
-        local spawns = OE.SpiralSearch(c_pos, Def.search_radius_chunks, 5, OE.OarcEnemiesDoesChunkHaveSpawner)
+        local spawns = OE.SpiralSearch(c_pos, gd.search_radius_chunks, 5, OE.OarcEnemiesDoesChunkHaveSpawner)
 
         if (spawns ~= nil) then
             gd.attacks[key].spawn_chunk = spawns[Utils.GetRandomKeyFromTable(spawns)]
-            gd.attacks[key].process_stg = Def.process_find_spawn_path_req
+            gd.attacks[key].process_stg = gd.process_find_spawn_path_req
         else
             if gd.debug then
                 log("Could not find a spawn near target...")
             end
             gd.attacks[key].target_entity = nil
             gd.attacks[key].attempts = attack.attempts - 1
-            gd.attacks[key].process_stg = Def.process_find_target
+            gd.attacks[key].process_stg = gd.process_find_target
         end
 
         return true
@@ -320,9 +309,8 @@ end
 
 function Public.ProcessAttackCheckPathFromSpawn(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
 
-    if (attack.process_stg ~= Def.process_find_spawn_path_req) then return false end
+    if (attack.process_stg ~= gd.process_find_spawn_path_req) then return false end
 
     -- log("tick_log ProcessAttackCheckPathFromSpawn " .. game.tick)
 
@@ -330,7 +318,7 @@ function Public.ProcessAttackCheckPathFromSpawn(key, attack)
         if gd.debug then
             log("attack.attempts = 0 - ProcessAttackCheckPathFromSpawn FAILURE")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 
@@ -341,7 +329,7 @@ function Public.ProcessAttackCheckPathFromSpawn(key, attack)
             if gd.debug then
                 log("ERROR - group should not be valid - ProcessAttackCheckPathFromSpawn!")
             end
-            table.remove(gd.attacks, key)
+            gd.attacks[key] = nil
             return false
         end
 
@@ -374,7 +362,7 @@ function Public.ProcessAttackCheckPathFromSpawn(key, attack)
             gd.attacks[key].target_entity = nil
             gd.attacks[key].target_chunk = nil
             gd.attacks[key].attempts = attack.attempts - 1
-            gd.attacks[key].process_stg = Def.process_find_target
+            gd.attacks[key].process_stg = gd.process_find_target
             return false
         end
 
@@ -387,7 +375,7 @@ function Public.ProcessAttackCheckPathFromSpawn(key, attack)
                                                         pathfind_flags={low_priority=true},
                                                         can_open_gates=false,
                                                         path_resolution_modifier=-1}
-        gd.attacks[key].process_stg = Def.process_find_spawn_path_calc
+        gd.attacks[key].process_stg = gd.process_find_spawn_path_calc
         return true
     else
         if gd.debug then
@@ -401,7 +389,6 @@ end
 
 function Public.ProcessAttackCheckPathComplete(event)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
     local global_data = Table.get_table()
     if (not event.id) then return end
     local path_success = (event.path ~= nil)
@@ -426,24 +413,24 @@ function Public.ProcessAttackCheckPathComplete(event)
             local group_exists_already = (attack.group and attack.group_id and attack.group.valid)
 
             -- First time path check before a group is spawned
-            if (attack.process_stg == Def.process_find_spawn_path_calc) then
+            if (attack.process_stg == gd.process_find_spawn_path_calc) then
                 if (group_exists_already) then
                     if gd.debug then
-                    log("ERROR - Def.process_find_spawn_path_calc has a valid group?!")
+                    log("ERROR - gd.process_find_spawn_path_calc has a valid group?!")
                     end
                 end
 
                 if (path_success) then
                     gd.attacks[key].path = event.path
-                    gd.attacks[key].process_stg = Def.process_find_create_group
+                    gd.attacks[key].process_stg = gd.process_find_create_group
                 else
                     gd.attacks[key].path_id = nil
                     gd.attacks[key].attempts = attack.attempts - 1
-                    gd.attacks[key].process_stg = Def.process_find_target
+                    gd.attacks[key].process_stg = gd.process_find_target
                 end
 
             -- Retry path check on a command failure
-            elseif  (attack.process_stg == Def.process_find_retry_path_calc) then
+            elseif  (attack.process_stg == gd.process_find_retry_path_calc) then
 
                 if (not group_exists_already) then
                     if gd.debug then
@@ -453,14 +440,14 @@ function Public.ProcessAttackCheckPathComplete(event)
 
                 if (path_success) then
                     gd.attacks[key].path = event.path
-                    gd.attacks[key].process_stg = Def.process_find_command_group
+                    gd.attacks[key].process_stg = gd.process_find_command_group
                 else
                     if gd.debug then
                         log("Group can no longer path to target. Performing fallback attack instead" .. attack.group.group_id)
                     end
                     gd.attacks[key].path_id = nil
                     gd.attacks[key].attempts = attack.attempts - 1
-                    gd.attacks[key].process_stg = Def.process_find_fallback_attack
+                    gd.attacks[key].process_stg = gd.process_find_fallback_attack
                 end
 
             else
@@ -477,8 +464,7 @@ end
 
 function Public.ProcessAttackCreateGroup(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
-    if (attack.process_stg ~= Def.process_find_create_group) then return false end
+    if (attack.process_stg ~= gd.process_find_create_group) then return false end
 
     -- log("tick_log ProcessAttackCreateGroup " .. game.tick)
 
@@ -486,7 +472,7 @@ function Public.ProcessAttackCreateGroup(key, attack)
         if gd.debug then
             log("attack.attempts = 0 - ProcessAttackCreateGroup FAILURE")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 
@@ -497,10 +483,10 @@ function Public.ProcessAttackCreateGroup(key, attack)
                                                         attack.size)
         gd.attacks[key].group_id = group.group_number
         gd.attacks[key].group = group
-        gd.attacks[key].process_stg = Def.process_find_command_group
+        gd.attacks[key].process_stg = gd.process_find_command_group
 
         -- On the first time the player has a direct attack, warn them?
-        if (attack.target_type == Def.type_target_player) and
+        if (attack.target_type == gd.type_target_player) and
            (not gd.player_sbubbles[attack.target_player].uh_oh) then
             Utils.DisplaySpeechBubble(game.players[attack.target_player],
                                 "I got the scent that biters are headed my way!", 15)
@@ -520,9 +506,8 @@ end
 
 function Public.ProcessAttackCommandGroup(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
     local global_data = Table.get_table()
-    if (attack.process_stg ~= Def.process_find_command_group) then return false end
+    if (attack.process_stg ~= gd.process_find_command_group) then return false end
 
     -- log("tick_log ProcessAttackCommandGroup " .. game.tick)
 
@@ -530,7 +515,7 @@ function Public.ProcessAttackCommandGroup(key, attack)
         if gd.debug then
             log("attack.attempts = 0 - ProcessAttackCommandGroup FAILURE")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 
@@ -540,7 +525,7 @@ function Public.ProcessAttackCommandGroup(key, attack)
         -- If we have a target entity, attack that.
         if (attack.target_entity and attack.target_entity.valid and attack.path_id) then
             OE.EnemyGroupGoAttackEntityThenWander(attack.group, attack.target_entity, attack.path)
-            gd.attacks[key].process_stg = Def.process_find_group_active
+            gd.attacks[key].process_stg = gd.process_find_group_active
             return true
 
         -- If we have a target chunk, attack that area.
@@ -548,7 +533,7 @@ function Public.ProcessAttackCommandGroup(key, attack)
             OE.EnemyGroupAttackAreaThenWander(attack.group,
                                             Utils.GetCenterTilePosFromChunkPos(attack.target_chunk),
                                             global_data.chunk_size*2)
-            gd.attacks[key].process_stg = Def.process_find_group_active
+            gd.attacks[key].process_stg = gd.process_find_group_active
             return true
 
         -- Otherwise, shit's fucked
@@ -558,7 +543,7 @@ function Public.ProcessAttackCommandGroup(key, attack)
             end
             gd.attacks[key].path_id = nil
             gd.attacks[key].attempts = attack.attempts - 1
-            gd.attacks[key].process_stg = Def.process_find_target
+            gd.attacks[key].process_stg = gd.process_find_target
             return false
         end
     else
@@ -574,7 +559,6 @@ end
 
 function Public.OarcEnemiesGroupCmdFailed(event)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
     local attack_key = OE.FindAttackKeyFromGroupIdNumber(event.unit_number)
 
     -- This group cmd failure is not associated with an attack. Must be a unit or something.
@@ -587,26 +571,25 @@ function Public.OarcEnemiesGroupCmdFailed(event)
         if gd.debug then
             log("OarcEnemiesGroupCmdFailed group not valid anymore")
         end
-        table.remove(gd.attacks, attack_key)
+        gd.attacks[attack_key] = nil
         return
     end
 
     -- Check if it's a fallback attack.
-    if (attack.target_type == Def.type_target_area) then
+    if (attack.target_type == gd.type_target_area) then
 
-        gd.attacks[attack_key].process_stg = Def.process_find_fallback_final
+        gd.attacks[attack_key].process_stg = gd.process_find_fallback_final
 
     -- Else handle failure based on attack type.
     else
-        gd.attacks[attack_key].process_stg = Def.process_find_command_failed
+        gd.attacks[attack_key].process_stg = gd.process_find_command_failed
     end
 end
 
 
 function Public.ProcessAttackCommandFailed(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
-    if (attack.process_stg ~= Def.process_find_command_failed) then return false end
+    if (attack.process_stg ~= gd.process_find_command_failed) then return false end
 
     -- log("tick_log ProcessAttackCommandFailed " .. game.tick)
 
@@ -614,14 +597,14 @@ function Public.ProcessAttackCommandFailed(key, attack)
         if gd.debug then
             log("attack.attempts = 0 - ProcessAttackCommandFailed FAILURE")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 
     -- If we fail to attack the player, it likely means the player moved.
     -- So we try to retry pathing so we can "chase" the player.
-    if (attack.target_type == Def.type_target_player) then
-        gd.attacks[key].process_stg = Def.process_find_retry_path_req
+    if (attack.target_type == gd.type_target_player) then
+        gd.attacks[key].process_stg = gd.process_find_retry_path_req
         return true
 
     -- Fallback for all other attack types is to attack the general area instead.
@@ -631,7 +614,7 @@ function Public.ProcessAttackCommandFailed(key, attack)
             log("ProcessAttackCommandFailed - performing fallback now?")
         end
         gd.attacks[key].attempts = attack.attempts - 1
-        gd.attacks[key].process_stg = Def.process_find_fallback_attack
+        gd.attacks[key].process_stg = gd.process_find_fallback_attack
         return true
     end
 
@@ -641,9 +624,8 @@ end
 
 function Public.ProcessAttackFallbackAttack(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
     local global_data = Table.get_table()
-    if (attack.process_stg ~= Def.process_find_fallback_attack) then return false end
+    if (attack.process_stg ~= gd.process_find_fallback_attack) then return false end
 
     -- log("tick_log ProcessAttackFallbackAttack " .. game.tick)
 
@@ -652,13 +634,13 @@ function Public.ProcessAttackFallbackAttack(key, attack)
         OE.EnemyGroupAttackAreaThenWander(attack.group,
                                       Utils.GetCenterTilePosFromChunkPos(attack.target_chunk),
                                       global_data.chunk_size*2)
-        gd.attacks[key].target_type = Def.type_target_area
-        gd.attacks[key].process_stg = Def.process_find_group_active
+        gd.attacks[key].target_type = gd.type_target_area
+        gd.attacks[key].process_stg = gd.process_find_group_active
         return true
     else
         if gd.debug then
             log("ProcessAttackFallbackAttack invalid group or target?" .. key)
-            table.remove(gd.attacks, key)
+            gd.attacks[key] = nil
         end
     end
 
@@ -668,8 +650,7 @@ end
 
 function Public.ProcessAttackFallbackAuto(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
-    if (attack.process_stg ~= Def.process_find_fallback_final) then return false end
+    if (attack.process_stg ~= gd.process_find_fallback_final) then return false end
 
     -- log("tick_log ProcessAttackFallbackAuto " .. game.tick)
 
@@ -684,21 +665,20 @@ function Public.ProcessAttackFallbackAuto(key, attack)
         end
     end
 
-    table.remove(gd.attacks, key)
+    gd.attacks[key] = nil
     return true
 end
 
 
 function Public.ProcessAttackRetryPath(key, attack)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
 
-    if (attack.process_stg ~= Def.process_find_retry_path_req) then return false end
+    if (attack.process_stg ~= gd.process_find_retry_path_req) then return false end
 
     -- log("tick_log ProcessAttackRetryPath " .. game.tick)
 
     -- Validation checks
-    if ((attack.target_type ~= Def.type_target_player) or
+    if ((attack.target_type ~= gd.type_target_player) or
         (attack.attempts == 0) or
         (not attack.target_entity) or
         (not attack.target_entity.valid)) then
@@ -708,12 +688,12 @@ function Public.ProcessAttackRetryPath(key, attack)
         if (attack.group and attack.group.valid) then
             attack.group.set_autonomous()
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 
     -- Check group still exists
-    if (attack.group and attack.group_id and attack.group.valid) then
+    if (attack.group and attack.group_id and attack.group.valid and attack.group.members and attack.group.members[1].valid) then
 
         -- Path request
         gd.attacks[key].path_id =
@@ -726,14 +706,14 @@ function Public.ProcessAttackRetryPath(key, attack)
                                             pathfind_flags={low_priority=true},
                                             can_open_gates=false,
                                             path_resolution_modifier=-1}
-        gd.attacks[key].process_stg = Def.process_find_retry_path_calc
+        gd.attacks[key].process_stg = gd.process_find_retry_path_calc
         return true
 
     else
         if gd.debug then
             log("ERROR - group should BE valid - ProcessAttackRetryPath!")
         end
-        table.remove(gd.attacks, key)
+        gd.attacks[key] = nil
         return false
     end
 

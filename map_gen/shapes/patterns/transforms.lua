@@ -1,4 +1,6 @@
-require 'simple'
+local Simple = require 'map_gen.shapes.patterns.simple'
+
+local Public = {}
 
 local function noop()
     return nil
@@ -8,7 +10,7 @@ local tinsert = table.insert
 local M = math.pow(2, 26)
 -- Lua can represent integers exactly up to a bit more than M^2
 
-function Zoom(pattern, f)
+function Public.Zoom(pattern, f)
     local factor = f or 16
     local pget = pattern.get
 
@@ -20,7 +22,7 @@ function Zoom(pattern, f)
         get = get, output = pattern.output}
 end
 
-function Tighten(pattern)
+function Public.Tighten(pattern)
     local pget = pattern.get
 
     local function get(x, y)
@@ -29,7 +31,7 @@ function Tighten(pattern)
     return {create = pattern.create, reload = pattern.reload, get = get, output = "bool"}
 end
 
-function FullTighten(pattern)
+function Public.FullTighten(pattern)
     local pget = pattern.get
 
     local function get(x, y)
@@ -38,7 +40,7 @@ function FullTighten(pattern)
     return {create = pattern.create, reload = pattern.reload, get = get, output = "bool"}
 end
 
-function Not(pattern)
+function Public.Not(pattern)
     local pget = pattern.get
 
     local function get(x, y)
@@ -49,11 +51,11 @@ end
 
 -- Takes any number of patterns. Either all patterns must output "bool", or "float". If no patterns
 -- are given, "bool" is assumed. For float, takes maximum.
-function Union(...)
+function Public.Union(...)
     local n = select('#', ...)
     local patterns = {...}
     if n == 0 then
-        return NoLand()
+        return Simple.NoLand()
     elseif n == 1 then
         return patterns[1]
     end
@@ -97,11 +99,11 @@ function Union(...)
 end
 
 -- See Union. For "float", takes the minimum.
-function Intersection(...)
+function Public.Intersection(...)
     local n = select('#', ...)
     local patterns = {...}
     if n == 0 then
-        return AllLand()
+        return Simple.AllLand()
     elseif n == 1 then
         return patterns[1]
     end
@@ -145,7 +147,7 @@ function Intersection(...)
 end
 
 -- Shifts the given pattern by dx to the right and dy up
-function Translate(pattern, dx, dy)
+function Public.Translate(pattern, dx, dy)
     local pget = pattern.get
 
     local function get(x, y)
@@ -157,7 +159,7 @@ function Translate(pattern, dx, dy)
 end
 
 -- Given an angle in degrees, rotates anticlockwise by that much
-function Rotate(pattern, angle)
+function Public.Rotate(pattern, angle)
     local pget = pattern.get
     local c = math.cos(angle * math.pi / 180)
     local s = math.sin(angle * math.pi / 180)
@@ -170,7 +172,7 @@ function Rotate(pattern, angle)
         get = get, output = pattern.output}
 end
 
-function Affine(pattern, a, b, c, d, dx, dy)
+function Public.Affine(pattern, a, b, c, d, dx, dy)
     local pget = pattern.get
     local dx_ = dx or 0
     local dy_ = dy or 0
@@ -184,7 +186,7 @@ function Affine(pattern, a, b, c, d, dx, dy)
 end
 
 -- Tiles the plane with the contents of the given pattern from [xlow, xhigh) x [ylow, yhigh)
-function Tile(pattern, xhigh, yhigh, xlow, ylow)
+function Public.Tile(pattern, xhigh, yhigh, xlow, ylow)
     local pget = pattern.get
     local xl = xlow or 0
     local yl = ylow or 0
@@ -199,7 +201,7 @@ function Tile(pattern, xhigh, yhigh, xlow, ylow)
         get = get, output = pattern.output}
 end
 
-function Tilex(pattern, xhigh, xlow)
+function Public.Tilex(pattern, xhigh, xlow)
     local pget = pattern.get
     local xl = xlow or 0
     local dx = xhigh - xl
@@ -212,7 +214,7 @@ function Tilex(pattern, xhigh, xlow)
         get = get, output = pattern.output}
 end
 
-function Tiley(pattern, yhigh, ylow)
+function Public.Tiley(pattern, yhigh, ylow)
     local pget = pattern.get
     local yl = ylow or 0
     local dy = yhigh - yl
@@ -228,7 +230,7 @@ end
 -- Similar to the z -> z^k function, repeats the given pattern k times by squeezing
 -- k copies angularly around the origin.
 -- If you can come up with a better name for this, let me know.
-function AngularRepeat(pattern, k)
+function Public.AngularRepeat(pattern, k)
     local pget = pattern.get
 
     local function get(x, y)
@@ -250,7 +252,7 @@ end
 
 -- Adds jitter to the boundaries of the given pattern; radius controls the size of the
 -- jitter.
-function Jitter(pattern, radius)
+function Public.Jitter(pattern, radius)
     local pget = pattern.get
     local r = radius or 10
     local data
@@ -289,7 +291,7 @@ function Jitter(pattern, radius)
 end
 
 -- Poor performance, don't use
-function SmoothDiscrete(pattern, radius)
+function Public.SmoothDiscrete(pattern, radius)
     local pget = pattern.get
     local r = radius or 3
 
@@ -299,8 +301,8 @@ function SmoothDiscrete(pattern, radius)
     for i = -r,r+1 do
         for j = -r,r+1 do
             if i * i + j * j <= r * r then
-                table.insert(dx, i)
-                table.insert(dy, j)
+                tinsert(dx, i)
+                tinsert(dy, j)
                 total = total + 1
             end
         end
@@ -344,3 +346,5 @@ function SmoothDiscrete(pattern, radius)
 
     return {create = create, reload = reload, get = get, output = "bool"}
 end
+
+return Public

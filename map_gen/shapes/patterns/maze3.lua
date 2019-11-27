@@ -1,6 +1,8 @@
-require 'map_gen.shapes.lib.randgrid'
+local RG = require 'map_gen.shapes.lib.randgrid'
 
-function Maze3(t, v)
+local Public = {}
+
+function Public.Maze3(t, v)
     if v == nil then
         v = true
     end
@@ -64,7 +66,7 @@ function Maze3(t, v)
         local bottom = false
 
         for i = -n, n do
-            left = left or visited[-n][i] 
+            left = left or visited[-n][i]
             right = right or visited[n][i]
             top = top or visited[i][-n]
             bottom = bottom or visited[i][n]
@@ -77,7 +79,7 @@ function Maze3(t, v)
         data = {}
         local num_attempts = 0
         repeat
-            rg = RandGrid()
+            rg = RG.RandGrid()
             data.randgrid = rg.create()
             num_attempts = num_attempts + 1
         until verify_ok() or num_attempts >= max_attempts
@@ -87,7 +89,7 @@ function Maze3(t, v)
 
     local function reload(d)
         data = d
-        rg = RandGrid()
+        rg = RG.RandGrid()
         rg.reload(data.randgrid)
     end
 
@@ -98,3 +100,5 @@ function Maze3(t, v)
         output = "bool"
     }
 end
+
+return Public

@@ -1,4 +1,6 @@
-function JigsawIslands(landratio)
+local Public = {}
+
+function Public.JigsawIslands(landratio)
     local lr = landratio or 0.5
     local l = math.sqrt(lr)
     local dirs = {
@@ -9,6 +11,7 @@ function JigsawIslands(landratio)
     }
 
     local data
+    local group
 
     local function key(x, y)
         if x == 0 then
@@ -64,10 +67,10 @@ function JigsawIslands(landratio)
                 dir = {dx = -dir.dx, dy = -dir.dy}
             end
             local gid = which_group(x + dir.dx, y + dir.dy, keys, count + 1)
-            local group = data.groups[gid]
-            group.sx = group.sx + x
-            group.sy = group.sy + y
-            group.count = group.count + 1
+            local _group = data.groups[gid]
+            _group.sx = group.sx + x
+            _group.sy = group.sy + y
+            _group.count = group.count + 1
             data.xy2group[k] = gid
             return gid
         end
@@ -77,6 +80,8 @@ function JigsawIslands(landratio)
 
     local function floodfill(x, y, gid, visited)
         local k = key(x, y)
+
+        local gid2
 
         if visited[k] == nil then
             visited[k] = true
@@ -91,25 +96,25 @@ function JigsawIslands(landratio)
 
     local function dofloodfill(x, y)
         local gid = which_group(x, y)
-        local group = data.groups[gid]
-        if not group.done then
+        local _group = data.groups[gid]
+        if not _group.done then
             floodfill(x, y, gid, {})
-            group.done = true
-            -- print ("Group " .. gid .. " has " .. group.count .. " members.")
+            _group.done = true
+            -- print ("Group " .. gid .. " has " .. _group.count .. " members.")
         end
-        return group.count
+        return _group.count
     end
 
     local function ingroup(x, y, x_, y_)
         local gid = which_group(x_, y_)
         dofloodfill(x_, y_)
 
-        local group = data.groups[gid]
-        if group.count <= 4 then
+        local _group = data.groups[gid]
+        if _group.count <= 4 then
             return false
         end
-        local mx = group.sx / group.count
-        local my = group.sy / group.count
+        local mx = _group.sx / _group.count
+        local my = _group.sy / _group.count
         local x__ = math.floor(x + mx * (1 - 1 / l))
         local y__ = math.floor(y + my * (1 - 1 / l))
         return gid == which_group(x__, y__)
@@ -132,3 +137,5 @@ function JigsawIslands(landratio)
         output = "bool"
     }
 end
+
+return Public

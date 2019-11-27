@@ -1,3 +1,5 @@
+local Public = {}
+
 local permute_bit_reversal = {}
 -- N must be a power of 2.
 local function precompute_bit_reversal(N)
@@ -44,7 +46,7 @@ end
 -- and must be a power of two.
 -- scrap is an array of length at least N for holding temporary data
 -- Uses Cooley-Tukey algorithm.
-function fft(x1, x2, a, da, N, scrap)
+function Public.fft(x1, x2, a, da, N, scrap)
 
     -- temporary variables
     local t, ta1, ta2, tb1, tb2, idx
@@ -96,12 +98,12 @@ end
 
 -- If x1 and x2 are N x N arrays, with N a power of two, compute the 2d FFT in place.
 -- scrap is an array of length at least N for holding temporary data.
-function fft2d(x1, x2, N, scrap)
+function Public.fft2d(x1, x2, N, scrap)
     for i = 0, N - 1 do
-        fft(x1, x2, i, N, N, scrap)
+        Public.fft(x1, x2, i, N, N, scrap)
     end
     for i = 0, N - 1 do
-        fft(x1, x2, i * N, 1, N, scrap)
+        Public.fft(x1, x2, i * N, 1, N, scrap)
     end
 end
 
@@ -149,3 +151,5 @@ print('d')
 print(serpent.line(x1))
 print(serpent.line(x2))
 --]]
+
+return Public

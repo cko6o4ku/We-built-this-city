@@ -1,7 +1,10 @@
 -- landthickness is the mean thickness of each bar of land
 -- landthickness / (sqrt(2) - 1) is the median thickness
 -- angle is in *degrees*
-function Barcode(angle, landthickness, waterthickness)
+
+local Public = {}
+
+function Public.Barcode(angle, landthickness, waterthickness)
     local l_ = landthickness or 20
     local w_ = waterthickness or 50
     local l = l_ / (math.sqrt(2) - 1)
@@ -113,7 +116,7 @@ function Barcode(angle, landthickness, waterthickness)
     }
 end
 
-function ConcentricBarcode(landthickness, waterthickness)
+function Public.ConcentricBarcode(landthickness, waterthickness)
     local l_ = landthickness or 20
     local w_ = waterthickness or 50
     local l = l_ / (math.sqrt(2) - 1)
@@ -198,3 +201,5 @@ function ConcentricBarcode(landthickness, waterthickness)
         output = "bool"
     }
 end
+
+return Public

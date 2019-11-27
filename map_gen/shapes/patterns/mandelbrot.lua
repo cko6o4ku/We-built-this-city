@@ -1,7 +1,10 @@
 -- Creates a Mandelbrot set
 -- The set is bounded within about -size to size/2 along the x-axis,
 -- and -1.2 * size to 1.2 * size along the y-axis.
-function Mandelbrot(size)
+
+local Public = {}
+
+function Public.Mandelbrot(size)
     local s = size or 100
     local maxiter = 100
 
@@ -82,3 +85,5 @@ function Mandelbrot(size)
         output = "bool"
     }
 end
+
+return Public

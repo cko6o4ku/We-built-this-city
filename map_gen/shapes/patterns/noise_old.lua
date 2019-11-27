@@ -1,4 +1,6 @@
-require 'simple'
+local Simple = require 'map_gen.shapes.patterns.simple'
+
+local Public = {}
 
 -- To compute the inverse CDF of the normal distribution, use
 -- sqrt(2) * erfinv(2 * x - 1)
@@ -34,7 +36,7 @@ local function cache_grid(M, w1, w2, power, sigma)
     local count = 0
     for wx = 0, M-1 do
         for wy = 0, M-1 do
-            w = 2 * math.pi * math.sqrt(wx * wx + wy * wy) / M
+            local w = 2 * math.pi * math.sqrt(wx * wx + wy * wy) / M
             -- There are approximately (w * M) / 4 different choices of (wx, wy)
             -- that give "roughly" the same value of w, meaning within the interval
             -- [w, w + 2 pi / M)
@@ -131,17 +133,17 @@ end
 
 -- cache_length should not be a multiple of 11
 
-function Noise(options)
+function Public.Noise(options)
     if options == nil then
         options = {}
     end
 
     local land_percent = default(options, "land_percent", 0.5)
     if land_percent > 0.999 then
-        return AllLand()
+        return Simple.AllLand()
     end
     if land_percent < 0.001 then
-        return NoLand()
+        return Simple.NoLand()
     end
     -- For a Gaussian distribution with mean 0 and variance 1, the fraction of
     -- the time it is above thresh equals land_pct.
@@ -236,7 +238,7 @@ function Noise(options)
     end
 
     local function verify_ok()
-        dh = height(0, 0) - thresh
+        local dh = height(0, 0) - thresh
         if start_on_beach then
             return dh > 0 and dh < 0.1
         end
@@ -300,25 +302,25 @@ function Noise(options)
     }
 end
 
-function NoisePink(options)
+function Public.NoisePink(options)
     local function power(w)
         return -math.log(w)
     end
     options["power"] = power
-    return Noise(options)
+    return Public.Noise(options)
 end
 
-function NoiseExponent(options)
+function Public.NoiseExponent(options)
     local exponent = default(options, "exponent", -0.8)
     if exponent >= 0 then
-        return NoisePink(options)
+        return Public.NoisePink(options)
     end
 
     local function power(w)
         return math.pow(w, exponent)
     end
     options["power"] = power
-    return Noise(options)
+    return Public.Noise(options)
 end
 
 local function sigmoidal(x)
@@ -332,9 +334,11 @@ local function mixed_power_sigmoidal(exponent, wmix, sig_amp)
     return power
 end
 
-function Continents(options)
+function Public.Continents(options)
     local exponent = default(options, "exponent", -0.8)
     local continent_amp = default(options, "continent_amp", 0.5)
     options["power"] = mixed_power_sigmoidal(exponent, 5000, continent_amp)
-    return Noise(options)
+    return Public.Noise(options)
 end
+
+return Public

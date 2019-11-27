@@ -13,21 +13,24 @@
 -- The result is immutable. It can be reused in multiple patterns.
 -- Creating an instance of DistortionMap is computationally intensive, so if you need
 -- more than one you would do well to reuse the same one in multiple places.
-require 'perlin'
+local Perlin = require 'map_gen.shapes.lib.perlin'
 
-function DistortionMap(interpolate_, perlin_, maxstepsize_, integration_time_, k_)
+local Public = {}
+
+function Public.DistortionMap(interpolate_, perlin_, maxstepsize_, integration_time_, k_)
+    local do_interpolate
     if interpolate_ == nil then
-        local do_interpolate = true
+        do_interpolate = true
     else
-        local do_interpolate = interpolate_
+        do_interpolate = interpolate_
     end
-    local perlin = perlin_ or PerlinNoise()
+    local perlin = perlin_ or Perlin.PerlinNoise()
 
     -- The distortion repeats with a period of N (times wavelength)
     -- Each unit square of Perlin noise is sampled in k x k places,
     -- and then interpolated within those samples.
     local N = perlin.N
-    local NN = N * N
+    --local NN = N * N
     local k = k_ or 6
     local kN = k * N
     local kkNN = k * k * N * N
@@ -38,7 +41,7 @@ function DistortionMap(interpolate_, perlin_, maxstepsize_, integration_time_, k
     local integration_time = integration_time_ or 0.1
     local numsteps = math.ceil(integration_time / maxstepsize)
 
-    -- half of the true stepsize 
+    -- half of the true stepsize
     local stepsize_ = (integration_time / numsteps) / 2
 
     local dh = perlin.dh
@@ -130,12 +133,12 @@ function DistortionMap(interpolate_, perlin_, maxstepsize_, integration_time_, k
 
         return data
     end
-    
+
     local function reload(d)
         data = d
         perlin.reload(data.perlin)
     end
-
+    local get
     if do_interpolate then
         get = interpolate
     else
@@ -148,3 +151,5 @@ function DistortionMap(interpolate_, perlin_, maxstepsize_, integration_time_, k
         get = get
     }
 end
+
+return Public

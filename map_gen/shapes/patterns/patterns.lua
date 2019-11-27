@@ -1,16 +1,3 @@
-require 'map_gen.shapes.patterns.maze1'
-require 'map_gen.shapes.patterns.maze2'
-require 'map_gen.shapes.patterns.maze3'
-require 'map_gen.shapes.patterns.mandelbrot'
-require 'map_gen.shapes.patterns.jigsawislands'
-require 'map_gen.shapes.patterns.barcode'
-require 'map_gen.shapes.patterns.distort'
-require 'map_gen.shapes.patterns.simple'
-require 'map_gen.shapes.patterns.transforms'
-require 'map_gen.shapes.patterns.islandify'
-require 'map_gen.shapes.patterns.fractal'
-require 'map_gen.shapes.patterns.noise'
-
 local Public = {}
 --
 --  A pattern is a dictionary:

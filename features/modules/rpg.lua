@@ -18,6 +18,7 @@ local Global = require 'utils.global'
 local Event = require 'utils.event'
 local P = require "utils.player_modifiers"
 local Tabs = require 'features.gui.main'
+local validate = require 'utils.validate_player'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
 local visuals_delay = 1800
@@ -444,6 +445,7 @@ end
 
 local function gain_xp(player, amount)
 	local left = player.gui.left
+	validate(player)
 	amount = math.round(amount, 2)
 	rpg_t[player.index].xp = rpg_t[player.index].xp + amount
 	rpg_t[player.index].xp_since_last_floaty_text = rpg_t[player.index].xp_since_last_floaty_text + amount

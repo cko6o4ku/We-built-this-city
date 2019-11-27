@@ -1,6 +1,8 @@
-require 'map_gen.shapes.lib.pqueue'
+local pQueue = require 'map_gen.shapes.lib.pqueue'
 
-function Fractal(dimension, width, aspect)
+local Public = {}
+
+function Public.Fractal(dimension, width, aspect)
     local d = dimension or 1.4
     local w = width or 40
     local a = aspect or 0.4
@@ -20,7 +22,7 @@ function Fractal(dimension, width, aspect)
 
     local init
     local function create()
-        ends = PQueue()
+        ends = pQueue.PQueue()
         data = {}
         data.rectangles = {}
         data.circles = {}
@@ -30,9 +32,9 @@ function Fractal(dimension, width, aspect)
         return data
     end
 
-    local function reload(d)
-        data = d
-        ends = PQueue(data.ends_data)
+    local function reload(_d)
+        data = _d
+        ends = pQueue.PQueue(data.ends_data)
     end
 
     local key_scale = 30
@@ -119,13 +121,13 @@ function Fractal(dimension, width, aspect)
         local e = ends.peek()
         if branches_needed(e[1]) > ends.size() then
             -- Two branches
-            e1 = extend1(e[2], e[3], e[4] + math.pi * (math.random() / turn + 1/3))
-            e2 = extend1(e[2], e[3], e[4] - math.pi * (math.random() / turn + 1/3))
+            local e1 = extend1(e[2], e[3], e[4] + math.pi * (math.random() / turn + 1/3))
+            local e2 = extend1(e[2], e[3], e[4] - math.pi * (math.random() / turn + 1/3))
             ends.pop_and_push(e1[1], e1)
             ends.push(e2[1], e2)
         else
             -- One branch
-            e1 = extend1(e[2], e[3], e[4] + math.pi * (2 * math.random() - 1) / turn)
+            local e1 = extend1(e[2], e[3], e[4] + math.pi * (2 * math.random() - 1) / turn)
             ends.pop_and_push(e1[1], e1)
         end
     end
@@ -184,3 +186,5 @@ function Fractal(dimension, width, aspect)
         output = "bool"
     }
 end
+
+return Public

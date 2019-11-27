@@ -1,6 +1,9 @@
 -- This is a minimum priority queue; the elements with the lowest priority
 -- are popped first.
-function PQueue(data)
+
+local Public = {}
+
+function Public.PQueue(data)
     local elems = data or {}
     local cur_size = #elems
     local function push(p, x)
@@ -77,3 +80,5 @@ function PQueue(data)
         data = elems -- live access to data for serializing purposes
     }
 end
+
+return Public

@@ -34,13 +34,17 @@ local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 local OE_Table = require 'features.modules.oarc_enemies.table'
 local Table = require 'map_gen.mps_0_17.lib.table'
 local Surface = require 'utils.surface'.get_surface_name()
+local validate = require 'utils.validate_player'
 local insert = table.insert
-local table_remove = table.remove
-local math_random = math.random
 
 local Public = {}
 
-local OE = {}
+function Public.init_all_the_tables()
+    local gd = OE_Table.get_table()
+    if (gd.w_attack == nil) then
+        gd.w_attack = {}
+    end
+end
 
 function Public.SpiralSearch(starting_c_pos, max_radius, max_count, check_function)
     local gd = OE_Table.get_table()
@@ -98,7 +102,7 @@ function Public.OarcEnemiesSectorScanned(event)
     if not player.connected then return end
 
     -- 1 in a X chance of triggering an attack on radars?
-    if (math_random(1,gd.params.radar_scan_attack_chance) == 1) then
+    if (math.random(1,gd.params.radar_scan_attack_chance) == 1) then
         Public.OarcEnemiesBuildingAttack(player.name, "radar")
     end
 end
@@ -251,8 +255,8 @@ end
 -- First time player init stuff
 function Public.OarcEnemiesPlayerCreatedEvent(event)
     local gd = OE_Table.get_table()
-    if (game.players[event.player_index] == nil) then return end
     local p_name = game.players[event.player_index].name
+    validate(p_name)
 
     if not gd.player_timers[p_name] then
         gd.player_timers[p_name] = {next_wave_player=Evo.GetRandomizedPlayerTimer(0, 60*20), next_wave_buildings=Evo.GetRandomizedPlayerTimer(0, 0)}
@@ -261,12 +265,6 @@ function Public.OarcEnemiesPlayerCreatedEvent(event)
     if not gd.player_wave[p_name] then
         gd.player_wave[p_name] = {}
     end
-
-    if not gd.player_wave[p_name].wave_number then
-        gd.player_wave[p_name].wave_number = 1
-    end
-
-    gd.player_wave[p_name].grace = true
 
     if (gd.buildings[p_name] == nil) then
         gd.buildings[p_name] = {}
@@ -308,30 +306,32 @@ function Public.OarcEnemiesChunkGenerated(event)
     local spawners = event.surface.find_entities_filtered{area=event.area,
                                                             type={"unit-spawner"},
                                                             force="enemy"}
-
-    -- If this is the first chunk in that row:
-    if (OE[c_pos.x] == nil) then
-        OE[c_pos.x] = {}
+    if (gd.w_attack.w_chunk == nil) then
+        gd.w_attack.w_chunk = {}
     end
-
+    -- If this is the first chunk in that row:
+    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
+        gd.w_attack.w_chunk[c_pos.x] = {}
+    end
     -- Save chunk info.
-    OE[c_pos.x][c_pos.y] = {player_building=false,
+    gd.w_attack.w_chunk[c_pos.x][c_pos.y] = {player_building=false,
                                                         near_building=false,
                                                         valid_spawn=enough_land,
                                                         enemy_spawners=spawners}
 end
 
 function Public.OarcEnemiesChunkIsNearPlayerBuilding(c_pos)
-    if (OE[c_pos.x] == nil) then
-        OE[c_pos.x] = {}
+    local gd = OE_Table.get_table()
+    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
+        gd.w_attack.w_chunk[c_pos.x] = {}
     end
-    if (OE[c_pos.x][c_pos.y] == nil) then
-        OE[c_pos.x][c_pos.y] = {player_building=false,
+    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y] == nil) then
+        gd.w_attack.w_chunk[c_pos.x][c_pos.y] = {player_building=false,
                                                             near_building=true,
                                                             valid_spawn=true,
                                                             enemy_spawners={}}
     else
-        OE[c_pos.x][c_pos.y].near_building = true
+        gd.w_attack.w_chunk[c_pos.x][c_pos.y].near_building = true
     end
 end
 
@@ -348,6 +348,7 @@ function Public.OarcEnemiesChunkHasPlayerBuilding(position)
 end
 
 function Public.OarcEnemiesIsChunkValidSpawn(c_pos)
+    local gd = OE_Table.get_table()
 
     -- Chunk should exist.
     if (game.surfaces[Surface].is_chunk_generated(c_pos) == false) then
@@ -355,15 +356,15 @@ function Public.OarcEnemiesIsChunkValidSpawn(c_pos)
     end
 
     -- Check entry exists.
-    if (OE[c_pos.x] == nil) then
+    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
         return false
     end
-    if (OE[c_pos.x][c_pos.y] == nil) then
+    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y] == nil) then
         return false
     end
 
     -- Get entry
-    local chunk = OE[c_pos.x][c_pos.y]
+    local chunk = gd.w_attack.w_chunk[c_pos.x][c_pos.y]
 
     -- Check basic flags
     if (chunk.player_building or chunk.near_building or not chunk.valid_spawn) then
@@ -390,6 +391,7 @@ end
 -- Check if a given chunk has a spawner in it.
 -- Ideally optimized since we use our tracking of spawners in chunk_map
 function Public.OarcEnemiesDoesChunkHaveSpawner(c_pos)
+    local gd = OE_Table.get_table()
     local has_spawners
 
     -- Chunk should exist.
@@ -398,15 +400,15 @@ function Public.OarcEnemiesDoesChunkHaveSpawner(c_pos)
     end
 
     -- Check entry exists.
-    if (OE[c_pos.x] == nil) then
+    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
         return false
     end
-    if (OE[c_pos.x][c_pos.y] == nil) then
+    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y] == nil) then
         return false
     end
 
     -- Get entry
-    local chunk = OE[c_pos.x][c_pos.y]
+    local chunk = gd.w_attack.w_chunk[c_pos.x][c_pos.y]
 
     -- Check basic flags
     if (not chunk.valid_spawn) then
@@ -420,7 +422,7 @@ function Public.OarcEnemiesDoesChunkHaveSpawner(c_pos)
     else
         for k,v in pairs(chunk.enemy_spawners) do
             if (not v or not v.valid) then
-                table_remove(chunk.enemy_spawners, k)
+                chunk.enemy_spawners[k] = nil
             else
                 has_spawners = true
                 break
@@ -440,27 +442,26 @@ function Public.OarcEnemiesBiterBaseBuilt(event)
 
     local c_pos = Utils.GetChunkPosFromTilePos(event.entity.position)
 
-    if (OE[c_pos.x] == nil) then
-        OE[c_pos.x] = {}
+    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
+        gd.w_attack.w_chunk[c_pos.x] = {}
     end
 
-    if (OE[c_pos.x][c_pos.y] == nil) then
+    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y] == nil) then
         if gd.debug then
             log("ERROR - OarcEnemiesBiterBaseBuilt chunk_map.x.y is nil")
         end
         return
     end
 
-    if (OE[c_pos.x][c_pos.y].enemy_spawners == nil) then
-        OE[c_pos.x][c_pos.y].enemy_spawners = {event.entity}
+    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y].enemy_spawners == nil) then
+        gd.w_attack.w_chunk[c_pos.x][c_pos.y].enemy_spawners = {event.entity}
     else
-        insert(OE[c_pos.x][c_pos.y].enemy_spawners, event.entity)
+        insert(gd.w_attack.w_chunk[c_pos.x][c_pos.y].enemy_spawners, event.entity)
     end
 end
 
 function Public.OarcEnemiesEntityDiedEvent(event)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
 
     -- Validate
     if (not event.entity or
@@ -471,7 +472,7 @@ function Public.OarcEnemiesEntityDiedEvent(event)
     if (not (event.entity.type == "unit-spawner")) then return end
 
     -- Check we don't have too many ongoing attacks.
-    if (#gd.attacks >= Def.max_attacks_retal) then
+    if (#gd.attacks >= gd.max_attacks_retal) then
         if gd.debug then
             log("Max number of simulataneous attacks reached (retaliation).")
         end
@@ -483,9 +484,9 @@ function Public.OarcEnemiesEntityDiedEvent(event)
 
     -- If there is just a force, then just attack the area.
     if (not event.cause) then
-        death_attack.process_stg = Def.process_find_create_group
+        death_attack.process_stg = gd.process_find_create_group
         death_attack.spawn_pos = event.entity.position
-        death_attack.target_type = Def.type_target_area
+        death_attack.target_type = gd.type_target_area
         death_attack.target_chunk = Utils.GetChunkPosFromTilePos(event.entity.position)
 
         death_attack.evo,death_attack.size = Evo.GetEnemyGroup{player=nil,
@@ -506,9 +507,9 @@ function Public.OarcEnemiesEntityDiedEvent(event)
         -- No attacks on offline players??
         -- if (not player or not player.connected) then return end
 
-        death_attack.process_stg = Def.process_find_spawn_path_req
+        death_attack.process_stg = gd.process_find_spawn_path_req
         death_attack.target_player = player.name
-        death_attack.target_type = Def.type_target_entity
+        death_attack.target_type = gd.type_target_entity
         death_attack.target_entity = event.cause
         death_attack.target_chunk = Utils.GetChunkPosFromTilePos(player.character.position)
 
@@ -525,8 +526,7 @@ end
 
 function Public.OarcEnemiesTrackBuildings(e)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
-    local targets = Def.target_types
+    local targets = gd.target_types
     if targets[e.type] then
 
         if (e.last_user == nil) then
@@ -562,7 +562,7 @@ function Public.GetRandomBuildingMultipleTypes(player_name, entity_types)
         end
     end
     if (#rand_list > 0) then
-        return rand_list[math_random(#rand_list)]
+        return rand_list[math.random(#rand_list)]
     else
         return nil
     end
@@ -598,7 +598,7 @@ function Public.GetRandomBuildingSingleType(player_name, entity_type, count)
     local random_building = gd.buildings[player_name][entity_type][rand_key]
 
     if (not random_building or not random_building.valid) then
-        table_remove(gd.buildings[player_name][entity_type], rand_key)
+        gd.buildings[player_name][entity_type][rand_key] = nil
         return Public.GetRandomBuildingSingleType(player_name, entity_type, count_internal-1)
     else
         return random_building
@@ -612,7 +612,7 @@ function Public.CreateEnemyGroupGivenEvoAndCount(surface, position, evo, count)
     local spitter_list = Evo.CalculateEvoChanceListSpitters(evo)
 
     -- Spitters will be between 10-50% of the size
-    local rand_spitter_count = math_random(math.ceil(count/10),math.ceil(count/2))
+    local rand_spitter_count = math.random(math.ceil(count/10),math.ceil(count/2))
 
     local enemy_units = {}
     for i=1,count do
@@ -637,7 +637,7 @@ function Public.CreateEnemyGroup(surface, position, units)
 
     -- Attempt to spawn all units nearby
     for k,biter_name in pairs(units) do
-        local unit_position = surface.find_non_colliding_position(biter_name, {position.x+math_random(-5,5), position.y+math_random(-5,5)}, 32, 1)
+        local unit_position = surface.find_non_colliding_position(biter_name, {position.x+math.random(-5,5), position.y+math.random(-5,5)}, 32, 1)
         if (unit_position) then
             new_unit = surface.create_entity{name = biter_name, position = unit_position}
             new_enemy_group.add_member(new_unit)
@@ -799,13 +799,13 @@ function Public.EnemyGroupBuildBaseThenWander(group, target_pos)
                                         ignore_planner = true,
                                         distraction = defines.distraction.by_enemy})
     insert(combined_commands, {type = defines.command.build_base,
-                                        destination = {x=target_pos.x+math_random(-global_data.chunk_size,global_data.chunk_size),
-                                                        y=target_pos.y+math_random(-global_data.chunk_size,global_data.chunk_size)},
+                                        destination = {x=target_pos.x+math.random(-global_data.chunk_size,global_data.chunk_size),
+                                                        y=target_pos.y+math.random(-global_data.chunk_size,global_data.chunk_size)},
                                         ignore_planner = true,
                                         distraction = defines.distraction.by_enemy})
     insert(combined_commands, {type = defines.command.build_base,
-                                        destination = {x=target_pos.x+math_random(-global_data.chunk_size,global_data.chunk_size),
-                                                        y=target_pos.y+math_random(-global_data.chunk_size,global_data.chunk_size)},
+                                        destination = {x=target_pos.x+math.random(-global_data.chunk_size,global_data.chunk_size),
+                                                        y=target_pos.y+math.random(-global_data.chunk_size,global_data.chunk_size)},
                                         ignore_planner = true,
                                         distraction = defines.distraction.by_enemy})
 
@@ -847,13 +847,13 @@ function Public.EnemyUnitBuildBaseThenWander(unit, target_pos)
                                         ignore_planner = true,
                                         distraction = defines.distraction.by_enemy})
     insert(combined_commands, {type = defines.command.build_base,
-                                        destination = {x=target_pos.x+math_random(-64,64),
-                                                        y=target_pos.y+math_random(-64,64)},
+                                        destination = {x=target_pos.x+math.random(-64,64),
+                                                        y=target_pos.y+math.random(-64,64)},
                                         ignore_planner = true,
                                         distraction = defines.distraction.by_enemy})
     insert(combined_commands, {type = defines.command.build_base,
-                                        destination = {x=target_pos.x+math_random(-64,64),
-                                                        y=target_pos.y+math_random(-64,64)},
+                                        destination = {x=target_pos.x+math.random(-64,64),
+                                                        y=target_pos.y+math.random(-64,64)},
                                         ignore_planner = true,
                                         distraction = defines.distraction.by_enemy})
 

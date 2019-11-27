@@ -1,4 +1,6 @@
-function Queue()
+local Public = {}
+
+function Public.Queue()
     local elems = {}
     local head = 1
     local tail = 1
@@ -21,3 +23,5 @@ function Queue()
         size = size
     }
 end
+
+return Public
