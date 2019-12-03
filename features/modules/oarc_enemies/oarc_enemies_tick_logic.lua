@@ -8,7 +8,7 @@ local OE_Table = require 'features.modules.oarc_enemies.table'
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 local OE = require 'features.modules.oarc_enemies.oarc_enemies'
 local Evo = require 'features.modules.oarc_enemies.oarc_enemies_evo'
-local Surface = require 'utils.surface'.get_surface_name()
+local Surface = require 'utils.surface'
 
 local Public = {}
 
@@ -108,16 +108,16 @@ function Public.OarcEnemiesOnTick()
         end
     end
 
-    if ((game.tick % (global_data.ticks_per_second)) == 31) then
-        for _, p in pairs(game.connected_players) do
-        if gd.buildings[p.name] == nil then return end
-            for k, v in pairs(gd.buildings[p.name]) do
-                if not v.valid then
-                    gd.buildings[p.name][k] = nil
-                end
-            end
-        end
-    end
+    --if ((game.tick % (global_data.ticks_per_second)) == 31) then
+    --    for _, p in pairs(game.connected_players) do
+    --    if gd.buildings[p.name] == nil then return end
+    --        for k, v in pairs(gd.buildings[p.name]) do
+    --            if not v.valid then
+    --                gd.buildings[p.name][k] = nil
+    --            end
+    --        end
+    --    end
+    --end
 
     -- process_find_retry_path_calc -- WAIT FOR EVENT
     -- Event Function: ProcessAttackCheckPathComplete(event)
@@ -158,20 +158,20 @@ end
 function Public.ProcessPlayerTimersEverySecond()
     local gd = OE_Table.get_table()
     local global_data = Table.get_table()
-    for name,timer_table in pairs(gd.player_timers) do
+    for name,timer_table in pairs(gd.p_time) do
         if (game.players[name] and game.players[name].connected) then
 
             for timer_name,timer in pairs(timer_table) do
                 if (timer > 0) then
-                    gd.player_timers[name][timer_name] = timer-1
+                    gd.p_time[name][timer_name] = timer-1
                 else
                     if (timer_name == "next_wave_player") then
                         OE.OarcEnemiesPlayerAttackCharacter(name)
-                        gd.player_timers[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
+                        gd.p_time[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
 
-                    elseif (timer_name == "next_wave_buildings") then
-                        OE.OarcEnemiesBuildingAttack(name, gd.enemy_targets)
-                        gd.player_timers[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
+                    --elseif (timer_name == "next_wave_buildings") then
+                    --    OE.OarcEnemiesBuildingAttack(name, gd.enemy_targets)
+                    --    gd.p_time[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
                     end
                 end
             end
@@ -181,6 +181,7 @@ end
 
 function Public.ProcessAttackFindTarget(key, attack)
     local gd = OE_Table.get_table()
+    local s_name = Surface.get_surface_name()
 
     if (attack.process_stg ~= gd.process_find_target) then return false end
 
@@ -199,38 +200,13 @@ function Public.ProcessAttackFindTarget(key, attack)
         local player = game.players[attack.target_player]
 
         -- Attack a building of the player, given a certain building type
-        if (attack.target_type == gd.type_target_building) then
-
-            local random_building = OE.GetRandomBuildingAny(attack.target_player,
-                                                            attack.building_types)
-
-            if (random_building ~= nil) then
-                gd.attacks[key].target_entity = random_building
-
-                local e,s = Evo.GetEnemyGroup{player=player,
-                                            force_name=player.force.name,
-                                            surface=player.surface,
-                                            target_pos=random_building.position}
-
-                gd.attacks[key].size = s
-                gd.attacks[key].evo = e
-                gd.attacks[key].process_stg = gd.process_find_spawn
-                return true
-            else
-                if gd.debug then
-                    log("No building found to attack.")
-                end
-                gd.attacks[key] = nil
-            end
-
-        -- Attack a player directly
-        elseif (attack.target_type == gd.type_target_player) then
+        if (attack.target_type == gd.type_target_player) then
 
             gd.attacks[key].target_entity = player.character
 
             local e,s = Evo.GetEnemyGroup{player=player,
                                             force_name=player.force.name,
-                                            surface=game.surfaces[Surface],
+                                            surface=game.surfaces[s_name],
                                             target_pos=player.position}
 
             gd.attacks[key].size = s
@@ -247,7 +223,6 @@ function Public.ProcessAttackFindTarget(key, attack)
 
     return false
 end
-
 
 function Public.ProcessAttackFindSpawn(key, attack)
     local gd = OE_Table.get_table()
@@ -282,7 +257,7 @@ function Public.ProcessAttackFindSpawn(key, attack)
         elseif (attack.target_chunk) then
             c_pos = attack.target_chunk
         end
-        local spawns = OE.SpiralSearch(c_pos, gd.search_radius_chunks, 5, OE.OarcEnemiesDoesChunkHaveSpawner)
+        local spawns = OE.SpiralSearch(c_pos, gd.search_radius_chunks, 200)
 
         if (spawns ~= nil) then
             gd.attacks[key].spawn_chunk = spawns[Utils.GetRandomKeyFromTable(spawns)]
@@ -306,9 +281,9 @@ function Public.ProcessAttackFindSpawn(key, attack)
     return false
 end
 
-
 function Public.ProcessAttackCheckPathFromSpawn(key, attack)
     local gd = OE_Table.get_table()
+    local s_name = Surface.get_surface_name()
 
     if (attack.process_stg ~= gd.process_find_spawn_path_req) then return false end
 
@@ -334,7 +309,7 @@ function Public.ProcessAttackCheckPathFromSpawn(key, attack)
         end
 
         -- Find a large area that is free to spawn biters in
-        local spawn_pos = game.surfaces[Surface].find_non_colliding_position("rocket-silo",
+        local spawn_pos = game.surfaces[s_name].find_non_colliding_position("rocket-silo",
                                             Utils.GetCenterTilePosFromChunkPos(attack.spawn_chunk),
                                             32,
                                             1)
@@ -366,7 +341,7 @@ function Public.ProcessAttackCheckPathFromSpawn(key, attack)
             return false
         end
 
-        gd.attacks[key].path_id = game.surfaces[Surface].request_path{bounding_box={{0,0},{0,0}},
+        gd.attacks[key].path_id = game.surfaces[s_name].request_path{bounding_box={{0,0},{0,0}},
                                                         collision_mask={"player-layer"},
                                                         start=spawn_pos,
                                                         goal=target_pos,
@@ -464,6 +439,7 @@ end
 
 function Public.ProcessAttackCreateGroup(key, attack)
     local gd = OE_Table.get_table()
+    local s_name = Surface.get_surface_name()
     if (attack.process_stg ~= gd.process_find_create_group) then return false end
 
     -- log("tick_log ProcessAttackCreateGroup " .. game.tick)
@@ -477,7 +453,7 @@ function Public.ProcessAttackCreateGroup(key, attack)
     end
 
     if (attack.group_id == nil) then
-        local group = OE.CreateEnemyGroupGivenEvoAndCount(game.surfaces[Surface],
+        local group = OE.CreateEnemyGroupGivenEvoAndCount(game.surfaces[s_name],
                                                         attack.spawn_pos,
                                                         attack.evo,
                                                         attack.size)
@@ -672,6 +648,7 @@ end
 
 function Public.ProcessAttackRetryPath(key, attack)
     local gd = OE_Table.get_table()
+    local s_name = Surface.get_surface_name()
 
     if (attack.process_stg ~= gd.process_find_retry_path_req) then return false end
 
@@ -697,7 +674,7 @@ function Public.ProcessAttackRetryPath(key, attack)
 
         -- Path request
         gd.attacks[key].path_id =
-            game.surfaces[Surface].request_path{bounding_box={{0,0},{0,0}},
+            game.surfaces[s_name].request_path{bounding_box={{0,0},{0,0}},
                                             collision_mask={"player-layer"},
                                             start=attack.group.members[1].position,
                                             goal=attack.target_entity.position,

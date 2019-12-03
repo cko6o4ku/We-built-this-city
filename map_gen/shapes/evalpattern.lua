@@ -1,34 +1,45 @@
 local P = require 'map_gen.shapes.patterns.patterns'
---local Meta = require 'map_gen.shapes.metaconfig'
 --local M1 = require 'map_gen.shapes.patterns.maze1'
 --local M2 = require 'map_gen.shapes.patterns.maze2'
 --local M3 = require 'map_gen.shapes.patterns.maze3'
---local MB = require 'map_gen.shapes.patterns.mandelbrot'
+local MB = require 'map_gen.shapes.patterns.mandelbrot'
 --local JI = require 'map_gen.shapes.patterns.jigsawislands'
 --local BC = require 'map_gen.shapes.patterns.barcode'
 --local Disort = require 'map_gen.shapes.patterns.distort'
---local Simple = require 'map_gen.shapes.patterns.simple'
---local Transform = require 'map_gen.shapes.patterns.transforms'
+local Simple = require 'map_gen.shapes.patterns.simple'
+local Transform = require 'map_gen.shapes.patterns.transforms'
 --local Island = require 'map_gen.shapes.patterns.islandify'
 --local Fractal = require 'map_gen.shapes.patterns.fractal'
 local Simplex = require 'map_gen.shapes.patterns.noise'
 
 local Public = {}
 
---function Union(func)
---    return Transform.Union(func)
---end
---
---function Spiral(x, y)
---    return Simple.Spiral(x, y)
---end
---
---function Rectangle(a, b , c , d)
---    return Simple.Rectangle(a, b, c, d)
---end
+function Union(func)
+    return Transform.Union(func)
+end
+
+function Tile(a, b , c , d, e)
+    return Transform.Tile(a, b , c , d, e)
+end
+
+function Mandelbrot(func)
+    return MB.Mandelbrot(func)
+end
+
+function Spiral(x, y)
+    return Simple.Spiral(x, y)
+end
+
+function Rectangle(a, b , c , d)
+    return Simple.Rectangle(a, b, c, d)
+end
 
 function NoiseCustom (a)
     return Simplex.NoiseCustom(a)
+end
+
+function NoiseExponent(a)
+    return Simplex.NoiseExponent(a)
 end
 
 local meta = {
@@ -45,15 +56,15 @@ local meta = {
                 "NoiseCustom({exponent=1.5,noise={0.3,0.4,1,1,1.2,0.8,0.7,0.4,0.3,0.2},land_percent=0.07})," ..
                 "NoiseCustom({exponent=1.9,noise={1,1,1,1,1,1,0.7,0.4,0.3,0.2},land_percent=0.1," ..
                 "start_on_land=false,start_on_beach=true}))"},
-            {"natural big islands",
+            {"natural_big_islands",
                 "NoiseCustom({exponent=2.3,noise={1,1,1,1,1,1,0.7,0.4,0.3,0.2},land_percent=0.2})"},
-            {"natural continents",
+            {"natural_continents",
                 "NoiseCustom({exponent=2.4,noise={1,1,1,1,1,1,1,0.6,0.3,0.2},land_percent=0.35})"},
-            {"natural half land",
+            {"natural_half_land",
                 "NoiseCustom({exponent=2,noise={0.5,1,1,1,1,1,0.7,0.4,0.3,0.2},land_percent=0.5})"},
-            {"natural big lakes",
+            {"natural_big_lakes",
                 "NoiseCustom({exponent=2.3,noise={0.5,0.8,1,1,1,1,0.7,0.4,0.3,0.2},land_percent=0.65})"},
-            {"natural medium lakes",
+            {"natural_medium_lakes",
                 "NoiseCustom({exponent=2.1,noise={0.3,0.6,1,1,1,1,0.7,0.4,0.3,0.2},land_percent=0.86})"},
             {"natural small lakes","NoiseCustom({exponent=1.5,noise={0.05,0.1,0.4,0.7,1,0.7,0.3,0.1},land_percent=0.92})"},
             {"pink_noise_hell", "NoiseExponent({exponent=1,land_percent = 0.35})"},
@@ -103,7 +114,6 @@ function Public.evaluate_pattern(map_name)
     local preset = Public.preset_by_name(map_name)
     local pattern
     pattern = assert(load("return (" .. preset .. ")"))()
-
 
     if pattern.output == "tilename" then
         return pattern

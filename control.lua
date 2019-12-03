@@ -30,6 +30,8 @@ require 'features.modules.corpse_markers'
 require 'features.modules.floaty_chat'
 require 'features.modules.autohotbar'
 require 'features.modules.autostash'
+require 'features.commands.repair'
+require 'features.commands.bonus'
 require 'features.commands.misc'
 
 require 'features.modules.rpg'
@@ -37,6 +39,10 @@ require 'features.modules.rpg'
 -- load from config/map
 require 'config'
 
+-- lua profiler by boodals
+if _DEBUG then
+	require 'utils.profiler'
+end
 
 if _DUMP_ENV then
     require 'utils.dump_env'

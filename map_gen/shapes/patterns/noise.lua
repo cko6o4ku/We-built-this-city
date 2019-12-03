@@ -4,13 +4,17 @@ local FFT = require 'map_gen.shapes.lib.fft'
 local Public = {}
 
 local tau = 2 * math.pi
+local t_insert = table.insert
+local floor = math.floor
+local random = math.random
+local sqrt = math.sqrt
 
 -- To compute the inverse CDF of the normal distribution, use
 -- sqrt(2) * erfinv(2 * x - 1)
 local function erfinv(x)
     local l = math.log((1 - x) * (1 + x))
     local t1 = 2 / (math.pi * 0.147) + l / 2
-    local res = math.sqrt(-t1 + math.sqrt(t1 * t1 - l / 0.147))
+    local res = sqrt(-t1 + sqrt(t1 * t1 - l / 0.147))
     if x < 0 then
         return -res
     else
@@ -26,8 +30,20 @@ local function default(t, k, v)
     end
 end
 
+local A1, A2 = 727595, 798405  -- 5^17=D20*A1+A2
+local D20, D40 = 1048576, 1099511627776  -- 2^20, 2^40
+local X1, X2 = 0, 1
+local function rand()
+    local U = X2*A2
+    local V = (X1*A2 + X2*A1) % D20
+    V = (V*D20 + U) % D40
+    X1 = floor(V/D20)
+    X2 = V - X1*D20
+    return V/D40
+end
+
 local function randomize_phases(schema, wmin, wmax)
-    local thetass = {}
+    local t = {}
     for idx = 1, #(schema[1]) do
         local inner = schema[1][idx]
         local outer = schema[2][idx]
@@ -39,28 +55,28 @@ local function randomize_phases(schema, wmin, wmax)
 
         for wx = 0, outer - 1 do
             for wy = 0, outer - 1 do
-                local w = tau * math.sqrt(wx * wx + wy * wy) / (M * zoom)
+                local w = tau * sqrt(wx * wx + wy * wy) / (M * zoom)
                 if (w > 0 and w >= wmin and w <= wmax and
                     (extended or (wx >= inner) or (wy >= inner))) then
-                    table.insert(thetas, tau * math.random())
+                    t_insert(thetas, tau * rand())
                     if wx > 0 and wy > 0 and 2 * wy < M then
-                        table.insert(thetas, tau * math.random())
+                        t_insert(thetas, tau * rand())
                     end
                 end
             end
         end
-        thetass[idx] = thetas
+        t[idx] = thetas
     end
-    return thetass
+    return t
 end
 
-local function compute_grid(schema, idx, phasess, wmin, wmax, power)
+local function compute_grid(schema, idx, phase, wmin, wmax, power)
     local inner = schema[1][idx]
     local outer = schema[2][idx]
     local M = schema[3][idx]
     local zoom = schema[4][idx]
     local extended = schema[5][idx]
-    local phases = phasess[idx]
+    local phases = phase[idx]
     local MM = M * M
     local grid = {}
     local grid_imag = {}
@@ -80,7 +96,7 @@ local function compute_grid(schema, idx, phasess, wmin, wmax, power)
     local i = 1
     for wx = 0, outer - 1 do
         for wy = 0, outer - 1 do
-            w = tau * math.sqrt(wx * wx + wy * wy) / (M * zoom)
+            w = tau * sqrt(wx * wx + wy * wy) / (M * zoom)
             if (w > 0 and w >= wmin and w <= wmax and
                 (extended or (wx >= inner) or (wy >= inner))) then
                 -- The (wx, wy) lattice point represents a square in the frequency
@@ -89,8 +105,8 @@ local function compute_grid(schema, idx, phasess, wmin, wmax, power)
                 -- since power(w) gives the total power of frequency above w.
                 -- Take the square root to go from power to amplitude.
                 -- dw = tau / (w * MM * zoom * zoom)
-                -- amp = math.sqrt(power(w - (dw / 2)) - power(w + (dw / 2)))
-                amp = math.sqrt(power(w) * tau / w) / (M * zoom)
+                -- amp = sqrt(power(w - (dw / 2)) - power(w + (dw / 2)))
+                amp = sqrt(power(w) * tau / w) / (M * zoom)
                 theta = phases[i]
                 i = i + 1
                 grid[wx * M + wy] = amp * math.cos(theta)
@@ -187,11 +203,11 @@ local function make_grid_schema(wmin)
 
     while grid_wmin(#Ms) > 1.05 * wmin do
         local n = #Ms
-        table.insert(inners, inner(n + 1))
-        table.insert(outers, outer(n + 1))
-        table.insert(Ms, M(n + 1))
-        table.insert(zooms, tau * (outer(n + 1) - 0.5) / (M(n + 1) * grid_wmin(n)))
-        table.insert(extended, false)
+        t_insert(inners, inner(n + 1))
+        t_insert(outers, outer(n + 1))
+        t_insert(Ms, M(n + 1))
+        t_insert(zooms, tau * (outer(n + 1) - 0.5) / (M(n + 1) * grid_wmin(n)))
+        t_insert(extended, false)
     end
 
     extended[#extended] = true
@@ -229,7 +245,7 @@ local function Noise(options)
     end
     -- For a Gaussian distribution with mean 0 and variance 1, the fraction of
     -- the time it is above thresh equals land_pct.
-    local thresh1 = math.sqrt(2) * erfinv(1 - 2 * land_percent)
+    local thresh1 = sqrt(2) * erfinv(1 - 2 * land_percent)
 
     local start_on_land = default(options, "start_on_land", true)
     local start_on_beach = default(options, "start_on_beach", true)
@@ -252,6 +268,7 @@ local function Noise(options)
     local wmin = tau / wavelength_max
     local wmax = tau / wavelength_min
 
+
     local grid_schema = make_grid_schema(wmin)
     local Ms = grid_schema[3]
     local zooms = grid_schema[4]
@@ -273,9 +290,13 @@ local function Noise(options)
 
     local data = {}
 
+    local phase = randomize_phases(grid_schema, wmin, wmax)
+
+    --log(serpent.block(phase))
+
     local function make_grid(i)
-        print("Making grid")
-        local res = compute_grid(grid_schema, i, data.phasess, wmin, wmax, power)
+        --print("Making grid")
+        local res = compute_grid(grid_schema, i, phase, wmin, wmax, power)
         local v = 0
         for j = 0, (Ms[i] * Ms[i]) - 1 do
             v = v + res[1][j] * res[1][j]
@@ -293,10 +314,10 @@ local function Noise(options)
             v = v + griddata.variances[i]
         end
 
-        griddata.stddev = math.sqrt(v)
-        print("Variances and stddev")
-        print(serpent.line(griddata.variances))
-        print(griddata.stddev)
+        griddata.stddev = sqrt(v)
+        --print("Variances and stddev")
+        --print(serpent.line(griddata.variances))
+        --print(griddata.stddev)
     end
 
     local function build_data()
@@ -307,12 +328,11 @@ local function Noise(options)
     end
 
     local function randomize_starting_square()
-        data.dx = math.random(1000000)
-        data.dy = math.random(1000000)
+        data.dx = random(1000000)
+        data.dy = random(1000000)
     end
 
     local function init()
-        data.phasess = randomize_phases(grid_schema, wmin, wmax)
         randomize_starting_square()
         build_data()
     end
@@ -339,7 +359,7 @@ local function Noise(options)
             if z == 1 then
                 h = h + griddata.grids[i][(x % M) * M + (y % M)]
             else
-                j = (math.floor(x / z) % M) * M + math.floor(y / z) % M
+                j = (floor(x / z) % M) * M + floor(y / z) % M
                 dx = (x / z) % 1
                 dy = (y / z) % 1
                 h = (h
@@ -358,7 +378,7 @@ local function Noise(options)
     end
 
     local function get(x, y)
-        return geti(math.floor(x + 0.5), math.floor(y + 0.5))
+        return geti(floor(x + 0.5), floor(y + 0.5))
     end
 
     local function verify_ok()
@@ -373,28 +393,28 @@ local function Noise(options)
     end
 
     local function height_distribution()
-        print("Sampling heights")
+        --print("Sampling heights")
         local M = 100000
         local s = 0
         local ss = 0
         local h
         local hs = {}
         for i = 1, M do
-            h = height(math.random(1000000), math.random(1000000))
+            h = height(random(1000000), random(1000000))
             s = s + h
             ss = ss + h * h
-            table.insert(hs, h)
+            t_insert(hs, h)
         end
         table.sort(hs)
-        print("Height distribution:")
+        --print("Height distribution:")
         hs[0] = hs[1]
         for i = 0, M, 4000 do
             print(i)
             print(hs[i])
         end
-        print(s / M)
-        print(ss / M - (s / M) * (s / M))
-        print(thresh1)
+        --print(s / M)
+        --print(ss / M - (s / M) * (s / M))
+        --print(thresh1)
     end
 
     local function create()
@@ -411,8 +431,8 @@ local function Noise(options)
             end
             num_attempts = num_attempts + 1
         until verify_ok() or num_attempts >= max_attempts
-        print("Number of re-rolls:")
-        print(num_attempts)
+        --print("Number of re-rolls:")
+        --print(num_attempts)
 
         -- height_distribution()
 
@@ -460,11 +480,11 @@ function Public.NoiseCustom(options)
     if #noise < 1 then
         noise = {1}
     end
-    table.insert(noise, 0)
+    t_insert(noise, 0)
 
     local logws = {math.log(tau) - 0.5 * math.log(10)}
     while #logws < #noise do
-        table.insert(logws, logws[#logws] - 0.5 * math.log(10))
+        t_insert(logws, logws[#logws] - 0.5 * math.log(10))
     end
     local n = #logws
 

@@ -22,7 +22,7 @@ local function create_wave_gui(player)
     if tbl.player_wave[player.name].wave_number then wave_number = tbl.player_wave[player.name].wave_number end
 
     if not tbl.player_wave[player.name].grace then
-        local next_level_progress = math.floor(((tbl.player_timers[player.name].next_wave_player - (player.online_time % tbl.player_timers[player.name].next_wave_player)) / 60) / 60)
+        local next_level_progress = math.floor(((tbl.p_time[player.name].next_wave_player - (player.online_time % tbl.p_time[player.name].next_wave_player)) / 60) / 60)
         local label = frame.add({ type = "label", caption = "Wave " .. wave_number .. " in: " .. next_level_progress .. " minutes.", tooltip="Man your defenses!" })
         label.style.font_color = {r=0.88, g=0.88, b=0.88}
         label.style.font = "default-listbox"
@@ -33,7 +33,7 @@ local function create_wave_gui(player)
         --label.style.width = 55
         game.print(serpent.block(next_level_progress))
     else
-        local time_remaining = math.floor(((tbl.player_timers[player.name].next_wave_player - (player.online_time % tbl.player_timers[player.name].next_wave_player)) / 60) / 60)
+        local time_remaining = math.floor(((tbl.p_time[player.name].next_wave_player - (player.online_time % tbl.p_time[player.name].next_wave_player)) / 60) / 60)
         if time_remaining <= 0 then
             tbl.player_wave[player.name].grace = nil
             return

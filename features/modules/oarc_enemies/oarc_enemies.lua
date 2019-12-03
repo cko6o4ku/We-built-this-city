@@ -23,30 +23,17 @@
 --      group_age=tick_spawned          -- The tick when the group was created
 -- }
 
-
--- Adapted from:
--- https://stackoverflow.com/questions/3706219/algorithm-for-iterating-over-an-outward-spiral-on-a-discrete-2d-grid-from-the-or
--- Searches in a spiral outwards on a 2D grid map.
--- Returns table of coordinates when the check_function passes.
-
 local Evo = require 'features.modules.oarc_enemies.oarc_enemies_evo'
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 local OE_Table = require 'features.modules.oarc_enemies.table'
 local Table = require 'map_gen.mps_0_17.lib.table'
-local Surface = require 'utils.surface'.get_surface_name()
+local Surface = require 'utils.surface'
 local validate = require 'utils.validate_player'
 local insert = table.insert
 
 local Public = {}
 
-function Public.init_all_the_tables()
-    local gd = OE_Table.get_table()
-    if (gd.w_attack == nil) then
-        gd.w_attack = {}
-    end
-end
-
-function Public.SpiralSearch(starting_c_pos, max_radius, max_count, check_function)
+function Public.SpiralSearch(starting_c_pos, max_radius, max_count)
     local gd = OE_Table.get_table()
 
     local dx = 1
@@ -61,10 +48,10 @@ function Public.SpiralSearch(starting_c_pos, max_radius, max_count, check_functi
 
     for i=1,(math.pow(max_radius*2+1, 2)) do
 
-        if (true == check_function({x=x, y=y})) then
+        --if (true == check_function({x=x, y=y})) then
             insert(found, {x=x, y=y})
             if (#found >= max_count) then return found end
-        end
+        --end
 
         x = x + dx;
         y = y + dy;
@@ -90,8 +77,46 @@ function Public.SpiralSearch(starting_c_pos, max_radius, max_count, check_functi
         end
         return nil
     else
+        game.print(serpent.block(found))
         return found
     end
+end
+
+function Public.OarcEnemiesDoesChunkHaveSpawner(c_pos)
+    local s_name = Surface.get_surface_name()
+
+    local w_chunk = {}
+
+    if (w_chunk[c_pos.x] == nil) then
+        w_chunk[c_pos.x] = {}
+    end
+
+    if not w_chunk[c_pos.x][c_pos.y] then
+        w_chunk[c_pos.x][c_pos.y] = {player_building=false, near_building=false, valid_spawn=true, enemy_spawners=true}
+    end
+
+    -- Chunk should exist.
+    if (game.surfaces[s_name].is_chunk_generated(c_pos) == false) then
+        return false
+    end
+
+    -- Get entry
+    local chunk = w_chunk[c_pos.x][c_pos.y]
+
+    -- Check basic flags
+    if (not chunk.valid_spawn) then
+        return false
+    end
+
+    -- Check for spawners
+    local has_spawners = false
+    if (not chunk.enemy_spawners) then
+        return false
+    else
+        has_spawners = true
+    end
+
+    return true
 end
 
 function Public.OarcEnemiesSectorScanned(event)
@@ -109,7 +134,6 @@ end
 
 function Public.OarcEnemiesRocketLaunched(event)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
     if (not event.rocket_silo) then return end
     local player = event.rocket_silo.last_user
     if (not player) then
@@ -127,9 +151,9 @@ function Public.OarcEnemiesRocketLaunched(event)
                                 target_pos=silo.position}
 
     local rocket_launch_attack = {target_player = player.name,
-                                    target_type = Def.type_target_entity,
+                                    target_type = gd.type_target_entity,
                                     attempts=1,
-                                    process_stg=Def.process_find_spawn,
+                                    process_stg=gd.process_find_spawn,
                                     building_types=nil,
                                     evo=e,
                                     size=s}
@@ -193,13 +217,12 @@ end
 -- Request an attack on a given player's building type.
 function Public.OarcEnemiesBuildingAttack(player_name, entity_type)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
     -- Make sure player exists and is connected.
     if (not game.players[player_name] or
         not game.players[player_name].connected) then return end
 
     -- Check we don't have too many ongoing attacks.
-    if (#gd.attacks >= Def.max_attacks) then
+    if (#gd.attacks >= gd.max_attacks) then
         if gd.debug then
             log("Max number of simulataneous attacks reached.")
         end
@@ -207,9 +230,9 @@ function Public.OarcEnemiesBuildingAttack(player_name, entity_type)
     end
 
     local building_attack = {target_player = player_name,
-                            target_type = Def.type_target_building,
+                            target_type = gd.type_target_building,
                             attempts=3,
-                            process_stg=Def.process_find_target,
+                            process_stg=gd.process_find_target,
                             building_types=entity_type}
     if gd.debug then
         log("Building Attack Request: " .. serpent.line(entity_type))
@@ -220,7 +243,6 @@ end
 -- Attack a player's character
 function Public.OarcEnemiesPlayerAttackCharacter(player_name)
     local gd = OE_Table.get_table()
-    local Def = OE_Table.get_table()
 
     -- Validation checks.
     if (not game.players[player_name] or
@@ -234,7 +256,7 @@ function Public.OarcEnemiesPlayerAttackCharacter(player_name)
     end
 
     -- Check we don't have too many ongoing attacks.
-    if (#gd.attacks >= Def.max_attacks) then
+    if (#gd.attacks >= gd.max_attacks) then
         if gd.debug then
             log("Max number of simulataneous attacks reached.")
         end
@@ -243,9 +265,9 @@ function Public.OarcEnemiesPlayerAttackCharacter(player_name)
 
     -- Create the attack request
     local player_attack = {target_player = player_name,
-                            target_type = Def.type_target_player,
+                            target_type = gd.type_target_player,
                             attempts=3,
-                            process_stg=Def.process_find_target}
+                            process_stg=gd.process_find_target}
     if gd.debug then
         log("Player Attack!")
     end
@@ -255,20 +277,24 @@ end
 -- First time player init stuff
 function Public.OarcEnemiesPlayerCreatedEvent(event)
     local gd = OE_Table.get_table()
-    local p_name = game.players[event.player_index].name
-    validate(p_name)
+    local player = event.player_index
 
-    if not gd.player_timers[p_name] then
-        gd.player_timers[p_name] = {next_wave_player=Evo.GetRandomizedPlayerTimer(0, 60*20), next_wave_buildings=Evo.GetRandomizedPlayerTimer(0, 0)}
+    if not player then
+        return
+    end
+    --validate(p_name)
+
+    if not gd.p_time[player] then
+        gd.p_time[player] = {next_wave_player=7200}
     end
 
-    if not gd.player_wave[p_name] then
-        gd.player_wave[p_name] = {}
-    end
+    --if not gd.p_time[player] then
+    --    gd.p_time[player] = {next_wave_player=7200, next_wave_buildings=7200}
+    --end
 
-    if (gd.buildings[p_name] == nil) then
-        gd.buildings[p_name] = {}
-    end
+    --if (gd.buildings[player] == nil) then
+    --    gd.buildings[player] = {}
+    --end
 
     local force = game.players[event.player_index].force
     if (gd.tech_levels[force.name] == nil) then
@@ -276,48 +302,9 @@ function Public.OarcEnemiesPlayerCreatedEvent(event)
     end
 
     -- Setup tracking of first time chat bubble displays
-    if (gd.player_sbubbles[p_name] == nil) then
-        gd.player_sbubbles[p_name] = {uh_oh=false, rocket=false}
+    if (gd.player_sbubbles[player] == nil) then
+        gd.player_sbubbles[player] = {uh_oh=false, rocket=false}
     end
-end
-
-function Public.OarcEnemiesChunkGenerated(event)
-    local gd = OE_Table.get_table()
-    if (not event.area or not event.area.left_top) then
-        if gd.debug then
-            log("ERROR - OarcEnemiesChunkGenerated")
-        end
-        return
-    end
-
-    local c_pos = Utils.GetChunkPosFromTilePos(event.area.left_top)
-
-    local enough_land = true
-
-    -- Check if there is any water in the chunk.
-    local water_tiles = event.surface.find_tiles_filtered{area = event.area,
-                                                            collision_mask = "water-tile",
-                                                            limit=5}
-    if (#water_tiles >= 5) then
-        enough_land = false
-    end
-
-    -- Check if it has spawners
-    local spawners = event.surface.find_entities_filtered{area=event.area,
-                                                            type={"unit-spawner"},
-                                                            force="enemy"}
-    if (gd.w_attack.w_chunk == nil) then
-        gd.w_attack.w_chunk = {}
-    end
-    -- If this is the first chunk in that row:
-    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
-        gd.w_attack.w_chunk[c_pos.x] = {}
-    end
-    -- Save chunk info.
-    gd.w_attack.w_chunk[c_pos.x][c_pos.y] = {player_building=false,
-                                                        near_building=false,
-                                                        valid_spawn=enough_land,
-                                                        enemy_spawners=spawners}
 end
 
 function Public.OarcEnemiesChunkIsNearPlayerBuilding(c_pos)
@@ -336,132 +323,12 @@ function Public.OarcEnemiesChunkIsNearPlayerBuilding(c_pos)
 end
 
 function Public.OarcEnemiesChunkHasPlayerBuilding(position)
-    local Def = OE_Table.get_table()
-    local c_pos = Utils.GetChunkPosFromTilePos(position)
-
-    for i=-Def.safe_area_radius,Def.safe_area_radius do
-        for j=-Def.safe_area_radius,Def.safe_area_radius do
-            Public.OarcEnemiesChunkIsNearPlayerBuilding({x=c_pos.x+i,y=c_pos.y+j})
-        end
-    end
-
-end
-
-function Public.OarcEnemiesIsChunkValidSpawn(c_pos)
-    local gd = OE_Table.get_table()
-
-    -- Chunk should exist.
-    if (game.surfaces[Surface].is_chunk_generated(c_pos) == false) then
-        return false
-    end
-
-    -- Check entry exists.
-    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
-        return false
-    end
-    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y] == nil) then
-        return false
-    end
-
-    -- Get entry
-    local chunk = gd.w_attack.w_chunk[c_pos.x][c_pos.y]
-
-    -- Check basic flags
-    if (chunk.player_building or chunk.near_building or not chunk.valid_spawn) then
-        return false
-    end
-
-    -- Check for spawners
-    if (not chunk.enemy_spawners or (#chunk.enemy_spawners == 0)) then
-        return false
-    end
-
-    -- Check visibility
-    for _,force in pairs(game.forces) do
-        if (force.name ~= "enemy") then
-            if (force.is_chunk_visible(game.surfaces[Surface], c_pos)) then
-                return false
-            end
-        end
-    end
-
     return true
-end
-
--- Check if a given chunk has a spawner in it.
--- Ideally optimized since we use our tracking of spawners in chunk_map
-function Public.OarcEnemiesDoesChunkHaveSpawner(c_pos)
-    local gd = OE_Table.get_table()
-    local has_spawners
-
-    -- Chunk should exist.
-    if (game.surfaces[Surface].is_chunk_generated(c_pos) == false) then
-        return false
-    end
-
-    -- Check entry exists.
-    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
-        return false
-    end
-    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y] == nil) then
-        return false
-    end
-
-    -- Get entry
-    local chunk = gd.w_attack.w_chunk[c_pos.x][c_pos.y]
-
-    -- Check basic flags
-    if (not chunk.valid_spawn) then
-        return false
-    end
-
-    -- Check for spawners
-    has_spawners = false
-    if (not chunk.enemy_spawners or (#chunk.enemy_spawners == 0)) then
-        return false
-    else
-        for k,v in pairs(chunk.enemy_spawners) do
-            if (not v or not v.valid) then
-                chunk.enemy_spawners[k] = nil
-            else
-                has_spawners = true
-                break
-            end
-        end
-    end
-
-    return true
-end
-
-function Public.OarcEnemiesBiterBaseBuilt(event)
-    local gd = OE_Table.get_table()
-    if (not event.entity or
-        not event.entity.valid or
-        not (event.entity.force.name == "enemy") or
-        not (event.entity.type == "unit-spawner")) then return end
-
-    local c_pos = Utils.GetChunkPosFromTilePos(event.entity.position)
-
-    if (gd.w_attack.w_chunk[c_pos.x] == nil) then
-        gd.w_attack.w_chunk[c_pos.x] = {}
-    end
-
-    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y] == nil) then
-        if gd.debug then
-            log("ERROR - OarcEnemiesBiterBaseBuilt chunk_map.x.y is nil")
-        end
-        return
-    end
-
-    if (gd.w_attack.w_chunk[c_pos.x][c_pos.y].enemy_spawners == nil) then
-        gd.w_attack.w_chunk[c_pos.x][c_pos.y].enemy_spawners = {event.entity}
-    else
-        insert(gd.w_attack.w_chunk[c_pos.x][c_pos.y].enemy_spawners, event.entity)
-    end
 end
 
 function Public.OarcEnemiesEntityDiedEvent(event)
     local gd = OE_Table.get_table()
+    local s_name = Surface.get_surface_name()
 
     -- Validate
     if (not event.entity or
@@ -491,7 +358,7 @@ function Public.OarcEnemiesEntityDiedEvent(event)
 
         death_attack.evo,death_attack.size = Evo.GetEnemyGroup{player=nil,
                                                 force_name=event.force.name,
-                                                surface=game.surfaces[Surface],
+                                                surface=game.surfaces[s_name],
                                                 target_pos=event.entity.position,
                                                 min_size=8,min_evo=0.25}
 
@@ -515,7 +382,7 @@ function Public.OarcEnemiesEntityDiedEvent(event)
 
         death_attack.evo,death_attack.size = Evo.GetEnemyGroup{player=player,
                                                 force_name=event.force.name,
-                                                surface=game.surfaces[Surface],
+                                                surface=game.surfaces[s_name],
                                                 target_pos=event.entity.position,
                                                 min_size=8,min_evo=0.25}
     end

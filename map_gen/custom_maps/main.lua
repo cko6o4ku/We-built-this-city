@@ -1,6 +1,6 @@
-require "its_a_me_mario"
+require "pica"
 
-local event = require 'utils.event'
+local Event = require 'utils.event'
 local t_insert = table.insert
 local use_large_map = false
 local scale = 2
@@ -9,9 +9,6 @@ local spawn = {
     y = 1080
 }
 
-----
---Don't touch anything under this, unless you know what you're doing
-----
 --Terrain codes should be in sync with the ConvertMap code
 local terrain_codes = {
     ["a"] = "concrete",
@@ -72,7 +69,7 @@ local function decompress_map_data()
     for y = 0, height-1 do
         decompressed[y] = {}
         --debug info
-        work = math.floor(y * 100 / height)
+        local work = math.floor(y * 100 / height)
         if work ~= last then --so it doesn't --print the same percent over and over.
             --print("... ", work, "%")
         end
@@ -97,7 +94,7 @@ local function decompress_map_data()
     return decompressed, width, height
 end
 
-decompressed_map_data, width, height = decompress_map_data();
+local decompressed_map_data, width, height = decompress_map_data();
 
 local function add_to_total(totals, weight, code)
     if totals[code] == nil then
@@ -154,8 +151,8 @@ local function on_chunk_generated(event)
     local lt = event.area.left_top
     local rb = event.area.right_bottom
 
-    local w = rb.x - lt.x
-    local h = rb.y - lt.y
+    --local w = rb.x - lt.x
+    --local h = rb.y - lt.y
     --print("Chunk generated: ", lt.x, lt.y, w, h)
 
     local tiles = {}
@@ -167,4 +164,4 @@ local function on_chunk_generated(event)
     surface.set_tiles(tiles)
 end
 
-event.add(defines.events.on_chunk_generated, on_chunk_generated)
+Event.add(defines.events.on_chunk_generated, on_chunk_generated)

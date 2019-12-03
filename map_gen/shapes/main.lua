@@ -1,17 +1,16 @@
 local Event = require 'utils.event'
-local Surface = require 'utils.surface'.get_surface_name()
+local Server = require 'utils.server'
+local Surface = require 'utils.surface'
 local Table = require 'utils.surface'
---require 'map_gen.shapes.metaconfig'
 local Eval = require 'map_gen.shapes.evalpattern'
 
-local map_name = 'natural medium lakes'
+local map_name = 'natural_medium_lakes'
 local water_color = 'green'
 
 local get_tile = nil
 local force_initial_water = false
 local mabs = math.abs
 local insert = table.insert
-local math_random = math.random
 
 local function replace_water(surface)
     if global.spawn_water_replaced then return end
@@ -39,11 +38,12 @@ local function replace_water(surface)
 end
 
 local function make_chunk(event)
+    local s_name = Surface.get_surface_name()
     local gt = get_tile
     local tinsert = table.insert
-    if not game.surfaces[Surface] then return end
+    if not game.surfaces[s_name] then return end
 
-    local surface = game.surfaces[Surface]
+    local surface = game.surfaces[s_name]
 
     local x1 = event.area.left_top.x
     local y1 = event.area.left_top.y
@@ -59,7 +59,7 @@ local function make_chunk(event)
                 local new = gt(x, y)
                 if new ~= nil then
                     tinsert(tiles, {name = new, position = {x, y}})
-                    if math_random(1,1024) == 1 then tinsert(fishes, {x, y}) end
+                    --if math_random(1,1024) == 1 then tinsert(fishes, {x, y}) end
                 end
             end
         end
@@ -89,27 +89,23 @@ local function make_chunk(event)
     end
 end
 
-local function on_load()
-        local tp = Eval.evaluate_pattern(map_name)
-        tp.reload(global.tp_data)
-        get_tile = tp.get
-
-end
-
-local function on_init()
+Event.on_load(function()
     local t = Table.get()
-        t.water = 0
-        local tp = Eval.evaluate_pattern(map_name)
-        global.tp_data = tp.create()
-        get_tile = tp.get
-end
+    local tp = Eval.evaluate_pattern(map_name)
+    tp.reload(t.tp_data)
+    get_tile = tp.get
+end)
 
-Event.on_init(on_init)
-
-Event.on_load(on_load)
+Event.on_init(function()
+    local t = Table.get()
+    t.water = 0
+    local tp = Eval.evaluate_pattern(map_name)
+    t.tp_data = tp.create()
+    get_tile = tp.get
+end)
 
 Event.add(defines.events.on_chunk_generated, function(event)
+    local s_name = Surface.get_surface_name()
     make_chunk(event)
-    replace_water(game.surfaces[Surface])
-end
-)
+    replace_water(game.surfaces[s_name])
+end)
