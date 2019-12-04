@@ -10,7 +10,7 @@ local function is_type(v,test_type)
 end
 
 
--- these are just so you can have short cuts to this
+-- these are just so you can have shortcuts to this
 inputs.events = {
     error='error',
     state=defines.events.on_gui_checked_state_changed,
@@ -116,7 +116,7 @@ function inputs._event_handler(event)
     if not elem then return end
     local elements = Core._get_data('inputs_'..elem.type) or {}
     local element = elements[elem.name]
-    if not element and elem.type == 'sprite-button' then 
+    if not element and elem.type == 'sprite-button' then
         elements = Core._get_data('inputs_button') or {}
         element = elements[elem.name]
     end
@@ -140,7 +140,7 @@ end
 -- @treturn table the button object that was made, to allow a custom error event if wanted
 function inputs.add_button(name,display,tooltip,callbacks)
     local button = inputs.add{
-        type='button',
+        type='sprite-button',
         name=name,
         caption=display,
         tooltip=tooltip

@@ -127,7 +127,7 @@ end
 function center._center:add_tab(name,caption,tooltip,callback)
     self._tabs[self.name..'_'..name] = callback
     self.tabs[name] = Core.inputs.add{
-        type='button',
+        type='sprite-button',
         name=self.name..'_'..name,
         caption=caption,
         tooltip=tooltip

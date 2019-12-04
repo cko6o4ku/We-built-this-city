@@ -821,7 +821,7 @@ local function player_joined(event)
             update_poll_viewer(data)
         end
     else
-       mod(player).add {type = 'sprite-button', name = main_button_name, sprite = 'item/programmable-speaker', tooltip = "Let your question be heard!"}
+       mod(player).add {type = 'sprite-button', name = main_button_name, sprite = 'item/programmable-speaker', tooltip = "Let your question be heard!", style = m_gui.button_style}
     end
 end
 

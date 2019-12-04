@@ -33,6 +33,7 @@ local personal_settings = {
     {type='slider',object='player',key='character_build_distance_bonus',name='build-distance',min=0,max=50},
     {type='slider',object='player',key='character_reach_distance_bonus',name='reach-distance',min=0,max=50},
     {type='slider',object='player',key='character_inventory_slots_bonus',name='inventory-size',min=0,max=1000},
+    {type='slider',object='player',key='character_health_bonus',name='health',min=0,max=5000},
 
 }
 
@@ -49,7 +50,7 @@ end
 local function _object_list(player) return {game=game,player=player,force=player.force,enemy=game.forces['enemy']} end
 
 for name,group in pairs(_root_list) do
-    if name == "personal_settings" then
+    if name == "personal_settings" and package.loaded['features.modules.rpg'] then
         for key,setting in pairs(group) do
             local _added = nil
             if setting.type == 'slider' then

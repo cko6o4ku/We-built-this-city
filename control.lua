@@ -22,6 +22,7 @@ require 'features.gui.group'
 require 'features.gui.poll'
 require 'features.gui.score'
 require 'features.gui.config'
+require 'features.gui.game_settings'
 --require 'features.gui.tag'
 require 'features.gui.warp_system'
 require 'features.functions.chatbot'
@@ -33,8 +34,6 @@ require 'features.modules.autostash'
 require 'features.commands.repair'
 require 'features.commands.bonus'
 require 'features.commands.misc'
-
-require 'features.gui.game_settings'
 
 require 'features.modules.rpg'
 

@@ -16,7 +16,7 @@ local this = {
 }
 
 Global.register(
-    this,
+    {this=this},
     function(t)
         this = t.this
     end
@@ -27,6 +27,141 @@ Public._thread = {}
 
 local function is_type(v,test_type)
     return test_type and v and type(v) == test_type or not test_type and not v or false
+end
+
+function Public._thread:create(obj)
+    local obj = obj or {}
+    setmetatable(obj,{__index=Public._thread})
+    obj.uuid = Public.new_uuid()
+    return obj
+end
+
+function Public._thread:queue()
+    self:open()
+    return Public.queue_thread(self)
+end
+
+function Public._thread:valid(skip_location_check)
+    local skip_location_check = skip_location_check or false
+    if is_type(self.uuid,'string') and
+    skip_location_check or is_type(self.opened,'number') and
+    skip_location_check or is_type(this.all[self.uuid],'table') and
+    is_type(self.timeout) or is_type(self.timeout,'number') and
+    is_type(self.name) or is_type(self.name,'string') and
+    is_type(self._close) or is_type(self._close,'function') and
+    is_type(self._timeout) or is_type(self._timeout,'function') and
+    is_type(self._tick) or is_type(self._tick,'function') and
+    is_type(self._resolve) or is_type(self._resolve,'function') and
+    is_type(self._success) or is_type(self._success,'function') and
+    is_type(self._error) or is_type(self._error,'function') then
+        return true
+    end
+    return false
+end
+
+function Public._thread:open()
+    if not self:valid(true) or self.opened then return false end
+    local threads = this
+    local uuid = self.uuid
+    self.opened = game.tick
+    threads.all[uuid] = threads.all[uuid] or self
+    threads.all._n = threads.all._n+1
+    if threads.paused[self.name] then threads.paused[self.name] = nil end
+    if is_type(self.timeout,'number') then table.insert(threads.timeout,uuid) end
+    if is_type(self._tick,'function') then table.insert(threads.tick,uuid) end
+    if is_type(self.name,'string') then threads.named[self.name] = threads.named[self.name] or self.uuid end
+    if is_type(self._events,'table') then 
+        Table.each(self._events,function(callback,event,threads,uuid)
+            -- cant be used V
+            --Public.add_thread_handler(event)
+            if not threads.events[event] then threads.events[event] = {} end
+            table.insert(threads.events[event],uuid)
+        end,threads,self.uuid)
+    end
+    return true
+end
+
+function Public._thread:close()
+    local threads = this
+    local uuid = self.uuid
+    local _return = false
+    if is_type(self._close,'function') then pcall(self._close,self) _return = true end
+    local value,key = Table.find(threads.queue,function(v,k,uuid) return v == uuid end,uuid)
+    if key then threads.queue[key] = nil end
+    local value,key = Table.find(threads.timeout,function(v,k,uuid) return v == uuid end,uuid)
+    if key then threads.timeout[key] = nil end
+    local value,key = Table.find(threads.tick,function(v,k,uuid) return v == uuid end,uuid)
+    if key then threads.tick[key] = nil end
+    if is_type(self._events,'table') then
+        Table.each(self._events,function(callback,event)
+            if threads.events[event] then
+                local value,key = Table.find(threads.events[event],function(v,k,uuid) return v == uuid end,uuid)
+                if key then threads.events[event][key] = nil end
+                -- cant be used V
+                --if #threads.events[event] == 0 then Event.remove(event,Public.game_event) threads.events[event] = nil end
+            end
+        end)
+    end
+    if is_type(self.name,'string') then threads.paused[self.name]=self.uuid self.opened=nil
+        if self.reopen == true then self:open() end
+    else threads.all[uuid] = nil threads.all._n = threads.all._n-1 end
+    return _return
+end
+
+function Public._thread:resolve(...)
+    local _return = false
+    if is_type(self._resolve,'function') then 
+        local success, err = pcall(self._resolve,self,...)
+        if success then
+            if is_type(self._success,'function') then
+                Public.interface(function(thread,err)
+                    local success,err = pcall(thread._success,thread,err)
+                    if not success then thread:error(err) end
+                end,true,self,err)
+                _return = true
+            end
+        else
+            _return = self:error(err)
+        end
+    end
+    self:close()
+    return _return
+end
+
+function Public._thread:check_timeout()
+    local _return = false
+    if not self:valid() then return false end
+    if is_type(self.timeout,'number') and game.tick >= (self.opened+self.timeout) then
+        if is_type(self._timeout,'function') then
+            pcall(self._timeout,self)
+        end
+        _return = true
+        self:close()
+    end
+    return _return
+end
+
+function Public._thread:error(err)
+    local _return = false
+    if is_type(self._error,'function') then
+        pcall(self._error,self,err)
+        _return = true
+    else
+        error(err)
+    end
+    return _return
+end
+
+function Public._thread:on_event(event,callback)
+    local events = {'close','timeout','tick','resolve','success','error'}
+    local value = Table.find(events,function(v,k,find) return v == string.lower(find) end,event)
+    if value and is_type(callback,'function') then
+        self['_'..value] = callback
+    elseif is_type(event,'number') and is_type(callback,'function') then
+        if not self._events then self._events = {} end
+        self._events[event] = callback
+    end
+    return self
 end
 
 function Public.new_uuid()
@@ -167,141 +302,6 @@ commands.add_command('interface', 'Runs the given input from the script', functi
     if not success and is_type(err,'string') then local _end = string.find(err,'stack traceback') if _end then err = string.sub(err,0,_end-2) end end
     if err or err == false then player.print("Command failed with: " .. err, Color.warning) end
 end)
-
-function Public._thread:create(obj)
-    local obj = obj or {}
-    setmetatable(obj,{__index=Public._thread})
-    obj.uuid = Public.new_uuid()
-    return obj
-end
-
-function Public._thread:queue()
-    self:open()
-    return Public.queue_thread(self)
-end
-
-function Public._thread:valid(skip_location_check)
-    local skip_location_check = skip_location_check or false
-    if is_type(self.uuid,'string') and
-    skip_location_check or is_type(self.opened,'number') and
-    skip_location_check or is_type(this.all[self.uuid],'table') and
-    is_type(self.timeout) or is_type(self.timeout,'number') and
-    is_type(self.name) or is_type(self.name,'string') and
-    is_type(self._close) or is_type(self._close,'function') and
-    is_type(self._timeout) or is_type(self._timeout,'function') and
-    is_type(self._tick) or is_type(self._tick,'function') and
-    is_type(self._resolve) or is_type(self._resolve,'function') and
-    is_type(self._success) or is_type(self._success,'function') and
-    is_type(self._error) or is_type(self._error,'function') then
-        return true
-    end
-    return false
-end
-
-function Public._thread:open()
-    if not self:valid(true) or self.opened then return false end
-    local threads = this
-    local uuid = self.uuid
-    self.opened = game.tick
-    threads.all[uuid] = threads.all[uuid] or self
-    threads.all._n = threads.all._n+1
-    if threads.paused[self.name] then threads.paused[self.name] = nil end
-    if is_type(self.timeout,'number') then table.insert(threads.timeout,uuid) end
-    if is_type(self._tick,'function') then table.insert(threads.tick,uuid) end
-    if is_type(self.name,'string') then threads.named[self.name] = threads.named[self.name] or self.uuid end
-    if is_type(self._events,'table') then 
-        Table.each(self._events,function(callback,event,threads,uuid)
-            -- cant be used V
-            --Public.add_thread_handler(event)
-            if not threads.events[event] then threads.events[event] = {} end
-            table.insert(threads.events[event],uuid)
-        end,threads,self.uuid)
-    end
-    return true
-end
-
-function Public._thread:close()
-    local threads = this
-    local uuid = self.uuid
-    local _return = false
-    if is_type(self._close,'function') then pcall(self._close,self) _return = true end
-    local value,key = Table.find(threads.queue,function(v,k,uuid) return v == uuid end,uuid)
-    if key then threads.queue[key] = nil end
-    local value,key = Table.find(threads.timeout,function(v,k,uuid) return v == uuid end,uuid)
-    if key then threads.timeout[key] = nil end
-    local value,key = Table.find(threads.tick,function(v,k,uuid) return v == uuid end,uuid)
-    if key then threads.tick[key] = nil end
-    if is_type(self._events,'table') then
-        Table.each(self._events,function(callback,event)
-            if threads.events[event] then
-                local value,key = Table.find(threads.events[event],function(v,k,uuid) return v == uuid end,uuid)
-                if key then threads.events[event][key] = nil end
-                -- cant be used V
-                --if #threads.events[event] == 0 then Event.remove(event,Public.game_event) threads.events[event] = nil end
-            end
-        end)
-    end
-    if is_type(self.name,'string') then threads.paused[self.name]=self.uuid self.opened=nil
-        if self.reopen == true then self:open() end
-    else threads.all[uuid] = nil threads.all._n = threads.all._n-1 end
-    return _return
-end
-
-function Public._thread:resolve(...)
-    local _return = false
-    if is_type(self._resolve,'function') then 
-        local success, err = pcall(self._resolve,self,...)
-        if success then
-            if is_type(self._success,'function') then
-                Public.interface(function(thread,err)
-                    local success,err = pcall(thread._success,thread,err)
-                    if not success then thread:error(err) end
-                end,true,self,err)
-                _return = true
-            end
-        else
-            _return = self:error(err)
-        end
-    end
-    self:close()
-    return _return
-end
-
-function Public._thread:check_timeout()
-    local _return = false
-    if not self:valid() then return false end
-    if is_type(self.timeout,'number') and game.tick >= (self.opened+self.timeout) then
-        if is_type(self._timeout,'function') then
-            pcall(self._timeout,self)
-        end
-        _return = true
-        self:close()
-    end
-    return _return
-end
-
-function Public._thread:error(err)
-    local _return = false
-    if is_type(self._error,'function') then
-        pcall(self._error,self,err)
-        _return = true
-    else
-        error(err)
-    end
-    return _return
-end
-
-function Public._thread:on_event(event,callback)
-    local events = {'close','timeout','tick','resolve','success','error'}
-    local value = Table.find(events,function(v,k,find) return v == string.lower(find) end,event)
-    if value and is_type(callback,'function') then
-        self['_'..value] = callback
-    elseif is_type(event,'number') and is_type(callback,'function') then
-        if not self._events then self._events = {} end
-        self._events[event] = callback
-    end
-    return self
-end
 
 Event.add(defines.events.on_tick,function(event)
     if event.tick < 10 then return end

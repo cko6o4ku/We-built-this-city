@@ -133,20 +133,13 @@ end
 
 function Public.create_warp_button(player)
     if mod(player)[main_button_name] then return end
-    local b = mod(player).add{
+    mod(player).add{
     type = "sprite-button",
     sprite = "item/discharge-defense-equipment",
     name = main_button_name,
-    tooltip = "Warp to places!"
+    tooltip = "Warp to places!",
+    style = m_gui.button_style
     }
-    b.style.font_color = Color.success
-    b.style.font = "heading-1"
-    b.style.minimal_height = 38
-    b.style.minimal_width = 38
-    b.style.top_padding = 2
-    b.style.left_padding = 4
-    b.style.right_padding = 4
-    b.style.bottom_padding = 2
 end
 
 local function draw_create_warp(parent, player, p)

@@ -12,7 +12,7 @@ local toolbar = {}
 -- @tparam function callback the function which is called on_click
 -- @treturn table the button object that was made
 function toolbar.add(name,caption,tooltip,callback)
-    local button = Gui.inputs.add{type='button',name=name,caption=caption,tooltip=tooltip}
+    local button = Gui.inputs.add{type='sprite-button',name=name,caption=caption,tooltip=tooltip}
     button:on_event(Gui.inputs.events.click,callback)
     Gui._add_data('toolbar',name,button)
     return button

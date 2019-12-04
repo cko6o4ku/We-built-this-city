@@ -12,7 +12,7 @@ end
 
 function popup._load()
     popup._popup.close = Gui.inputs.add{
-        type='button',
+        type='sprite-button',
         name='popup-close',
         caption='utility/set_bar_slot',
         tooltip='Close This Popup'

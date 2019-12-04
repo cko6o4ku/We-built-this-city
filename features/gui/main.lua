@@ -14,15 +14,17 @@ local icons = {
 	 "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
 	  "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
 }
+local this = {}
 
 local main_button_name = Gui.uid_name()
 local main_frame_name = Gui.uid_name()
 
 Global.register(
-    {disabled_tabs=disabled_tabs, icons=icons},
+    {disabled_tabs=disabled_tabs, icons=icons, this=this},
     function(t)
         disabled_tabs = t.disabled_tabs
         icons = t.icons
+        this = t.this
     end
 )
 
