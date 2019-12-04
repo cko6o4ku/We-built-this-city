@@ -5,7 +5,6 @@ local mod = m_gui.get_frame_flow
 
 local toolbar = {}
 
---- Add a button to the toolbar, ranks need to be allowed to use these buttons if ranks is preset
 -- @usage toolbar.add('foo','Foo','Test',function() game.print('test') end)
 -- @tparam string name the name of the button
 -- @tparam string caption can be a sprite path or text to show
@@ -29,7 +28,10 @@ function toolbar.draw(event)
     --toolbar_frame.clear()
     if not Gui._get_data('toolbar') then return end
     for _, button in pairs(Gui._get_data('toolbar')) do
-        button:draw(toolbar_frame)
+        if not player.admin then
+        return
+        else button:draw(toolbar_frame)
+        end
 	end
 end
 

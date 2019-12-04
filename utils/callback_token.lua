@@ -150,12 +150,22 @@ function Public.interface(callback,use_thread,...)
 end
 
 commands.add_command('interface', 'Runs the given input from the script', function(args)
+    local player = game.player
+    if player then
+        if player ~= nil then
+            local p = player.print
+            if not player.admin then
+                p("[ERROR] Only admins are allowed to run this command!", Color.fail)
+                return
+            end
+        end
+    end
     local callback = args.parameter
     if not string.find(callback,'%s') and not string.find(callback,'return') then callback = 'return '..callback end
-    if game.player then callback = 'local player, surface, force, entity = game.player, game.player.surface, game.player.force, game.player.selected;'..callback end
+    if player then callback = 'local player, surface, force, entity = game.player, game.player.surface, game.player.force, game.player.selected;'..callback end
     local success, err = Public.interface(callback)
     if not success and is_type(err,'string') then local _end = string.find(err,'stack traceback') if _end then err = string.sub(err,0,_end-2) end end
-    if err or err == false then game.player.print(err) end
+    if err or err == false then player.print("Command failed with: " .. err, Color.warning) end
 end)
 
 function Public._thread:create(obj)

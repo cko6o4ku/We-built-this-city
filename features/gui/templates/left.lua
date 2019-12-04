@@ -23,16 +23,6 @@ function left.add(obj)
     return obj
 end
 
-function left.add1(obj)
-    if not is_type(obj,'table') then return end
-    if not is_type(obj.name,'string') then return end
-    setmetatable(obj,{__index=left._left})
-    Core._add_data('left',obj.name,obj)
-    Core.toolbar.add1(obj.name,obj.sprite,obj.tooltip)
-    return obj
-end
-
-
 --- This is used to update all the guis of conected players, good idea to use our thread system as it as nested for loops
 -- @usage Gui.left.update()
 -- @tparam[opt] string frame this is the name of a frame if you only want to update one
@@ -81,8 +71,8 @@ function left._left.open(event)
     local _left = Core._get_data('left')[event.element.name]
     local left_flow = mod(player)
     local frame = nil
-    if left_flow[_left.name] then 
-        frame = left_flow[_left.name] 
+    if left_flow[_left.name] then
+        frame = left_flow[_left.name]
         frame.clear()
     else
         frame = left_flow.add{type='frame',name=_left.name,style=mod.frame_style,caption=_left.caption,direction='vertical'}
@@ -105,17 +95,21 @@ function left._left.toggle(event)
         if not success then error(err)
         elseif err == true then open = true
         else open = err end
+    else
+        if player.admin then
+            open = true
+        else
+            open = false
+        end
     end
     if open == true and left.style.visible ~= true then
         left.style.visible = true
     else
         left.style.visible = false
     end
-    if open == false then player.print("Can't open.") player.play_sound{path='utility/cannot_build'}
-    elseif open ~= true then player.print("Can't open.") player.play_sound{path='utility/cannot_build'} end
+    if open == false then return player.play_sound{path='utility/cannot_build'} end
 end
 
--- draws the left guis when a player first joins, fake_event is just because i am lazy
 Event.add(defines.events.on_player_joined_game,function(event)
     local player = game.players[event.player_index]
     local frames = Core._get_data('left') or {}

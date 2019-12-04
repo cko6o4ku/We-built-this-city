@@ -27,7 +27,7 @@ local advanced_settings = {
 }
 
 local personal_settings = {
-    --{type='slider',object='player',key='character_resource_reach_distance_bonus',name='reach-bonus',min=0,max=30},
+    {type='slider',object='player',key='character_resource_reach_distance_bonus',name='reach-bonus',min=0,max=30},
     {type='slider',object='player',key='character_mining_speed_modifier',name='mining-speed',min=0,max=30},
     {type='slider',object='player',key='character_crafting_speed_modifier',name='craft-speed',min=0,max=30},
     {type='slider',object='player',key='character_running_speed_modifier',name='running-speed',min=0,max=10},
@@ -144,7 +144,7 @@ local function _draw_setting(frame,setting)
     end
 end
 
-Gui.center.add{
+local game_settings = Gui.center.add{
     name='game-settings',
     caption='utility/no_building_material_icon',
     tooltip={'game-settings.tooltip'}
