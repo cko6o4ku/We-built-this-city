@@ -1,8 +1,7 @@
 local Gui = require 'features.gui.core'
 local Server = require 'utils.callback_token'
+local Modifiers = require 'utils.player_modifiers'
 
---{type='slider',object='',key='',name='',min=x,max=y}
---{type='function',object='',key='',name='',param={}}
 local basic_settings = {
     {type='slider',object='force',key='manual_mining_speed_modifier',name='mining-speed',min=0,max=30},
     {type='slider',object='force',key='manual_crafting_speed_modifier',name='craft-speed',min=0,max=30},
@@ -50,46 +49,94 @@ end
 local function _object_list(player) return {game=game,player=player,force=player.force,enemy=game.forces['enemy']} end
 
 for name,group in pairs(_root_list) do
-    for key,setting in pairs(group) do
-        local _added = nil
-        if setting.type == 'slider' then
-            _added = Gui.inputs.add_slider('game-settings-'..setting.name,'horizontal',setting.min,setting.max,
-                function(player,root_frame)
-                    local data = _get_data(root_frame)
-                    local objects = _object_list(player)
-                    local object = objects[data.object]
-                    return object[data.key] or 1
-                end,
-                function(player,value,percent,element)
-                    local data = _get_data(element.parent)
-                    local objects = _object_list(player)
-                    local object = objects[data.object]
-                    local _caption = string.format('%.2f',value); if value > 2 then _caption = string.format('%.2f',math.floor(value)) end
-                    object[data.key] = tonumber(_caption)
-                    element.parent.counter.caption = _caption
-                end
-            )
-        elseif setting.type == 'function' then
-            _added = Gui.inputs.add_checkbox('game-settings-'..setting.name,true,nil,false,function(player,element)
-                local data = _get_data(element.parent.parent)
-                local objects = _object_list(player)
-                local object = objects[data.object]
-                pcall(object[data.key],unpack(data.params))
-                Server.new_thread{
-                    timeout=60,
-                    data=element
-                }:on_event('timeout',function(self)
-                    if self.data and self.data.valid then
-                        element.parent.parent['game-settings-are-you-sure'].state = false
-                        self.data.parent.visible = false
-                        self.data.state = false
+    if name == "personal_settings" then
+        for key,setting in pairs(group) do
+            local _added = nil
+            if setting.type == 'slider' then
+                _added = Gui.inputs.add_slider('game-settings-'..setting.name,'horizontal',setting.min,setting.max,
+                    function(player,root_frame)
+                        local data = _get_data(root_frame)
+                        local objects = _object_list(player)
+                        local object = objects[data.object]
+                        return object[data.key] or 1
+                    end,
+                    function(player,value,percent,element)
+                        local p_modifer = Modifiers.get_table()
+                        local _a = p_modifer
+                        local data = _get_data(element.parent)
+                        local objects = _object_list(player)
+                        local object = objects[data.object]
+                        local _caption = string.format('%.2f',value); if value > 2 then _caption = string.format('%.2f',math.floor(value)) end
+                        object[data.key] = tonumber(_caption)
+                        _a[player.index][data.key]["bonus"] = tonumber(_caption)
+                        element.parent.counter.caption = _caption
                     end
-                end):open()
-            end)
-            if not setting.params then setting.params = {} end
+                )
+            elseif setting.type == 'function' then
+                _added = Gui.inputs.add_checkbox('game-settings-'..setting.name,true,nil,false,function(player,element)
+                    local data = _get_data(element.parent.parent)
+                    local objects = _object_list(player)
+                    local object = objects[data.object]
+                    pcall(object[data.key],unpack(data.params))
+                    Server.new_thread{
+                        timeout=60,
+                        data=element
+                    }:on_event('timeout',function(self)
+                        if self.data and self.data.valid then
+                            element.parent.parent['game-settings-are-you-sure'].state = false
+                            self.data.parent.visible = false
+                            self.data.state = false
+                        end
+                    end):open()
+                end)
+                if not setting.params then setting.params = {} end
+            end
+            setting._loaded = _added
+            setting._group = name
         end
-        setting._loaded = _added
-        setting._group = name
+        else
+        for key,setting in pairs(group) do
+            local _added = nil
+            if setting.type == 'slider' then
+                _added = Gui.inputs.add_slider('game-settings-'..setting.name,'horizontal',setting.min,setting.max,
+                    function(player,root_frame)
+                        local data = _get_data(root_frame)
+                        local objects = _object_list(player)
+                        local object = objects[data.object]
+                        return object[data.key] or 1
+                    end,
+                    function(player,value,percent,element)
+                        local data = _get_data(element.parent)
+                        local objects = _object_list(player)
+                        local object = objects[data.object]
+                        local _caption = string.format('%.2f',value); if value > 2 then _caption = string.format('%.2f',math.floor(value)) end
+                        --if object[data.key]
+                        object[data.key] = tonumber(_caption)
+                        element.parent.counter.caption = _caption
+                    end
+                )
+            elseif setting.type == 'function' then
+                _added = Gui.inputs.add_checkbox('game-settings-'..setting.name,true,nil,false,function(player,element)
+                    local data = _get_data(element.parent.parent)
+                    local objects = _object_list(player)
+                    local object = objects[data.object]
+                    pcall(object[data.key],unpack(data.params))
+                    Server.new_thread{
+                        timeout=60,
+                        data=element
+                    }:on_event('timeout',function(self)
+                        if self.data and self.data.valid then
+                            element.parent.parent['game-settings-are-you-sure'].state = false
+                            self.data.parent.visible = false
+                            self.data.state = false
+                        end
+                    end):open()
+                end)
+                if not setting.params then setting.params = {} end
+            end
+            setting._loaded = _added
+            setting._group = name
+        end
     end
 end
 

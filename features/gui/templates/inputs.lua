@@ -112,12 +112,13 @@ end
 
 -- this just runs the events given to inputs
 function inputs._event_handler(event)
-    if not event.element then return end
-    local elements = Core._get_data('inputs_'..event.element.type) or {}
-    local element = elements[event.element.name]
-    if not element and event.element.type == 'sprite-button' then 
+    local elem = event.element
+    if not elem then return end
+    local elements = Core._get_data('inputs_'..elem.type) or {}
+    local element = elements[elem.name]
+    if not element and elem.type == 'sprite-button' then 
         elements = Core._get_data('inputs_button') or {}
-        element = elements[event.element.name]
+        element = elements[elem.name]
     end
     if element then
         if not is_type(element.events[event.name],'function') then return end
