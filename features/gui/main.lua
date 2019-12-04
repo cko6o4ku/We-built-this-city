@@ -3,6 +3,8 @@ local Event = require 'utils.event'
 local Global = require 'utils.global'
 local Gui = require 'utils.gui'
 local m_gui = require "mod-gui"
+local Color = require 'utils.color_presets'
+local Public = require 'utils.gui'
 local mod = m_gui.get_frame_flow
 
 panel_tabs = {}
@@ -23,7 +25,49 @@ Global.register(
         icons = t.icons
     end
 )
-local Public = {}
+
+Public.data = {}
+Public.classes = {}
+Public.defines = {}
+Public.names = {}
+
+function Public._add_data(key,value_key,value)
+    if game then return end
+    if not Public.data[key] then Public.data[key] = {} end
+    Public.data[key][value_key] = value
+end
+
+function Public._get_data(key)
+    return Public.data[key]
+end
+
+function Public:_load_parts(parts)
+    for _,part in pairs(parts) do
+        self[part] = require('objects.'..part)
+    end
+end
+
+function Public.bar(frame,width)
+    local line = frame.add{
+        type='progressbar',
+        size=1,
+        value=1
+    }
+    line.style.height = 3
+    line.style.width = width or 10
+    line.style.color = Color.white
+    return line
+end
+
+function Public.set_dropdown_index(dropdown,_item)
+    if dropdown and dropdown.valid and dropdown.items and _item then else return end
+    local _index = 1
+    for index, item in pairs(dropdown.items) do
+        if item == _item then _index = index break end
+    end
+    dropdown.selected_index = _index
+    return dropdown
+end
 
 function Public.get_tabs_table()
 	return panel_tabs
@@ -402,7 +446,11 @@ local function on_gui_click(event)
 end
 
 --Gui.allow_player_to_toggle_top_element_visibility(main_button_name)
-
+Event.add(defines.events.on_tick, function(event)
+    if Public.left and ((event.tick+10)/(3600*game.speed)) % 15 == 0 then
+        Public.left.update()
+    end
+end)
 Event.add(defines.events.on_player_created, on_player_created)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_gui_click, on_gui_click)

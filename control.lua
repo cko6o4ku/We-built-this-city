@@ -34,6 +34,8 @@ require 'features.commands.repair'
 require 'features.commands.bonus'
 require 'features.commands.misc'
 
+require 'features.gui.game_settings'
+
 require 'features.modules.rpg'
 
 -- load from config/map
@@ -42,6 +44,12 @@ require 'config'
 -- lua profiler by boodals
 if _DEBUG then
 	require 'utils.profiler'
+end
+
+if _DEBUG then
+	function raw(string)
+		return game.print(serpent.block(string))
+	end
 end
 
 if _DUMP_ENV then
