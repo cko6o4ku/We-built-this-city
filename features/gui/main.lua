@@ -33,15 +33,15 @@ Public.classes = {}
 Public.defines = {}
 Public.names = {}
 
-function Public._add_data(key,value_key,value)
-    if game then return end
-    if not Public.data[key] then Public.data[key] = {} end
-    Public.data[key][value_key] = value
-end
-
-function Public._get_data(key)
-    return Public.data[key]
-end
+Gui.data = setmetatable({},{
+    __call=function(tbl,location,key,value)
+        if not location then return tbl end
+        if not key then return rawget(tbl,location) or rawset(tbl,location,{}) and rawget(tbl,location) end
+        if game then error('New guis cannot be added during runtime',2) end
+        if not rawget(tbl,location) then rawset(tbl,location,{}) end
+        rawset(rawget(tbl,location),key,value)
+    end
+})
 
 function Public:_load_parts(parts)
     for _,part in pairs(parts) do

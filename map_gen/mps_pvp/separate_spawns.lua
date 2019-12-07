@@ -9,20 +9,20 @@ local SPAWN_GUI_MAX_HEIGHT = 1000
 -- Make sure to give the default starting items
 function SeparateSpawnsPlayerRespawned(event)
     local player = game.players[event.player_index]
-    SendPlayerToSpawn(player)
+    SendPlayerToSpawn(player.name)
 end
 
 
 -- This is the main function that creates the spawn area
 -- Provides resources, land and a safe zone
 function SeparateSpawnsGenerateChunk(event)
-    local surface = event.surface
+    local surface = game.surfaces["nauvis"]
     local chunkArea = event.area
     
     -- This handles chunk generation near player spawns
     -- If it is near a player spawn, it does a few things like make the area
     -- safe and provide a guaranteed area of land and water tiles.
-    SetupAndClearSpawnAreas(surface, chunkArea, global.uniqueSpawns)
+    SetupAndClearSpawnAreas(surface, chunkArea)
 end
 
 --------------------------------------------------------------------------------
@@ -155,9 +155,9 @@ function QueuePlayerForDelayedSpawn(playerName, spawn, moatEnabled)
     if ((spawn.x ~= 0) and (spawn.y ~= 0)) then
         global.uniqueSpawns[playerName] = {pos=spawn,moat=moatEnabled}
 
-        local delay_spawn_seconds = 4*(math_ceil(ENFORCE_LAND_AREA_TILE_DIST/CHUNK_SIZE))
+        local delay_spawn_seconds = 2*(math_ceil(ENFORCE_LAND_AREA_TILE_DIST/CHUNK_SIZE))
 
-        game.players[playerName].surface.request_to_generate_chunks(spawn, 2)
+        game.surfaces["nauvis"].request_to_generate_chunks(spawn, 2)
         delayedTick = game.tick + delay_spawn_seconds*TICKS_PER_SECOND
         table_insert(global.delayedSpawns, {playerName=playerName, spawn=spawn, moatEnabled=moatEnabled, delayedTick=delayedTick})
 
@@ -185,14 +185,14 @@ local function SendPlayerToNewSpawnAndCreateIt(playerName, spawn, moatEnabled)
 
 
     -- Send the player to that position
-    game.players[playerName].teleport(spawn, g_surface)
+    --game.players[playerName].teleport(spawn, g_surface)
     --GivePlayerStarterItems(game.players[playerName])
 
     -- Chart the area.
     --ChartArea(game.players[playerName].force, game.players[playerName].position, math_ceil(ENFORCE_LAND_AREA_TILE_DIST/CHUNK_SIZE), game.players[playerName].surface)
 
-    permission_group = game.permissions.get_group("Default")    
-    permission_group.add_player(tostring(playerName))
+    --permission_group = game.permissions.get_group("Default")    
+    --permission_group.add_player(tostring(playerName))
     -- Create the spawn resources here
     if ENABLE_RES then
     GenerateStartingResources(surface, spawn)
@@ -221,11 +221,11 @@ function DelayedSpawnOnTick()
 end
 
 function SendPlayerToSpawn(player)
-    if (DoesPlayerHaveCustomSpawn(player)) then
-        local p = player.surface.find_non_colliding_position("player", global.playerSpawns[player.name], 15, 1)
+    if (game.forces[player].get_spawn_position(game.surfaces["nauvis"]) ~= {0,0}) then
+        local p = g_surface.find_non_colliding_position("player", game.forces[player], 15, 1)
         player.teleport(p, g_surface)
     else
-        player.teleport(game.forces[MAIN_FORCE].get_spawn_position(g_surface), g_surface)
+        --player.teleport(game.forces[MAIN_FORCE].get_spawn_position(g_surface), g_surface)
     end
 end
 

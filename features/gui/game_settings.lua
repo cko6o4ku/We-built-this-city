@@ -50,7 +50,7 @@ end
 local function _object_list(player) return {game=game,player=player,force=player.force,enemy=game.forces['enemy']} end
 
 for name,group in pairs(_root_list) do
-    if name == "personal_settings" and package.loaded['features.modules.rpg'] then
+    if name == "personal_settings" then
         for key,setting in pairs(group) do
             local _added = nil
             if setting.type == 'slider' then

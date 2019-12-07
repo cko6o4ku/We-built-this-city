@@ -30,7 +30,7 @@ local settings = {
 
 commands.add_command(
     'bonus',
-    'Set your player bonus (default is 20)',
+    'Set your player bonus (speed, mining etc)',
     function(args)
     local trusted = Session.get_trusted_table()
     local player = game.player

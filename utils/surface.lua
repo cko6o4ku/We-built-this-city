@@ -11,7 +11,7 @@ local global_data = {
     spawn_position = nil,
     island = false,
     surface_name = wbtc_surface_name,
-    water = 0
+    water = 0.5
 }
 
 Global.register(

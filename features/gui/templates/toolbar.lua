@@ -14,7 +14,7 @@ local toolbar = {}
 function toolbar.add(name,caption,tooltip,callback)
     local button = Gui.inputs.add{type='sprite-button',name=name,caption=caption,tooltip=tooltip}
     button:on_event(Gui.inputs.events.click,callback)
-    Gui._add_data('toolbar',name,button)
+    Gui.data('toolbar',name,button)
     return button
 end
 
@@ -26,8 +26,8 @@ function toolbar.draw(event)
     if not player then return end
 	local toolbar_frame = mod(player)
     --toolbar_frame.clear()
-    if not Gui._get_data('toolbar') then return end
-    for _, button in pairs(Gui._get_data('toolbar')) do
+    if not Gui.data('toolbar') then return end
+    for _, button in pairs(Gui.data('toolbar')) do
         if not player.admin then
         return
         else button:draw(toolbar_frame)

@@ -31,7 +31,7 @@ function popup.add(obj)
     if not is_type(obj.name,'string') then return end
     setmetatable(obj,{__index=popup._popup})
     local name = obj.name; obj.name = nil
-    Gui._add_data('popup',name,obj)
+    Gui.data('popup',name,obj)
     obj.name = name
     return obj
 end
@@ -49,7 +49,7 @@ end
 -- @param data this is the data that is sent to the draw function
 -- @tparam[opt=game.connected_players] table players the players to open the popup for
 function popup.open(style,data,players)
-    local _popup = Gui._get_data('popup')[style]
+    local _popup = Gui.data('popup')[style]
     local players = players or game.connected_players
     local data = data or {}
     if not _popup then return end

@@ -1,10 +1,6 @@
 -- frontier_silo.lua
 -- Jan 2018
 -- My take on frontier silos for my Oarc scenario
-
-require 'config'
-require 'oarc_utils'
-
 --------------------------------------------------------------------------------
 -- Frontier style rocket silo stuff
 --------------------------------------------------------------------------------
@@ -43,7 +39,7 @@ end
 
 -- Create a rocket silo at the specified positionmmmm
 -- Also makes sure tiles and entities are cleared if required.
-local function CreateRocketSilo(surface, siloPosition, force)
+function CreateRocketSilo(surface, siloPosition, force)
 
     -- Delete any entities beneath the silo?
     for _, entity in pairs(surface.find_entities_filtered{area = {{siloPosition.x-5,
@@ -72,22 +68,13 @@ local function CreateRocketSilo(surface, siloPosition, force)
     end
     surface.set_tiles(tiles, true)
 
-    -- Create indestructible silo and assign to a force
-    local silo = surface.create_entity{name = "rocket-silo", position = {siloPosition.x+0.5, siloPosition.y}, force = force}
-    silo.destructible = false
+    -- Create silo and assign to a force
+    silo = surface.create_entity{name = "rocket-silo", position = {siloPosition.x+0.5, siloPosition.y}, force = force}
+    silo.destructible = true
     silo.minable = false
 
-    -- Make silo safe from being removed by regrowth
-    if ENABLE_REGROWTH then
-        OarcRegrowthOffLimits(siloPosition, 5)
-    end
-
-
-    if ENABLE_SILO_BEACONS then
-        PhilipsBeaconsAndShit(surface, siloPosition, game.forces["silo"])
-    end
-    if ENABLE_SILO_RADAR then
-        PhilipsRadarAndShit(surface, siloPosition, game.forces["silo"])
+    if ENABLE_SILO_TURRETS then
+        Defense(surface, siloPosition, game.forces["Protectors"])
     end
         
 end
@@ -98,7 +85,7 @@ function GenerateAllSilos(surface)
     
     -- Create each silo in the list
     for idx,siloPos in pairs(global.siloPosition) do
-        CreateRocketSilo(surface, siloPos, "silo")
+        CreateRocketSilo(surface, siloPos, "Protectors")
     end
 end
 
@@ -106,7 +93,7 @@ end
 function GenerateRocketSiloChunk(event)
 
     -- Silo generation can take awhile depending on the number of silos.
-    if (game.tick < SILO_NUM_SPAWNS*10*TICKS_PER_SECOND) then
+    if (game.tick < SILO_NUM_SPAWNS*2*TICKS_PER_SECOND) then
         local surface = event.surface
         local chunkArea = event.area
 
@@ -130,6 +117,7 @@ function GenerateRocketSiloChunk(event)
 
                 -- Remove trees/resources inside the spawn area
                 RemoveInCircle(surface, chunkArea, "tree", siloPos, ENFORCE_LAND_AREA_TILE_DIST+5)
+                RemoveInCircle(surface, chunkArea, "simple-entity", siloPos, ENFORCE_LAND_AREA_TILE_DIST+5)
                 RemoveInCircle(surface, chunkArea, "resource", siloPos, ENFORCE_LAND_AREA_TILE_DIST+5)
                 RemoveInCircle(surface, chunkArea, "cliff", siloPos, ENFORCE_LAND_AREA_TILE_DIST+5)
                 RemoveDecorationsArea(surface, chunkArea)
@@ -145,7 +133,7 @@ end
 function GenerateRocketSiloAreas(surface)
     for idx,siloPos in pairs(global.siloPosition) do
         if (ENABLE_SILO_VISION) then
-            for _, force in pairs(game.forces) do
+            for name, force in pairs(game.forces) do
             if name ~= "neutral" and name ~= "enemy" then
                 ChartRocketSiloAreas(surface, force)
             end
@@ -165,158 +153,109 @@ function ChartRocketSiloAreas(surface, force)
     end
 end
 
-global.oarc_silos_generated = false
+global.silos_generated = false
 function DelayedSiloCreationOnTick(event)
 
     -- Delay the creation of the silos so we place them on already generated lands.
-    if (not global.oarc_silos_generated and (game.tick >= SILO_NUM_SPAWNS*10*TICKS_PER_SECOND)) then
+    if (not global.silos_generated and (game.tick >= SILO_NUM_SPAWNS*2*TICKS_PER_SECOND)) then
         DebugPrint("Frontier silos generated!")
-        global.oarc_silos_generated = true
+        global.silos_generated = true
         GenerateAllSilos(game.surfaces[g_surface])
     end
-
 end 
 
+function Defense(surface, siloPos, force)
 
-function PhilipsBeaconsAndShit(surface, siloPos, force)
-
-    -- Add Beacons
+    -- Add Turrets
     -- x = right, left; y = up, down
     -- top 1 left 1
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-8, siloPos.y-9}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-8, siloPos.y-9}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- top 2
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-5, siloPos.y-9}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-5, siloPos.y-9}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- top 3
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-2, siloPos.y-9}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-2, siloPos.y-9}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- top 4
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+2, siloPos.y-9}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+2, siloPos.y-9}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- top 5
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+5, siloPos.y-9}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+5, siloPos.y-9}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- top 6 right 1
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+8, siloPos.y-9}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+8, siloPos.y-9}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- left 2
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-6, siloPos.y-6}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-6, siloPos.y-6}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- left 3
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-6, siloPos.y-3}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-6, siloPos.y-3}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- left 4
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-6, siloPos.y}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-6, siloPos.y}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- left 5
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-6, siloPos.y+3}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-6, siloPos.y+3}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- left 6 bottom 1
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-8, siloPos.y+6}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-8, siloPos.y+6}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- left 7 bottom 2
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x-5, siloPos.y+6}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x-5, siloPos.y+6}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- right 2
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+6, siloPos.y-6}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+6, siloPos.y-6}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- right 3
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+6, siloPos.y-3}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+6, siloPos.y-3}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- right 4
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+6, siloPos.y}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+6, siloPos.y}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- right 5
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+6, siloPos.y+3}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+6, siloPos.y+3}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- right 6 bottom 3
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+5, siloPos.y+6}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+5, siloPos.y+6}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
     -- right 7 bottom 4
-    local beacon = surface.create_entity{name = "beacon", position = {siloPos.x+8, siloPos.y+6}, force = force}
-    beacon.destructible = false
-    beacon.minable = false
-    -- substations
-    -- top left
-    local substation = surface.create_entity{name = "substation", position = {siloPos.x-8, siloPos.y-6}, force = force}
-    substation.destructible = false
-    substation.minable = false
-    -- top right
-    local substation = surface.create_entity{name = "substation", position = {siloPos.x+9, siloPos.y-6}, force = force}
-    substation.destructible = false
-    substation.minable = false
-    -- bottom left
-    local substation = surface.create_entity{name = "substation", position = {siloPos.x-8, siloPos.y+4}, force = force}
-    substation.destructible = false
-    substation.minable = false
-    -- bottom right
-    local substation = surface.create_entity{name = "substation", position = {siloPos.x+9, siloPos.y+4}, force = force}
-    substation.destructible = false
-    substation.minable = false
-
-    -- end adding beacons
-end
-
-function PhilipsRadarAndShit(surface, siloPos, force)
-    
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-33, siloPos.y+3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-33, siloPos.y-3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-30, siloPos.y-6}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-27, siloPos.y-6}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-24, siloPos.y-6}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-24, siloPos.y-3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-24, siloPos.y}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-24, siloPos.y+3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-33, siloPos.y-6}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-30, siloPos.y+3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "solar-panel", position = {siloPos.x-27, siloPos.y+3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "radar", position = {siloPos.x-33, siloPos.y}, force = force}
-    radar.destructible = false
-    local substation = surface.create_entity{name = "substation", position = {siloPos.x-28, siloPos.y-1}, force = force}
-    substation.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-30, siloPos.y-1}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-30, siloPos.y-3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-30, siloPos.y+1}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-28, siloPos.y-3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-28, siloPos.y+1}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-26, siloPos.y-1}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-26, siloPos.y-3}, force = force}
-    radar.destructible = false
-    local radar = surface.create_entity{name = "accumulator", position = {siloPos.x-26, siloPos.y+1}, force = force}
-    radar.destructible = false
+    local e = surface.create_entity{name = "gun-turret", position = {siloPos.x+8, siloPos.y+6}, force = force}
+    e.insert({name = "piercing-rounds-magazine", count = math.random(64, 128)})
+    e.destructible = true
+    e.minable = true
 end

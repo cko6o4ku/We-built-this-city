@@ -1,5 +1,8 @@
 --require each map here
+
+
 --require "map_gen.mps_0_16.main"
+require "map_gen.mps_pvp.main"
 --require "map_gen.shapes.main"
 --require "map_gen.custom_maps.main"
 --require "map_gen.mps_0_17.main"

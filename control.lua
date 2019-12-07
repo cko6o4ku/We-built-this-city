@@ -32,7 +32,7 @@ require 'features.modules.floaty_chat'
 require 'features.modules.autohotbar'
 require 'features.modules.autostash'
 require 'features.commands.repair'
-require 'features.commands.bonus'
+--require 'features.commands.bonus'
 require 'features.commands.misc'
 
 require 'features.modules.rpg'

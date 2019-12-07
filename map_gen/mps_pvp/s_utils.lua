@@ -1,4 +1,4 @@
-local f = require 'maps.tools.map_functions'
+local f = require 'features.tools.map_functions'
 local math_random = math.random
 local insert = table.insert
 
@@ -308,7 +308,7 @@ function spawn_protected(event)
     local entity = event.created_entity
     if not entity.valid then return end
     local distance_to_center = math.sqrt(entity.position.x^2 + entity.position.y^2)
-    if distance_to_center > 30 then return end
+    if distance_to_center > 20 then return end
     local surface = entity.surface
     surface.create_entity({name = "flying-text", position = entity.position, text = "Spawn is protected from building.", color = {r=0.88, g=0.1, b=0.1}})                    
     local player = game.players[event.player_index]         
@@ -318,15 +318,9 @@ end
 
 -- For each other player force, share a chat msg.
 function ShareChatBetweenForces(player, msg)
-    for _,force in pairs(game.forces) do
-        if (force ~= nil) then
-            if ((force.name ~= enemy) and
-                (force.name ~= neutral) and
-                (force.name ~= player) and
-                (force ~= player.force)) then
-                force.print(player.name..": "..msg)
-            end
-        end
+    if player.tag ~= "[Renegades]" then return end
+    for _, p in pairs(game.connected_players) do        
+        if p.tag == "[Renegades]" and p.name ~= player.name then p.print(player.name.."[Renegades]: "..msg) end        
     end
 end
 
@@ -866,31 +860,29 @@ end
 
 -- Enforce a circle of land, also adds trees in a ring around the area.
 function CreateCropCircle(surface, centerPos, chunkArea, tileRadius)
-    local floor = math.floor
-    local max = math.max
-    local abs = math.abs
+
+    local tileRadSqr = tileRadius^2
+
     local dirtTiles = {}
-    for i=chunkArea.left_top.x,chunkArea.right_bottom.x-1,1 do
-        for j=chunkArea.left_top.y,chunkArea.right_bottom.y-1,1 do
+    for i=chunkArea.left_top.x,chunkArea.right_bottom.x,1 do
+        for j=chunkArea.left_top.y,chunkArea.right_bottom.y,1 do
 
             -- This ( X^2 + Y^2 ) is used to calculate if something
             -- is inside a circle area.
-
-            --local distVar = floor(max(abs(centerPos.x - i), abs(centerPos.y - j)))
             local distVar = math.floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
 
             -- Fill in all unexpected water in a circle
-            if (distVar < tileRadius) then
-                if (surface.get_tile(i,j).collides_with("water-tile") or ENABLE_SPAWN_FORCE_GRASS) then
-                    insert(dirtTiles, {name = "dirt-1", position={i,j}})
+            if (distVar < tileRadSqr) then
+                if (surface.get_tile(i,j).collides_with("water-tile")) then
+                    table.insert(dirtTiles, {name = "grass-1", position ={i,j}})
                 end
             end
 
             -- Create a circle of trees around the spawn point.
-            --if ((distVar < tileRadius) and 
-            --    (distVar > tileRadius-3)) then
-            --    surface.create_entity({name="tree-02", amount=1, position={i, j}})
-            --end
+            if ((distVar < tileRadSqr-200) and 
+                (distVar > tileRadSqr-400)) then
+                surface.create_entity({name="tree-02", amount=1, position={i, j}})
+            end
         end
     end
 
@@ -1029,19 +1021,20 @@ end
 -- unique spawn points.
 -- This clears enemies in the immediate area, creates a slightly safe area around it,
 -- It no LONGER generates the resources though as that is now handled in a delayed event!
-function SetupAndClearSpawnAreas(surface, chunkArea, spawnPointTable)
-    for name,spawn in pairs(spawnPointTable) do
-
+function SetupAndClearSpawnAreas(event)
+    local surface = game.surfaces[g_surface]
+    local chunkArea = event.area
+    local localforce = {x=0,y=0}
         -- Create a bunch of useful area and position variables
-        local landArea = GetAreaAroundPos(spawn.pos, ENFORCE_LAND_AREA_TILE_DIST+CHUNK_SIZE)
-        local safeArea = GetAreaAroundPos(spawn.pos, SAFE_AREA_TILE_DIST)
-        local warningArea = GetAreaAroundPos(spawn.pos, WARNING_AREA_TILE_DIST)
+        local landArea = GetAreaAroundPos(localforce, ENFORCE_LAND_AREA_TILE_DIST+CHUNK_SIZE)
+        local safeArea = GetAreaAroundPos(localforce, SAFE_AREA_TILE_DIST)
+        local warningArea = GetAreaAroundPos(localforce, WARNING_AREA_TILE_DIST)
         local chunkAreaCenter = {x=chunkArea.left_top.x+(CHUNK_SIZE/2),
                                          y=chunkArea.left_top.y+(CHUNK_SIZE/2)}
-        local spawnPosOffset = {x=spawn.pos.x+ENFORCE_LAND_AREA_TILE_DIST,
-                                         y=spawn.pos.y+ENFORCE_LAND_AREA_TILE_DIST}
+        local forcePosOffset = {x=localforce.x+ENFORCE_LAND_AREA_TILE_DIST,
+                                         y=localforce.y+ENFORCE_LAND_AREA_TILE_DIST}
 
-        -- Make chunks near a spawn safe by removing enemies
+        -- Make chunks near a force safe by removing enemies
         if CheckIfInArea(chunkAreaCenter,safeArea) then
             RemoveAliensInArea(surface, chunkArea)
         
@@ -1051,38 +1044,37 @@ function SetupAndClearSpawnAreas(surface, chunkArea, spawnPointTable)
         end
 
         -- If the chunk is within the main land area, then clear trees/resources
-        -- and create the land spawn areas (guaranteed land with a circle of trees)
+        -- and create the land force areas (guaranteed land with a circle of trees)
         if CheckIfInArea(chunkAreaCenter,landArea) then
 
-            -- Remove trees/resources inside the spawn area
-            --RemoveInCircle(surface, chunkArea, "tree", spawn.pos, ENFORCE_LAND_AREA_TILE_DIST)
-            --RemoveInCircle(surface, chunkArea, "resource", spawn.pos, ENFORCE_LAND_AREA_TILE_DIST+10)
-            --RemoveInCircle(surface, chunkArea, "cliff", spawn.pos, ENFORCE_LAND_AREA_TILE_DIST+5)
-            --RemoveDecorationsArea(surface, chunkArea)
+            -- Remove trees/resources inside the force area
+            RemoveInCircle(surface, chunkArea, "tree", localforce, ENFORCE_LAND_AREA_TILE_DIST)
+            RemoveInCircle(surface, chunkArea, "resource", localforce, ENFORCE_LAND_AREA_TILE_DIST+10)
+            RemoveInCircle(surface, chunkArea, "cliff", localforce, ENFORCE_LAND_AREA_TILE_DIST+5)
+            RemoveDecorationsArea(surface, chunkArea)
+            RemoveInCircle(surface, chunkArea, "simple-entity", localforce, ENFORCE_LAND_AREA_TILE_DIST+10)
 
-            if (SPAWN_TREE_CIRCLE_ENABLED) then
-                CreateCropCircle(surface, spawn.pos, chunkArea, ENFORCE_LAND_AREA_TILE_DIST)
-            end
-            if (SPAWN_MOAT_CHOICE_ENABLED) then
-                if (spawn.moat) then
-                    CreateMoat(surface, spawn.pos, chunkArea, ENFORCE_LAND_AREA_TILE_DIST)
+            --CreateCropCircle(surface, localforce, chunkArea, ENFORCE_LAND_AREA_TILE_DIST)
+
+            if (force_MOAT_CHOICE_ENABLED) then
+                if (force.moat) then
+                    CreateMoat(surface, localforce, chunkArea, ENFORCE_LAND_AREA_TILE_DIST)
                 end
             end
         end
 
         -- Provide starting resources
-        -- This is run on the bottom, right chunk of the spawn area which should be
+        -- This is run on the bottom, right chunk of the force area which should be
         -- generated last, so it should work everytime.
-        -- if CheckIfInArea(spawnPosOffset,chunkArea) then
-        --     CreateWaterStrip(surface,
-        --                     {x=spawn.pos.x+WATER_SPAWN_OFFSET_X, y=spawn.pos.y+WATER_SPAWN_OFFSET_Y},
-        --                     WATER_SPAWN_LENGTH)
-        --     CreateWaterStrip(surface,
-        --                     {x=spawn.pos.x+WATER_SPAWN_OFFSET_X, y=spawn.pos.y+WATER_SPAWN_OFFSET_Y+1},
-        --                     WATER_SPAWN_LENGTH)
-        --     GenerateStartingResources(surface, spawn.pos)
-        -- end
-    end
+         --if CheckIfInArea(forcePosOffset,chunkArea) then
+             --CreateWaterStrip(surface,
+              --               {x=localforce.x+WATER_SPAWN_OFFSET_X, y=localforce.y+WATER_SPAWN_OFFSET_Y},
+              --               WATER_force_LENGTH)
+             --CreateWaterStrip(surface,
+             --                {x=localforce.x+WATER_SPAWN_OFFSET_X, y=localforce.y+WATER_SPAWN_OFFSET_Y+1},
+             --                WATER_force_LENGTH)
+             --GenerateStartingResources(surface, localforce)
+         --end
 end
 
 --------------------------------------------------------------------------------
@@ -1123,22 +1115,24 @@ end
 -- Holding pen for new players joining the map
 --------------------------------------------------------------------------------
 function CreateWall(surface, pos)
-    local wall = surface.create_entity({name="stone-wall", position=pos, force=MAIN_TEAM})
+    local wall = surface.create_entity({name="stone-wall", position=pos, force="Protectors"})
     if wall then
-        wall.destructible = false
-        wall.minable = false
+        wall.destructible = true
+        wall.minable = true
     end
 end
 
 function CreateHoldingPen(surface, chunkArea, sizeTiles, walls)
     if (((chunkArea.left_top.x == -32) or (chunkArea.left_top.x == 0)) and
         ((chunkArea.left_top.y == -32) or (chunkArea.left_top.y == 0))) then
+        walls = true
 
         -- Remove stuff
         RemoveAliensInArea(surface, chunkArea)
-        --RemoveInArea(surface, chunkArea, "tree")
-        --RemoveInArea(surface, chunkArea, "resource")
-        --RemoveInArea(surface, chunkArea, "cliff")
+        RemoveInArea(surface, chunkArea, "tree")
+        RemoveInArea(surface, chunkArea, "resource")
+        RemoveInArea(surface, chunkArea, "cliff")
+        RemoveInArea(surface, chunkArea, "simple-entity")
 
         -- This loop runs through each tile
         local grassTiles = {}
@@ -1149,34 +1143,34 @@ function CreateHoldingPen(surface, chunkArea, sizeTiles, walls)
                 if ((i>-sizeTiles) and (i<(sizeTiles-1)) and (j>-sizeTiles) and (j<(sizeTiles-1))) then
 
                     -- Fill all area with grass only
-                    insert(grassTiles, {name = "concrete", position ={i,j}})
+                    --insert(grassTiles, {name = "dirt-1", position ={i,j}})
 
                     -- Create the spawn box walls
-                    if not ENABLE_DEFAULT_SPAWN then
-                    if (j<(sizeTiles-1) and j>-sizeTiles) then
-                  
-                       -- Create horizontal sides of center spawn box
-                        if (((j>-sizeTiles and j<-(sizeTiles-4)) or (j<(sizeTiles-1) and j>(sizeTiles-5))) and (i<(sizeTiles-1) and i>-sizeTiles)) then
-                            if walls then
-                                CreateWall(surface, {i,j})
-                            else
-                                insert(waterTiles, {name = "water", position ={i,j}})
+                    --if not ENABLE_DEFAULT_SPAWN then
+                        if (j<(sizeTiles-1) and j>-sizeTiles) then
+                    
+                           -- Create horizontal sides of center spawn box
+                            if (((j>-sizeTiles and j<-(sizeTiles-4)) or (j<(sizeTiles-1) and j>(sizeTiles-5))) and (i<(sizeTiles-1) and i>-sizeTiles)) then
+                                if walls then
+                                    CreateWall(surface, {i,j})
+                                else
+                                    insert(waterTiles, {name = "water", position ={i,j}})
+                                end
                             end
                         end
-                    end
-
-                        -- Create vertical sides of center spawn box
-                        if ((i>-sizeTiles and i<-(sizeTiles-4)) or (i<(sizeTiles-1) and i>(sizeTiles-5))) then
-                            if walls then
-                                CreateWall(surface, {i,j})
-                            else
-                                insert(waterTiles, {name = "water", position ={i,j}})
+    
+                            -- Create vertical sides of center spawn box
+                            if ((i>-sizeTiles and i<-(sizeTiles-4)) or (i<(sizeTiles-1) and i>(sizeTiles-5))) then
+                                if walls then
+                                    CreateWall(surface, {i,j})
+                                else
+                                    insert(waterTiles, {name = "water", position ={i,j}})
+                                end
                             end
+    
                         end
-
-                    end
+                    --end
                 end
-            end
         end
         surface.set_tiles(grassTiles)
         surface.set_tiles(waterTiles)

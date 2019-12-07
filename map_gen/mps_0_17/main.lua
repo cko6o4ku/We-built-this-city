@@ -8,6 +8,7 @@ require 'features.modules.scramble'
 require 'features.modules.spawn_ent.main'
 require 'features.modules.biters_yield_coins'
 require 'features.modules.dangerous_goods'
+require 'features.modules.biter_pets'
 require 'features.modules.enhancedbiters'
 require 'features.modules.surrounded_by_worms'
 require 'features.modules.autodecon_when_depleted'
@@ -291,7 +292,7 @@ Event.add(defines.events.on_player_mined_entity, function(event)
     local e = event.entity
     if e.type ~= "tree" then return end
     if e and e.valid and math_random(1, 10) == 1 then
-      e.surface.spill_item_stack(game.players[event.player_index].position,{name = "raw-fish", count = math_random(1,2)},true)
+      e.surface.spill_item_stack(game.players[event.player_index].position,{name = "coin", count = math_random(1,2)},true)
     end
 end)
 

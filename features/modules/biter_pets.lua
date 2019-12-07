@@ -1,5 +1,17 @@
+local Event = require 'utils.event'
+local Global = require 'utils.global'
+
 local math_random = math.random
 local nom_msg = {"munch", "munch", "yum"}
+
+local this = {}
+
+Global.register(
+    this,
+    function(tbl)
+        this = tbl
+    end
+)
 
 local Public = {}
 
@@ -11,14 +23,14 @@ local function floaty_hearts(entity, c)
 	local position = {x = entity.position.x - 0.75, y = entity.position.y - 1}
 	local b = 1.35
 	for a = 1, c, 1 do
-		local p = {(position.x + 0.4) + (b * -1 + math_random(0, b * 20) * 0.1), position.y + (b * -1 + math_random(0, b * 20) * 0.1)}			
-		entity.surface.create_entity({name = "flying-text", position = p, text = "♥", color = {math_random(150, 255), 0, 255}})						
+		local p = {(position.x + 0.4) + (b * -1 + math_random(0, b * 20) * 0.1), position.y + (b * -1 + math_random(0, b * 20) * 0.1)}
+		entity.surface.create_entity({name = "flying-text", position = p, text = "♥", color = {math_random(150, 255), 0, 255}})
 	end
 end
 
 local function tame_unit_effects(player, entity)
 	floaty_hearts(entity, 7)
-	
+
 	rendering.draw_text{
 		text = "~" .. player.name .. "'s pet~",
 		surface = player.surface,
@@ -51,7 +63,7 @@ local function feed_pet(unit)
 end
 
 function Public.biter_pets_tame_unit(player, unit, forced)
-	if global.biter_pets[player.index] then return false end
+	if this[player.index] then return false end
 	if not forced then
 		if math_random(1, math.floor(unit.prototype.max_health * 0.01) + 1) ~= 1 then
 			feed_floaty_text(unit)
@@ -62,8 +74,8 @@ function Public.biter_pets_tame_unit(player, unit, forced)
 	unit.ai_settings.allow_destroy_when_commands_fail = false
 	unit.ai_settings.allow_try_return_to_spawner = false
 	unit.force = player.force
-	unit.set_command({type = defines.command.wander, distraction = defines.distraction.by_enemy})	
-	global.biter_pets[player.index] = {last_command = 0, entity = unit}
+	unit.set_command({type = defines.command.wander, distraction = defines.distraction.by_enemy})
+	this[player.index] = {last_command = 0, entity = unit}
 	tame_unit_effects(player, unit)
 	return true
 end
@@ -79,13 +91,13 @@ end
 local function on_player_changed_position(event)
 	if math_random(1, 100) ~= 1 then return end
 	local player = game.players[event.player_index]
-	if not global.biter_pets[player.index] then return end	
-	if not global.biter_pets[player.index].entity then global.biter_pets[player.index] = nil return end
-	if not global.biter_pets[player.index].entity.valid then global.biter_pets[player.index] = nil return end
+	if not this[player.index] then return end
+	if not this[player.index].entity then this[player.index] = nil return end
+	if not this[player.index].entity.valid then this[player.index] = nil return end
 	if not player.character then return end
-	if global.biter_pets[player.index].last_command + 600 > game.tick then return end
-	global.biter_pets[player.index].last_command = game.tick
-	command_unit(global.biter_pets[player.index].entity, player)	
+	if this[player.index].last_command + 600 > game.tick then return end
+	this[player.index].last_command = game.tick
+	command_unit(this[player.index].entity, player)
 end
 
 local function on_player_dropped_item(event)
@@ -94,16 +106,10 @@ local function on_player_dropped_item(event)
 	local unit = find_unit(player, event.entity)
 	if not unit then return end
 	if Public.biter_pets_tame_unit(player, unit, false) then event.entity.destroy() return end
-	if unit.force.index == player.force.index then feed_pet(unit) end	
+	if unit.force.index == player.force.index then feed_pet(unit) end
 end
 
-local function on_init(event)
-	global.biter_pets = {}
-end
-
-local event = require 'utils.event'
-event.on_init(on_init)
-event.add(defines.events.on_player_dropped_item, on_player_dropped_item)
-event.add(defines.events.on_player_changed_position, on_player_changed_position)
+Event.add(defines.events.on_player_dropped_item, on_player_dropped_item)
+Event.add(defines.events.on_player_changed_position, on_player_changed_position)
 
 return Public

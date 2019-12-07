@@ -45,5 +45,5 @@ commands.add_command(
             end
         end
     end
-    Server.to_admin_embed(table.concat{'[Info] ', player.name, ' ran command: ', args.parameters, ' at game.tick: ', game.tick, '.'})
+    Server.to_admin_embed(table.concat{'[Info] ', player.name, ' ran command: ', args.parameter, ' at game.tick: ', game.tick, '.'})
 end)

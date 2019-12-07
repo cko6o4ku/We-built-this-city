@@ -1,18 +1,19 @@
 -- local things
-CIRCLE_RESOURCE = true
+CIRCLE_RESOURCE = false
 DESYNC_DEBUG = false
-ENABLE_RSO = true
+ENABLE_RSO = false
 ENABLE_SCRAMBLE = true
 ENABLE_AUTOFILL = false
 ENABLE_LONGREACH = false
+ENABLE_NERF = false
 
 -- Separate spawns
 -- This is the core of the mod. Probably not a good idea to disable it.
 ENABLE_SEPARATE_SPAWNS = true
 
 -- Frontier style rocket silo mode
-FRONTIER_ROCKET_SILO_MODE = false
-
+FRONTIER_ROCKET_SILO_MODE = true
+    
 -- Enables default resources when force creates new force
 ENABLE_RES = false
 
@@ -39,8 +40,8 @@ ENABLE_ABANDONED_BASE_REMOVAL = false
 CHECK_SPAWN_UNGENERATED_CHUNKS_RADIUS = 2
 
 -- Near Distance in chunks
-NEAR_MIN_DIST = 10
-NEAR_MAX_DIST = 60
+NEAR_MIN_DIST = 5
+NEAR_MAX_DIST = 10
 
 -- Far Distance in chunks
 FAR_MIN_DIST = 88
@@ -63,7 +64,7 @@ MOAT_SIZE_MODIFIER = 0.2
 -- THIS IS WHAT SETS THE SPAWN CIRCLE SIZE!
 -- Create a circle of land area for the spawn
 -- If you make this much bigger than a few chunks, good luck.
-ENFORCE_LAND_AREA_TILE_DIST = CHUNK_SIZE*0.75
+ENFORCE_LAND_AREA_TILE_DIST = CHUNK_SIZE*1.5
 
 -- Location of water strip (horizontal)
 WATER_SPAWN_OFFSET_X = -6
@@ -81,24 +82,24 @@ START_OIL_AMOUNT = 2000000
 -- Start resource shape
 -- If this is true, it will be a circle
 -- If false, it will be a square
-ENABLE_RESOURCE_SHAPE_CIRCLE = false
+ENABLE_RESOURCE_SHAPE_CIRCLE = true
 
 -- Start resource position and size
 -- Position is relative to player starting location
-START_RESOURCE_COAL_POS_X = -56
-START_RESOURCE_COAL_POS_Y = -40
+START_RESOURCE_COAL_POS_X = -25
+START_RESOURCE_COAL_POS_Y = -30
 START_RESOURCE_COAL_SIZE = 12
 
-START_RESOURCE_STONE_POS_X = 50
-START_RESOURCE_STONE_POS_Y = -40
+START_RESOURCE_STONE_POS_X = 25
+START_RESOURCE_STONE_POS_Y = -30
 START_RESOURCE_STONE_SIZE = 12
 
-START_RESOURCE_COPPER_POS_X = 15
-START_RESOURCE_COPPER_POS_Y = -40
+START_RESOURCE_COPPER_POS_X = 10
+START_RESOURCE_COPPER_POS_Y = -30
 START_RESOURCE_COPPER_SIZE = 15
 
-START_RESOURCE_IRON_POS_X = -22
-START_RESOURCE_IRON_POS_Y = -40
+START_RESOURCE_IRON_POS_X = -10
+START_RESOURCE_IRON_POS_Y = -30
 START_RESOURCE_IRON_SIZE = 15
 
 START_RESOURCE_URANIUM_POS_X = -40
@@ -199,10 +200,10 @@ ENEMY_DESTROY_FACTOR_DIVISOR = 1
 -- Number of silos found in the wild.
 -- These will spawn in a circle at given distance from the center of the map
 -- If you set this number too high, you'll have a lot of delay at the start of the game.
-SILO_NUM_SPAWNS = 2
+SILO_NUM_SPAWNS = 1
 
 -- How many chunks away from the center of the map should the silo be spawned
-SILO_CHUNK_DISTANCE = 100
+SILO_CHUNK_DISTANCE = 10
 
 -- If this is enabled, you get ONE silo at the location specified below.
 SILO_FIXED_POSITION = false 
@@ -211,11 +212,8 @@ SILO_FIXED_POSITION = false
 SILO_POSITION = {x = 0, y = 100}
 
 -- Set this to false so that you have to search for the silo's.
-ENABLE_SILO_VISION = true
-
--- Add beacons around the silo (Philip's modm)
-ENABLE_SILO_BEACONS = false
-ENABLE_SILO_RADAR = false
+ENABLE_SILO_VISION = false
+ENABLE_SILO_TURRETS = true
 
 --------------------------------------------------------------------------------
 -- Long Reach Options

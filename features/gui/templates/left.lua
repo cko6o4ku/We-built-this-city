@@ -18,7 +18,7 @@ function left.add(obj)
     if not is_type(obj,'table') then return end
     if not is_type(obj.name,'string') then return end
     setmetatable(obj,{__index=left._left})
-    Core._add_data('left',obj.name,obj)
+    Core.data('left',obj.name,obj)
     Core.toolbar.add(obj.name,obj.caption,obj.tooltip,obj.toggle)
     return obj
 end
@@ -30,7 +30,7 @@ end
 function left.update(frame,players)
     local players = is_type(players,'table') and #players > 0 and {unpack(players)} or is_type(players,'table') and {players} or game.players(players) and {game.players(players)} or game.connected_players
     for _,player in pairs(players) do
-        local frames = Core._get_data('left') or {}
+        local frames = Core.data('left') or {}
         if frame then frames = {[frame]=frames[frame]} or {} end
         for name,left in pairs(frames) do
             if _left then
@@ -45,7 +45,7 @@ end
 -- @usage Gui.left.open('foo')
 -- @tparam string left_name this is the gui that you want to open
 function left.open(left_name)
-    local _left = Core._get_data('left')[left_name]
+    local _left = Core.data('left')[left_name]
     if not _left then return end
     for _,player in pairs(game.connected_players) do
         local left_flow = mod(player)
@@ -57,7 +57,7 @@ end
 -- @usage Gui.left.close('foo')
 -- @tparam string left_name this is the gui that you want to close
 function left.close(left_name)
-    local _left = Core._get_data('left')[left_name]
+    local _left = Core.data('left')[left_name]
     if not _left then return end
     for _,player in pairs(game.connected_players) do
         local left_flow = mod(player)
@@ -68,7 +68,7 @@ end
 -- this is used to draw the gui for the first time (these guis are never destoryed), used by the script
 function left._left.open(event)
     local player = game.players[event.player_index]
-    local _left = Core._get_data('left')[event.element.name]
+    local _left = Core.data('left')[event.element.name]
     local left_flow = mod(player)
     local frame = nil
     if left_flow[_left.name] then
@@ -85,7 +85,7 @@ end
 -- this is called when the toolbar button is pressed
 function left._left.toggle(event)
     local player = game.players[event.player_index]
-    local _left = Core._get_data('left')[event.element.name]
+    local _left = Core.data('left')[event.element.name]
     local left_flow = mod(player)
     if not left_flow[_left.name] then _left.open(event) end
     local left = left_flow[_left.name]
@@ -112,7 +112,7 @@ end
 
 Event.add(defines.events.on_player_joined_game,function(event)
     local player = game.players[event.player_index]
-    local frames = Core._get_data('left') or {}
+    local frames = Core.data('left') or {}
     for name,left in pairs(frames) do
         local fake_event = {player_index=player.index,element={name=name}}
         left.open(fake_event)
