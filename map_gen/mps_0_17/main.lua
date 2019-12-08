@@ -9,7 +9,7 @@ require 'features.modules.spawn_ent.main'
 require 'features.modules.biters_yield_coins'
 require 'features.modules.dangerous_goods'
 require 'features.modules.biter_pets'
-require 'features.modules.enhancedbiters'
+--require 'features.modules.enhancedbiters'
 require 'features.modules.surrounded_by_worms'
 require 'features.modules.autodecon_when_depleted'
 require 'features.modules.spawners_contain_biters'
@@ -37,7 +37,6 @@ local math_random = math.random
 --   time the game starts
 ----------------------------------------
 local function on_start()
-
 
     local T = Map.Pop_info()
         T.main_caption = "Shrine of the Ancients"
@@ -185,6 +184,7 @@ end)
 ----------------------------------------
 Event.add(defines.events.on_player_joined_game, function(event)
     Utils.PlayerJoinedMessages(event)
+    game.speed = 5
 end)
 
 Event.add(defines.events.on_player_created, function(event)
@@ -291,7 +291,7 @@ end)
 Event.add(defines.events.on_player_mined_entity, function(event)
     local e = event.entity
     if e.type ~= "tree" then return end
-    if e and e.valid and math_random(1, 10) == 1 then
+    if e and e.valid and math_random(1, 5) == 1 then
       e.surface.spill_item_stack(game.players[event.player_index].position,{name = "coin", count = math_random(1,2)},true)
     end
 end)

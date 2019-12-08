@@ -439,6 +439,7 @@ end
 
 local function gain_xp(player, amount)
 	local left = player.gui.left
+	if not player then return end
 	validate(player)
 	amount = math.round(amount, 2)
 	rpg_t[player.index].xp = rpg_t[player.index].xp + amount

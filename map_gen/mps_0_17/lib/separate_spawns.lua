@@ -35,6 +35,11 @@ function Public.SeparateSpawnsPlayerCreated(player_index)
         Public.FindUnusedSpawns(player, false)
     end
 
+    local i = player.get_main_inventory()
+    i.clear()
+
+    game.permissions.get_group("spectator").add_player(player)
+
     player.force = global.main_force_name
     Public.DisplayWelcomeTextGui(player)
 end
@@ -452,7 +457,8 @@ end
 -- Used for tracking which players are assigned to it, where it is and if
 -- it is open for new players to join
 function Public.CreateNewSharedSpawn(player)
-    global.sharedSpawns[player.name] = {openAccess=true,
+    global.sharedSpawns[player.name] = {openAccess=false,
+                                    AlwaysAccess=false,
                                     position=global.playerSpawns[player.name],
                                     players={}}
 end
@@ -461,6 +467,7 @@ function Public.TransferOwnershipOfSharedSpawn(prevOwnerName, newOwnerName)
     -- Transfer the shared spawn global
     global.sharedSpawns[newOwnerName] = global.sharedSpawns[prevOwnerName]
     global.sharedSpawns[newOwnerName].openAccess = false
+    global.sharedSpawns[newOwnerName].AlwaysAccess = false
     global.sharedSpawns[prevOwnerName] = nil
 
     -- Transfer the unique spawn global
@@ -504,7 +511,8 @@ function Public.GetNumberOfAvailableSharedSpawns()
     local count = 0
 
     for ownerName,sharedSpawn in pairs(global.sharedSpawns) do
-        if (sharedSpawn.openAccess and
+        if (sharedSpawn.openAccess or
+            sharedSpawn.AlwaysAccess and
             (game.players[ownerName] ~= nil) and
             game.players[ownerName].connected) then
             if ((global.max_players == 0) or
@@ -1330,7 +1338,8 @@ function Public.DisplaySharedSpawnOptions(player)
 
 
     for spawnName,sharedSpawn in pairs(global.sharedSpawns) do
-        if (sharedSpawn.openAccess and
+        if (sharedSpawn.openAccess or
+            sharedSpawn.AlwaysAccess and
             (game.players[spawnName] ~= nil) and
             game.players[spawnName].connected) then
             local spotsRemaining = global.max_players - #global.sharedSpawns[spawnName].players
@@ -1384,6 +1393,28 @@ function Public.SharedSpwnOptsGuiClick(event)
             if ((buttonClicked == spawnName) and
                 (game.players[spawnName] ~= nil) and
                 (game.players[spawnName].connected)) then
+                if global.sharedSpawns[spawnName].AlwaysAccess then
+                    Utils.SendBroadcastMsg({"oarc-player-joining-base", spawnName, player.name})
+
+                    -- Close the waiting players menu
+                    if (player.gui.screen.shared_spawn_opts ~= nil) then
+                        player.gui.screen.shared_spawn_opts.destroy()
+                    end
+
+                    -- Spawn the player
+                    local joiningPlayer = player
+                    Public.ChangePlayerSpawn(joiningPlayer, global.sharedSpawns[spawnName].position)
+                    Public.SendPlayerToSpawn(joiningPlayer)
+                    Utils.GivePlayerStarterItems(joiningPlayer)
+                    table.insert(global.sharedSpawns[spawnName].players, joiningPlayer.name)
+                    joiningPlayer.force = game.players[spawnName].force
+
+                    -- Unlock spawn control gui tab
+                    Tabs.set_tab(joiningPlayer, "Spawn Controls", true)
+                    game.permissions.get_group("Default").add_player(joiningPlayer)
+                    Score.init_player_table(joiningPlayer)
+                    return
+                else
 
                 -- Add the player to that shared spawns join queue.
                 if (global.sharedSpawns[spawnName].joinQueue == nil) then
@@ -1403,6 +1434,7 @@ function Public.SharedSpwnOptsGuiClick(event)
                 game.players[spawnName].print({"oarc-player-requesting-join-you", player.name})
                 Tabs.refresh(game.players[spawnName])
                 break
+                end
             end
         end
     end
@@ -1473,6 +1505,15 @@ local function IsSharedSpawnActive(player)
     end
 end
 
+local function IsSharedSpawnActiveAlways(player)
+    if ((global.sharedSpawns[player.name] == nil) or
+        (global.sharedSpawns[player.name].AlwaysAccess == false)) then
+        return false
+    else
+        return true
+    end
+end
+
 
 -- Get a random warp point to go to
 function Public.GetRandomSpawnPoint()
@@ -1510,6 +1551,16 @@ function Public.CreateSpawnCtrlGuiTab(player, frame)
             spwnCtrls.add{type="checkbox", name="accessToggle",
                             caption={"oarc-spawn-allow-joiners"},
                             state=IsSharedSpawnActive(player)}
+            if Public.DoesPlayerHaveCustomSpawn(player) then
+                if (global.sharedSpawns[player.name] == nil) then
+                    Public.CreateNewSharedSpawn(player)
+                end
+            end
+            if global.sharedSpawns[player.name].openAccess then
+                spwnCtrls.add{type="checkbox", name="alwaysallowaccessToggle",
+                                caption={"oarc-spawn-always-allow-joiners"},
+                                state=IsSharedSpawnActiveAlways(player)}
+            end
             UtilsGui.ApplyStyle(spwnCtrls["accessToggle"], UtilsGui.my_fixed_width_style)
         end
     end
@@ -1576,7 +1627,27 @@ function Public.SpawnCtrlGuiOptionsSelect(event)
         else
             if (global.sharedSpawns[player.name] ~= nil) then
                 global.sharedSpawns[player.name].openAccess = false
+                global.sharedSpawns[player.name].AlwaysAccess = false
                 Utils.SendBroadcastMsg({"oarc-stop-shared-base", player.name})
+            end
+        end
+        Tabs.refresh(player)
+    end
+    if (name == "alwaysallowaccessToggle") then
+        if event.element.state then
+            if Public.DoesPlayerHaveCustomSpawn(player) then
+                if (global.sharedSpawns[player.name] == nil) then
+                    Public.CreateNewSharedSpawn(player)
+                else
+                    global.sharedSpawns[player.name].AlwaysAccess = true
+                end
+
+                Utils.SendBroadcastMsg({"oarc-start-always-shared-base", player.name})
+            end
+        else
+            if (global.sharedSpawns[player.name] ~= nil) then
+                global.sharedSpawns[player.name].AlwaysAccess = false
+                Utils.SendBroadcastMsg({"oarc-stop-always-shared-base", player.name})
             end
         end
         Tabs.refresh(player)

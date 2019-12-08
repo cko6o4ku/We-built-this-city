@@ -963,6 +963,7 @@ stds.factorio_defines = {
                 },
                 events = {
                     fields = {
+                        'on_admin_state_changed',
                         'on_ai_command_completed',
                         'on_area_cloned',
                         'on_biter_base_built',

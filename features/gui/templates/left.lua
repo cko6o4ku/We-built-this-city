@@ -1,7 +1,9 @@
 local Event = require 'utils.event'
 local Core = require 'features.gui.main'
 local m_gui = require "mod-gui"
+local Server = require 'utils.callback_token'
 local mod = m_gui.get_frame_flow
+
 
 local left = {}
 left._left = {}
@@ -28,16 +30,38 @@ end
 -- @tparam[opt] string frame this is the name of a frame if you only want to update one
 -- @param[opt] players the player to update for, if not given all players are updated, can be one player
 function left.update(frame,players)
-    local players = is_type(players,'table') and #players > 0 and {unpack(players)} or is_type(players,'table') and {players} or game.players(players) and {game.players(players)} or game.connected_players
-    for _,player in pairs(players) do
-        local frames = Core.data('left') or {}
-        if frame then frames = {[frame]=frames[frame]} or {} end
-        for name,left in pairs(frames) do
-            if _left then
-                local fake_event = {player_index=player.index,element={name=name}}
-                left.open(fake_event)
+    if not Server or not Server._thread then
+        local players = is_type(players,'table') and #players > 0 and {unpack(players)} or is_type(players,'table') and {players} or game.get_player(players) and {game.get_player(players)} or game.connected_players
+        for _,player in pairs(players) do
+            local frames = Core.data('left') or {}
+            if frame then frames = {[frame]=frames[frame]} or {} end
+            for name,left in pairs(frames) do
+                if _left then
+                    local fake_event = {player_index=player.index,element={name=name}}
+                    left.open(fake_event)
+                end
             end
         end
+    else
+        local frames = Core.data('left') or {}
+        if frame then frames = {[frame]=frames[frame]} or {} end
+        local players = game.connected_players
+        Server.new_thread{
+            data={players=players,frames=frames}
+        }:on_event('tick',function(thread)
+            if #thread.data.players == 0 then thread:close() return end
+            local player = table.remove(thread.data.players,1)
+            Server.new_thread{
+                data={player=player,frames=thread.data.frames}
+            }:on_event('resolve',function(thread)
+                for name,left in pairs(thread.data.frames) do
+                    if left then
+                        local fake_event = {player_index=thread.data.player.index,element={name=name}}
+                        left.open(fake_event)
+                    end
+                end
+            end):queue()
+        end):open()
     end
 end
 
@@ -47,9 +71,20 @@ end
 function left.open(left_name)
     local _left = Core.data('left')[left_name]
     if not _left then return end
-    for _,player in pairs(game.connected_players) do
-        local left_flow = mod(player)
-        if left_flow[_left.name] then left_flow[_left.name].style.visible = true end
+    if not Server or not Server._thread then
+        for _,player in pairs(game.connected_players) do
+            local left_flow = mod(player)
+            if left_flow[_left.name] then left_flow[_left.name].style.visible = true end
+        end
+    else
+        Server.new_thread{
+            data={players=game.connected_players}
+        }:on_event('tick',function(thread)
+            if #thread.data.players == 0 then thread:close() return end
+            local player = table.remove(thread.data.players,1)
+            local left_flow = mod(player)
+            if left_flow[_left.name] then left_flow[_left.name].style.visible = true end
+        end):open()
     end
 end
 
@@ -59,9 +94,20 @@ end
 function left.close(left_name)
     local _left = Core.data('left')[left_name]
     if not _left then return end
-    for _,player in pairs(game.connected_players) do
-        local left_flow = mod(player)
-        if left_flow[_left.name] then left_flow[_left.name].style.visible = false end
+    if not Server or not Server._thread then
+        for _,player in pairs(game.connected_players) do
+            local left_flow = mod(player)
+            if left_flow[_left.name] then left_flow[_left.name].style.visible = false end
+        end
+    else
+        Server.new_thread{
+            data={players=game.connected_players}
+        }:on_event('tick',function(thread)
+            if #thread.data.players == 0 then thread:close() return end
+            local player = table.remove(thread.data.players,1)
+            local left_flow = mod(player)
+            if left_flow[_left.name] then left_flow[_left.name].style.visible = false end
+        end):open()
     end
 end
 
@@ -70,7 +116,7 @@ function left._left.open(event)
     local player = game.players[event.player_index]
     local _left = Core.data('left')[event.element.name]
     local left_flow = mod(player)
-    local frame = nil
+    local frame
     if left_flow[_left.name] then
         frame = left_flow[_left.name]
         frame.clear()

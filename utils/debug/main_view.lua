@@ -1,5 +1,6 @@
 local Gui = require 'utils.gui'
 local Color = require 'utils.color_presets'
+local Event = require 'utils.event'
 
 local Public = {}
 
@@ -30,7 +31,7 @@ function Public.open_dubug(player)
         return
     end
 
-    frame = center.add {type = 'frame', name = main_frame_name, caption = 'Debuggertron 3002', direction = 'vertical'}
+    frame = center.add {type = 'frame', name = main_frame_name, caption = 'Debuggertron 3003', direction = 'vertical'}
     local frame_style = frame.style
     frame_style.height = 600
     frame_style.width = 900
@@ -99,5 +100,9 @@ Gui.on_click(
         end
     end
 )
+
+Event.add(defines.events.on_gui_closed,function(event)
+    if event.element and event.element.valid then event.element.destroy() end
+end)
 
 return Public

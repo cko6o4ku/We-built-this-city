@@ -522,7 +522,7 @@ end
 -- Only if it is within given distance from given position.
 function Public.RemoveInCircle(surface, area, type, pos, dist)
     for key, entity in pairs(surface.find_entities_filtered{area=area, type= type}) do
-        if entity.valid and entity and entity.position then
+        if entity.valid and entity and entity.position and entity.name ~= 'character' then
             if ((pos.x - entity.position.x)^2 + (pos.y - entity.position.y)^2 < dist^2) then
                 entity.destroy()
             end

@@ -192,7 +192,7 @@ local function _draw_setting(frame,setting)
     end
 end
 
-local game_settings = Gui.center.add{
+Gui.center.add{
     name='game-settings',
     caption='utility/no_building_material_icon',
     tooltip={'game-settings.tooltip'}

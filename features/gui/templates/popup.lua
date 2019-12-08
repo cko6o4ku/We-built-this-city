@@ -1,5 +1,6 @@
 local Event = require 'utils.event'
 local Gui = require 'features.gui.main'
+local Server = require 'utils.callback_token'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
 
@@ -54,24 +55,50 @@ function popup.open(style,data,players)
     local data = data or {}
     if not _popup then return end
     if _popup.left then Gui.left.close(_popup.left.name) end
-    for _,player in pairs(players) do
-        local flow = popup.flow(player)
-        local _frame = flow.add{
-            type='frame',
-            direction='horizontal',
-            style=mod.frame_style
-        }
-        local frame = _frame.add{
-            type='frame',
-            name='inner_frame',
-            direction='vertical',
-            style='image_frame'
-        }
-        _popup.close:draw(_frame)
-        if is_type(_popup.draw,'function') then
-            local success, err = pcall(_popup.draw,frame,data)
-            if not success then error(err) end
-        else error('No Draw On Popup '.._popup.name) end
+    if not Server or not Server._thread then
+        for _,player in pairs(players) do
+            local flow = popup.flow(player)
+            local _frame = flow.add{
+                type='frame',
+                direction='horizontal',
+                style=m_gui.frame_style
+            }
+            local frame = _frame.add{
+                type='frame',
+                name='inner_frame',
+                direction='vertical',
+                style='image_frame'
+            }
+            _popup.close:draw(_frame)
+            if is_type(_popup.draw,'function') then
+                local success, err = pcall(_popup.draw,frame,data)
+                if not success then error(err) end
+            else error('No Draw On Popup '.._popup.name) end
+        end
+    else
+        Server.new_thread{
+            data={players=players,popup=_popup,data=data}
+        }:on_event('tick',function(thread)
+            if #thread.data.players == 0 then thread:close() return end
+            local player = table.remove(thread.data.players,1)
+            local flow = popup.flow(player)
+            local _frame = flow.add{
+                type='frame',
+                direction='horizontal',
+                style=m_gui.frame_style
+            }
+            local frame = _frame.add{
+                type='frame',
+                name='inner_frame',
+                direction='vertical',
+                style='image_frame'
+            }
+            thread.data.popup.close:draw(_frame)
+            if is_type(thread.data.popup.draw,'function') then
+                local success, err = pcall(thread.data.popup.draw,frame,thread.data.data)
+                if not success then error(err) end
+            else error('No Draw On Popup '..thread.data.popup.name) end
+        end):open()
     end
 end
 

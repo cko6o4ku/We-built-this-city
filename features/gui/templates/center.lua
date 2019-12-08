@@ -27,7 +27,7 @@ end
 
 -- used to get the center frame of the player, used mainly in script
 function center.get_flow(player)
-    return player.gui.center.exp_center or player.gui.center.add{name='exp_center',type='flow'}
+    return player.gui.center.wbtc_center or player.gui.center.add{name='wbtc_center',type='flow'}
 end
 
 -- used to clear the center frame of the player, used mainly in script

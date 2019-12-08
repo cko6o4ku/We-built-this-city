@@ -3,6 +3,7 @@
 local event = require 'utils.event'
 local Tabs = require 'features.gui.main'
 local Surface = require 'utils.surface'.get_surface_name()
+local Color = require 'utils.color_presets'
 
 
 local function admin_only_message(str)
@@ -102,6 +103,7 @@ local kill_messages = {
 	" had a strange accident.",
 	" was struck by lightning."
 }
+
 local function kill(player, source_player)
 	if player.character then
 		player.character.die("player")
@@ -115,6 +117,7 @@ local function respawn_player(player)
 	local pos = game.surfaces[Surface].find_non_colliding_position("character", {x=0,y=0}, 3, 0,5)
 	player.teleport(pos, Surface)
 	SS.SeparateSpawnsPlayerCreated(player.index)
+	game.print("Resetting and respawning " .. player.name, Color.warning)
 	log("Resetting and respawning " .. player.name)
 end
 

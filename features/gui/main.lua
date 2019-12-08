@@ -40,8 +40,13 @@ Gui.data = setmetatable({},{
         if game then error('New guis cannot be added during runtime',2) end
         if not rawget(tbl,location) then rawset(tbl,location,{}) end
         rawset(rawget(tbl,location),key,value)
+
     end
 })
+
+function Public.get_table()
+    return Gui.data
+end
 
 function Public:_load_parts(parts)
     for _,part in pairs(parts) do

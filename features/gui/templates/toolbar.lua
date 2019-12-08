@@ -24,17 +24,19 @@ end
 function toolbar.draw(event)
     local player = game.players[event.player_index]
     if not player then return end
-	local toolbar_frame = mod(player)
-    --toolbar_frame.clear()
+    local frame = mod(player)
+
     if not Gui.data('toolbar') then return end
     for _, button in pairs(Gui.data('toolbar')) do
         if not player.admin then
         return
-        else button:draw(toolbar_frame)
+        else button:draw(frame)
         end
 	end
 end
 
-Event.add(defines.events.on_player_joined_game,toolbar.draw)
+Event.add(defines.events.on_player_joined_game, toolbar.draw)
+--Event.add(defines.events.on_player_promoted, toolbar.draw)
+Event.add(defines.events.on_player_demoted, toolbar.remove)
 
 return toolbar
