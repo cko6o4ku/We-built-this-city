@@ -1,5 +1,5 @@
 local Event = require 'utils.event'
-local Core = require 'features.gui.main'
+local Core = require 'utils.gui.main'
 local m_gui = require "mod-gui"
 
 local inputs = {}

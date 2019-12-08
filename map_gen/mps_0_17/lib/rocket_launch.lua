@@ -5,7 +5,7 @@
 
 local Utils = require 'map_gen.mps_0_17.lib.oarc_utils'
 local Config = require 'map_gen.mps_0_17.config'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local Public = {}
 --------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 -- this script adds a group button to create groups for your players --
 
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local build_group_gui = (function (player, frame)
 	local group_name_width = 150

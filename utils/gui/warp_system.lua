@@ -4,7 +4,7 @@ local Gui = require 'utils.gui'
 local Event = require 'utils.event'
 local Global = require 'utils.global'
 local Surface = require 'utils.surface'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 local Color = require 'utils.color_presets'
 local Session = require 'utils.session_data'
 

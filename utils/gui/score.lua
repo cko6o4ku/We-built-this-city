@@ -3,7 +3,7 @@
 
 local Event = require 'utils.event'
 local Global = require 'utils.global'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local scoreboard = {}
 local scoreboard_sort_by = {}

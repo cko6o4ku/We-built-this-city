@@ -1,7 +1,7 @@
 --antigrief things made by mewmew
 
 local event = require 'utils.event'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 local Surface = require 'utils.surface'.get_surface_name()
 local Color = require 'utils.color_presets'
 

@@ -4,7 +4,7 @@ local Event = require 'utils.event'
 local Game = require 'utils.game'
 local Server = require 'utils.server'
 local session = require 'utils.session_data'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
 

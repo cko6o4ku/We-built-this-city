@@ -10,9 +10,9 @@ local Silo = require 'map_gen.mps_0_17.lib.frontier_silo'
 local Table = require 'map_gen.mps_0_17.lib.table'
 local surface_name = require 'utils.surface'.get_surface_name()
 local surface_index = require 'utils.surface'.get_surface()
-local Score = require 'features.gui.score'
+local Score = require 'utils.gui.score'
 local Config = require 'map_gen.mps_0_17.config'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local Public = {}
 

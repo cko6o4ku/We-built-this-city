@@ -4,7 +4,7 @@ local Event = require 'utils.event'
 local Server = require 'utils.server'
 local Game = require 'utils.game'
 local session = require 'utils.session_data'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local insert = table.insert
 

@@ -15,7 +15,7 @@ Minor changes by ~~~Gerkiz~~~
 
 local event = require 'utils.event'
 local play_time = require 'utils.session_data'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local symbol_asc = "▲"
 local symbol_desc = "▼"

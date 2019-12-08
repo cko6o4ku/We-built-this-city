@@ -4,7 +4,7 @@ local Gui = require 'utils.gui'
 local Event = require 'utils.event'
 local Global = require 'utils.global'
 local Game = require 'utils.game'
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 local Session = require 'utils.session_data'
 
 local default_verb = 'expanded'

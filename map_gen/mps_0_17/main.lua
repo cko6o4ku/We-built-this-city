@@ -1,6 +1,6 @@
 local Event = require 'utils.event'
 local market_items = require "features.modules.map_market_items"
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 local RPG = require 'features.modules.rpg'
 local fish = require 'features.modules.launch_fish_to_win'
 

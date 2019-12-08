@@ -1,5 +1,5 @@
 local Event = require 'utils.event'
-local Gui = require 'features.gui.test.core'
+local Gui = require 'utils.gui.test.core'
 
 local test_gui = {}
 

@@ -1,5 +1,5 @@
 local Event = require 'utils.event'
-local Gui = require 'features.gui.main'
+local Gui = require 'utils.gui.main'
 local Server = require 'utils.callback_token'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow

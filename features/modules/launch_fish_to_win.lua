@@ -3,7 +3,7 @@
 local event = require 'utils.event'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local function get_rank()
 	for i = #global.catplanet_goals, 1, -1 do

@@ -1,6 +1,6 @@
 -- config tab -- 
 
-local Tabs = require 'features.gui.main'
+local Tabs = require 'utils.gui.main'
 
 local functions = {
  	["panel_spectator_switch"] = function(event) 

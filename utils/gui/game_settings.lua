@@ -1,4 +1,4 @@
-local Gui = require 'features.gui.core'
+local Gui = require 'utils.gui.core'
 local Server = require 'utils.callback_token'
 local Modifiers = require 'utils.player_modifiers'
 
