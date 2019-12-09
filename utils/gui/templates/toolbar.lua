@@ -49,7 +49,7 @@ function toolbar.draw(event)
 end
 
 Event.add(defines.events.on_player_joined_game, toolbar.draw)
-Event.add(defines.events.on_player_promoted, toolbar.draw)
-Event.add(defines.events.on_player_demoted, toolbar.draw)
+--Event.add(defines.events.on_player_promoted, toolbar.draw)
+--Event.add(defines.events.on_player_demoted, toolbar.draw)
 
 return toolbar
