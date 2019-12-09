@@ -3,7 +3,7 @@
 
 local Event = require 'utils.event'
 local Global = require 'utils.global'
-local Tabs = require 'utils.gui.main'
+local Gui = require 'utils.gui.main'
 
 local scoreboard = {}
 local scoreboard_sort_by = {}
@@ -187,7 +187,7 @@ end -- show_score
 
 local function refresh_score_full()
 	for _, player in pairs(game.connected_players) do
-		local frame = Tabs.panel_get_active_frame(player)
+		local frame = Gui.panel_get_active_frame(player)
 		if frame then
 			if frame.name == "Scoreboard" then
 				show_score(player, frame)
@@ -226,7 +226,7 @@ local function on_gui_click(event)
 	if not event.element.valid then return end
 
 	local player = game.players[event.element.player_index]
-	local frame = Tabs.panel_get_active_frame(player)
+	local frame = Gui.panel_get_active_frame(player)
 	if not frame then return end
 	if frame.name ~= "Scoreboard" then return end
 
@@ -373,7 +373,7 @@ local function on_built_entity(event)
 	score.built_entities = 1 + (score.built_entities or 0)
 end
 
-panel_tabs["Scoreboard"] = show_score
+Gui.tabs["Scoreboard"] = show_score
 
 Event.add(defines.events.on_player_mined_entity, on_player_mined_entity)
 Event.add(defines.events.on_player_died, on_player_died)

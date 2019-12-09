@@ -1,5 +1,5 @@
 local Global = require 'utils.global'
-local Tabs = require 'utils.gui.main'
+local Gui = require 'utils.gui.main'
 local Validate = require 'utils.validate_player'
 
 local map_info = {
@@ -78,7 +78,7 @@ end
 
 local function on_player_joined_game(event)
 	local player = game.players[event.player_index]
-	if player.online_time == 0 then	Tabs.panel_call_tab(player, "Info") end
+	if player.online_time == 0 then	Gui.panel_call_tab(player, "Info") end
 end
 
 local function on_gui_click(event)
@@ -87,10 +87,10 @@ local function on_gui_click(event)
 	if not event then return end
 	if not event.element then return end
 	if not event.element.valid then return end
-	if event.element.name == "close_map_intro" then Tabs.panel_clear_left_gui(player) return end
+	if event.element.name == "close_map_intro" then Gui.panel_clear_left_gui(player) return end
 end
 
-panel_tabs["Info"] = create_map_intro
+Gui.tabs["Info"] = create_map_intro
 
 local event = require 'utils.event'
 event.add(defines.events.on_player_joined_game, on_player_joined_game)

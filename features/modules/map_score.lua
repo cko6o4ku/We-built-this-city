@@ -1,4 +1,5 @@
 local Public = {}
+local Gui = require 'utils.gui.main'
 
 local function get_sorted_score() 
 	local list = {}
@@ -85,7 +86,7 @@ local function on_init()
 	}
 end
 
-panel_tabs["Map Scores"] = score_list
+Gui.tabs["Map Scores"] = score_list
 
 local event = require 'utils.event'
 event.on_init(on_init)

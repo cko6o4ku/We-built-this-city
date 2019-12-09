@@ -1,7 +1,7 @@
 --antigrief things made by mewmew
 
 local event = require 'utils.event'
-local Tabs = require 'utils.gui.main'
+local Gui = require 'utils.gui.main'
 local Surface = require 'utils.surface'.get_surface_name()
 local Color = require 'utils.color_presets'
 
@@ -344,7 +344,7 @@ end
 	
 local function on_gui_click(event)
 	local player = game.players[event.player_index]
-	local frame = Tabs.panel_get_active_frame(player)
+	local frame = Gui.panel_get_active_frame(player)
 	if not frame then return end
 	if frame.name ~= "Admin" then return end
 	
@@ -397,7 +397,7 @@ local function on_gui_selection_state_changed(event)
 		if not global.admin_panel_selected_history_index then global.admin_panel_selected_history_index = {} end
 		global.admin_panel_selected_history_index[player.name] = event.element.selected_index
 		
-		local frame = Tabs.panel_get_active_frame(player)
+		local frame = Gui.panel_get_active_frame(player)
 		if not frame then return end
 		if frame.name ~= "Admin" then return end
 
@@ -405,7 +405,7 @@ local function on_gui_selection_state_changed(event)
 	end
 end
 
-panel_tabs["Admin"] = create_admin_panel
+Gui.tabs["Admin"] = create_admin_panel
 
 
 

@@ -1,6 +1,6 @@
 -- config tab -- 
 
-local Tabs = require 'utils.gui.main'
+local Gui = require 'utils.gui.main'
 
 local functions = {
  	["panel_spectator_switch"] = function(event) 
@@ -82,7 +82,7 @@ local function on_gui_click(event)
 	end
 end
 
-panel_tabs["Config"] = build_config_gui
+Gui.tabs["Config"] = build_config_gui
 
 
 local event = require 'utils.event'

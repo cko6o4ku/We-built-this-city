@@ -6,8 +6,6 @@ local m_gui = require "mod-gui"
 local Color = require 'utils.color_presets'
 local Public = require 'utils.gui'
 local mod = m_gui.get_frame_flow
-
-panel_tabs = {}
 local disabled_tabs = {}
 local icons = {
 	"entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
@@ -28,10 +26,13 @@ Global.register(
     end
 )
 
+Public.events = {on_gui_removal = Event.generate_event_name('on_gui_removal')}
+
 Public.data = {}
 Public.classes = {}
 Public.defines = {}
 Public.names = {}
+Public.tabs = {}
 
 Gui.data = setmetatable({},{
     __call=function(tbl,location,key,value)
@@ -43,6 +44,7 @@ Gui.data = setmetatable({},{
 
     end
 })
+
 
 function Public.get_table()
     return Gui.data
@@ -77,7 +79,7 @@ function Public.set_dropdown_index(dropdown,_item)
 end
 
 function Public.get_tabs_table()
-	return panel_tabs
+	return Public.tabs
 end
 
 Public.my_fixed_width_style = {
@@ -237,7 +239,7 @@ function Public.AddSpacerLine(guiIn)
 end
 
 function Public.get_tabs()
-	return panel_tabs
+	return Public.tabs
 end
 
 function Public.get_disabled_tabs()
@@ -291,7 +293,7 @@ end
 function Public.panel_refresh_active_tab(player)
 	local frame = Public.panel_get_active_frame(player)
 	if not frame then return end
-	panel_tabs[frame.name](player, frame)
+	Public.tabs[frame.name](player, frame)
 end
 
 local function top_button(player)
@@ -312,7 +314,7 @@ end
 
 local function main_frame(player)
 	local left = player.gui.left
-	local tabs = panel_tabs
+	local tabs = Public.tabs
 
 	Public.panel_clear_left_gui(player)
     local frame =left.add{type = 'frame', name = main_frame_name, direction = "vertical"}
@@ -452,11 +454,18 @@ local function on_gui_click(event)
 	Public.refresh(player)
 end
 
---Gui.allow_player_to_toggle_top_element_visibility(main_button_name)
+
+Gui.allow_player_to_toggle_top_element_visibility(main_button_name)
 Event.add(defines.events.on_tick, function(event)
     if Public.left and ((event.tick+10)/(3600*game.speed)) % 15 == 0 then
         Public.left.update()
     end
+end)
+
+Event.add(Gui.events.on_gui_removal, function(player)
+    local b = mod(player).add({type = "sprite-button", name = main_button_name, sprite = "utility/expand_dots", style=m_gui.button_style, tooltip = "The panel of all the goodies!"})
+    b.style.padding=2
+    b.style.width=20
 end)
 Event.add(defines.events.on_player_created, on_player_created)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)

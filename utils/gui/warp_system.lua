@@ -221,6 +221,51 @@ local function draw_remove_warp(parent, player)
         btn.focus()
 end
 
+local function draw_player_warp_only(player, p, table, sub_table, name, warp)
+    if not warp.tag or not warp.tag then
+        for k, v in pairs (game.forces) do
+            v.add_chart_tag(warp.surface,{
+                position=warp.position,
+                text='Warp: '..name,
+                icon={type='item',name=warp_item}
+            })
+        end
+    end
+    table.add{type='label', caption=name, style='caption_label', tooltip="Created by: " .. warp.created_by .. "\nShared: " .. tostring(warp.shared)}
+    --lb.style.minimal_width = 120
+
+    local _flows3 = table.add{type='flow'}
+    _flows3.style.minimal_width = 125
+    Tabs.AddSpacerLine(_flows3)
+
+    local bottom_warp_flow = table.add{type='flow', name = name}
+
+    local go_to_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = go_to_warp_name, sprite='utility/export_slot', tooltip = "Warps you over to: ".. bottom_warp_flow.name }
+    go_to_warp_flow.style.height = 20
+    go_to_warp_flow.style.width = 20
+    if bottom_warp_flow.name ~= "Spawn" then
+        local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, tooltip = "Removes warp: " .. bottom_warp_flow.name, sprite='utility/remove'}
+        remove_warp_flow.style.height = 20
+        remove_warp_flow.style.width = 20
+    else
+        local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Default spawn can't be removed.", sprite='utility/remove'}
+        remove_warp_flow.style.height = 20
+        remove_warp_flow.style.width = 20
+    end
+
+    if p.creating == true then
+        draw_create_warp(sub_table, player, p)
+        p.creating = false
+    end
+
+    if p.removing == true then
+        if bottom_warp_flow.name == p.frame then
+            draw_remove_warp(bottom_warp_flow, player)
+            p.removing = false
+        end
+    end
+end
+
 local function draw_main_frame(player, left)
     local p = player_table[player.index]
     local trusted = Session.get_trusted_table()
@@ -251,140 +296,19 @@ local function draw_main_frame(player, left)
     p.sub_table = sub_table
 
     for name,warp in pairs(warp_table) do
-        if p.only_my_warps and warp.created_by == player.name then
-            if not warp.tag or not warp.tag then
-                for k, v in pairs (game.forces) do
-                    v.add_chart_tag(warp.surface,{
-                        position=warp.position,
-                        text='Warp: '..name,
-                        icon={type='item',name=warp_item}
-                    })
-                end
+        if p.only_my_warps then
+            if (warp.created_by == player.name or warp.created_by == "script") then
+                draw_player_warp_only(player, p, table, sub_table, name, warp)
             end
-            local warps_table_name = table.add{type='label', caption=name, style='caption_label', tooltip="Created by: " .. warp.created_by .. "\nShared: " .. tostring(warp.shared)}
-            --lb.style.minimal_width = 120
-
-            local _flows3 = table.add{type='flow'}
-            _flows3.style.minimal_width = 125
-            Tabs.AddSpacerLine(_flows3)
-
-            local bottom_warp_flow = table.add{type='flow', name = name}
-
-            local go_to_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = go_to_warp_name, sprite='utility/export_slot', tooltip = "Warps you over to: ".. bottom_warp_flow.name }
-            go_to_warp_flow.style.height = 20
-            go_to_warp_flow.style.width = 20
-            if bottom_warp_flow.name ~= "Spawn" then
-                local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, tooltip = "Removes warp: " .. bottom_warp_flow.name, sprite='utility/remove'}
-                remove_warp_flow.style.height = 20
-                remove_warp_flow.style.width = 20
-            else
-                local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Default spawn can't be removed.", sprite='utility/remove'}
-                remove_warp_flow.style.height = 20
-                remove_warp_flow.style.width = 20
-            end
-
-            if p.creating == true then
-                game.print("true")
-                draw_create_warp(sub_table, player, p)
-                p.creating = false
-            end
-
-            if p.removing == true then
-                if bottom_warp_flow.name == p.frame then
-                    draw_remove_warp(bottom_warp_flow, player)
-                    p.removing = false
-                end
-            end
-            goto continue
-        end
-        if (warp.created_by == player.name and not warp.shared) then
-
-            if not warp.tag or not warp.tag then
-                for k, v in pairs (game.forces) do
-                    v.add_chart_tag(warp.surface,{
-                        position=warp.position,
-                        text='Warp: '..name,
-                        icon={type='item',name=warp_item}
-                    })
-                end
-            end
-            local warps_table_name = table.add{type='label', caption=name, style='caption_label', tooltip="Created by: " .. warp.created_by .. "\nShared: " .. tostring(warp.shared)}
-            --lb.style.minimal_width = 120
-
-            local _flows3 = table.add{type='flow'}
-            _flows3.style.minimal_width = 125
-            Tabs.AddSpacerLine(_flows3)
-
-            local bottom_warp_flow = table.add{type='flow', name = name}
-
-            local go_to_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = go_to_warp_name, sprite='utility/export_slot', tooltip = "Warps you over to: ".. bottom_warp_flow.name }
-            go_to_warp_flow.style.height = 20
-            go_to_warp_flow.style.width = 20
-            if bottom_warp_flow.name ~= "Spawn" then
-                local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, tooltip = "Removes warp: " .. bottom_warp_flow.name, sprite='utility/remove'}
-                remove_warp_flow.style.height = 20
-                remove_warp_flow.style.width = 20
-            else
-                local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Default spawn can't be removed.", sprite='utility/remove'}
-                remove_warp_flow.style.height = 20
-                remove_warp_flow.style.width = 20
-            end
-            if p.creating == true then
-                draw_create_warp(sub_table, player, p)
-                p.creating = false
-            end
-
-            if p.removing == true then
-                if bottom_warp_flow.name == p.frame then
-                    draw_remove_warp(bottom_warp_flow, player)
-                    p.removing = false
-                end
-            end
-        elseif warp.shared == true then
-            if not warp.tag or not warp.tag then
-                for k, v in pairs (game.forces) do
-                    v.add_chart_tag(warp.surface,{
-                        position=warp.position,
-                        text='Warp: '..name,
-                        icon={type='item',name=warp_item}
-                    })
-                end
-            end
-            local warps_table_name = table.add{type='label', caption=name, style='caption_label', tooltip="Created by: " .. warp.created_by .. "\nShared: " .. tostring(warp.shared)}
-            --lb.style.minimal_width = 120
-
-            local _flows3 = table.add{type='flow'}
-            _flows3.style.minimal_width = 125
-            Tabs.AddSpacerLine(_flows3)
-
-            local bottom_warp_flow = table.add{type='flow', name = name}
-
-            local go_to_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = go_to_warp_name, sprite='utility/export_slot', tooltip = "Warps you over to: ".. bottom_warp_flow.name }
-            go_to_warp_flow.style.height = 20
-            go_to_warp_flow.style.width = 20
-            if bottom_warp_flow.name ~= "Spawn" then
-                local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, tooltip = "Removes warp: " .. bottom_warp_flow.name, sprite='utility/remove'}
-                remove_warp_flow.style.height = 20
-                remove_warp_flow.style.width = 20
-            else
-                local remove_warp_flow = bottom_warp_flow.add{type = "sprite-button", name = remove_warp_button_name, enabled = "false", tooltip = "Default spawn can't be removed.", sprite='utility/remove'}
-                remove_warp_flow.style.height = 20
-                remove_warp_flow.style.width = 20
-            end
-            if p.creating == true then
-                draw_create_warp(sub_table, player, p)
-                p.creating = false
-            end
-
-            if p.removing == true then
-                if bottom_warp_flow.name == p.frame then
-                    draw_remove_warp(bottom_warp_flow, player)
-                    p.removing = false
-                end
+        else
+            if (warp.created_by == player.name and not warp.shared) then
+                draw_player_warp_only(player, p, table, sub_table, name, warp)
+            elseif warp.shared == true then
+                draw_player_warp_only(player, p, table, sub_table, name, warp)
             end
         end
     end
-    ::continue::
+
     local bottom_flow = frame.add {type = 'flow', direction = 'horizontal'}
 
     bottom_flow.add {type = 'checkbox', state = p.only_my_warps, name = show_only_player_warps, caption = 'Show only my warps.'}

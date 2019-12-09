@@ -1,6 +1,6 @@
 -- this script adds a group button to create groups for your players --
 
-local Tabs = require 'utils.gui.main'
+local Gui = require 'utils.gui.main'
 
 local build_group_gui = (function (player, frame)
 	local group_name_width = 150
@@ -107,7 +107,7 @@ end)
 
 local function refresh_gui()
 	for _, p in pairs(game.connected_players) do
-		local frame = Tabs.panel_get_active_frame(p)
+		local frame = Gui.panel_get_active_frame(p)
 		if frame then
 			if frame.name == "Groups" then
 				local new_group_name = frame.frame2.group_table.new_group_name.text
@@ -115,7 +115,7 @@ local function refresh_gui()
 
 				build_group_gui(p, frame)
 
-				local frame = Tabs.panel_get_active_frame(p)
+				local frame = Gui.panel_get_active_frame(p)
 				frame.frame2.group_table.new_group_name.text = new_group_name
 				frame.frame2.group_table.new_group_description.text = new_group_description
 			end
@@ -139,7 +139,7 @@ local function on_gui_click(event)
 
 	local player = game.players[event.element.player_index]
 	local name = event.element.name
-	local frame = Tabs.panel_get_active_frame(player)
+	local frame = Gui.panel_get_active_frame(player)
 	if not frame then return end
 	if frame.name ~= "Groups" then return end
 
@@ -215,7 +215,7 @@ local function on_gui_click(event)
 	end
 end
 
-panel_tabs["Groups"] = build_group_gui
+Gui.tabs["Groups"] = build_group_gui
 
 
 local event = require 'utils.event'

@@ -15,7 +15,7 @@ Minor changes by ~~~Gerkiz~~~
 
 local event = require 'utils.event'
 local play_time = require 'utils.session_data'
-local Tabs = require 'utils.gui.main'
+local Gui = require 'utils.gui.main'
 
 local symbol_asc = "▲"
 local symbol_desc = "▼"
@@ -291,7 +291,7 @@ local function on_gui_click(event)
 	if not event.element.name then return end
 	local player = game.players[event.element.player_index]
 	
-	local frame = Tabs.panel_get_active_frame(player)
+	local frame = Gui.panel_get_active_frame(player)
 	if not frame then return end
 	if frame.name ~= "Players" then return end
 	
@@ -353,14 +353,14 @@ local function on_gui_click(event)
 			global.player_list.last_poke_tick[event.element.player_index] = game.tick
 			local p = game.players[poked_player]
 			global.player_list.pokes[p.index] = global.player_list.pokes[p.index] + 1
-			Tabs.refresh(player)
+			Gui.refresh(player)
 		end
 	end
 end
 
 local function refresh()
 	for _, player in pairs(game.connected_players) do
-		local frame = Tabs.panel_get_active_frame(player)
+		local frame = Gui.panel_get_active_frame(player)
 		if frame then
 			if frame.name ~= "Players" then return end		
 			player_list_show(player, frame, global.player_list.sorting_method[player.index])
@@ -389,7 +389,7 @@ local on_init = function()
 	global.player_list.sorting_method = {}
 end
 
-panel_tabs["Players"] = player_list_show
+Gui.tabs["Players"] = player_list_show
 
 event.on_init(on_init)
 event.add(defines.events.on_player_joined_game, on_player_joined_game)

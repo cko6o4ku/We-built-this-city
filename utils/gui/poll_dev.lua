@@ -4,7 +4,7 @@ local Event = require 'utils.event'
 local Server = require 'utils.server'
 local Game = require 'utils.game'
 local session = require 'utils.session_data'
-local Tabs = require 'utils.gui.main'
+local Guis = require 'utils.gui.main'
 
 local insert = table.insert
 
@@ -427,7 +427,7 @@ local function toggle(event)
     if main_frame then
         remove_main_frame(main_frame, left, event.player)
     else
-        Tabs.panel_call_tab(p, "Polls")
+        Guis.panel_call_tab(p, "Polls")
     end
 end
 
@@ -639,7 +639,7 @@ local function show_new_poll(poll_data)
         if block_notify[p.index] then
           p.print(message)
         else
-          local frame = Tabs.panel_call_tab(p, "Polls")
+          local frame = Guis.panel_call_tab(p, "Polls")
           p.print(message)
             if frame and frame.valid then
                 local data = Gui.get_data(frame)
@@ -647,7 +647,7 @@ local function show_new_poll(poll_data)
                 update_poll_viewer(data)
             else
                 player_poll_index[p.index] = nil
-                Tabs.panel_call_tab(p, "Polls")
+                Guis.panel_call_tab(p, "Polls")
             end
         end
     end
@@ -1100,7 +1100,7 @@ Gui.on_click(
                     main_frame_data.poll_index = poll_index
                     update_poll_viewer(main_frame_data)
                 else
-                    Tabs.panel_call_tab(p, "Polls")
+                    Guis.panel_call_tab(p, "Polls")
                 end
             end
         end
@@ -1297,6 +1297,6 @@ function Class.send_poll_result_to_discord(id)
     Server.to_discord_embed(message)
 end
 
-panel_tabs["Polls"] = draw_main_frame
+Gui.tabs["Polls"] = draw_main_frame
 
 return Class

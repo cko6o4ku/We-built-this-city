@@ -12,7 +12,7 @@ local surface_name = require 'utils.surface'.get_surface_name()
 local surface_index = require 'utils.surface'.get_surface()
 local Score = require 'utils.gui.score'
 local Config = require 'map_gen.mps_0_17.config'
-local Tabs = require 'utils.gui.main'
+local Gui = require 'utils.gui.main'
 
 local Public = {}
 
@@ -27,7 +27,7 @@ function Public.SeparateSpawnsPlayerCreated(player_index)
     local player = game.players[player_index]
 
     -- Make sure spawn control tab is disabled
-    Tabs.set_tab(player, "Spawn Controls", false)
+    Gui.set_tab(player, "Spawn Controls", false)
 
     -- This checks if they have just joined the server.
     -- No assigned force yet.
@@ -1242,7 +1242,7 @@ function Public.SpawnOptsGuiClick(event)
         Utils.SendBroadcastMsg({"oarc-player-is-joining-main-force", player.name})
         Utils.ChartArea(player.force, player.position, math.ceil(global.scenario_config.gen_settings.land_area_tiles/global_data.chunk_size), player.surface)
         -- Unlock spawn control gui tab
-        --Tabs.set_tab(player, "Spawn Controls", true)
+        --Gui.set_tab(player, "Spawn Controls", true)
         game.permissions.get_group("Default").add_player(player)
         Score.init_player_table(player)
 
@@ -1298,7 +1298,7 @@ function Public.SpawnOptsGuiClick(event)
         end
 
         -- Unlock spawn control gui tab
-        Tabs.set_tab(player, "Spawn Controls", true)
+        Gui.set_tab(player, "Spawn Controls", true)
         --game.permissions.get_group("Default").add_player(player)
         Score.init_player_table(player)
 
@@ -1410,7 +1410,7 @@ function Public.SharedSpwnOptsGuiClick(event)
                     joiningPlayer.force = game.players[spawnName].force
 
                     -- Unlock spawn control gui tab
-                    Tabs.set_tab(joiningPlayer, "Spawn Controls", true)
+                    Gui.set_tab(joiningPlayer, "Spawn Controls", true)
                     game.permissions.get_group("Default").add_player(joiningPlayer)
                     Score.init_player_table(joiningPlayer)
                     return
@@ -1432,7 +1432,7 @@ function Public.SharedSpwnOptsGuiClick(event)
 
                 -- Tell other player they are requesting a response.
                 game.players[spawnName].print({"oarc-player-requesting-join-you", player.name})
-                Tabs.refresh(game.players[spawnName])
+                Gui.refresh(game.players[spawnName])
                 break
                 end
             end
@@ -1631,7 +1631,7 @@ function Public.SpawnCtrlGuiOptionsSelect(event)
                 Utils.SendBroadcastMsg({"oarc-stop-shared-base", player.name})
             end
         end
-        Tabs.refresh(player)
+        Gui.refresh(player)
     end
     if (name == "alwaysallowaccessToggle") then
         if event.element.state then
@@ -1650,7 +1650,7 @@ function Public.SpawnCtrlGuiOptionsSelect(event)
                 Utils.SendBroadcastMsg({"oarc-stop-always-shared-base", player.name})
             end
         end
-        Tabs.refresh(player)
+        Gui.refresh(player)
     end
 end
 
@@ -1675,7 +1675,7 @@ function Public.SpawnCtrlGuiClick(event)
     if (elemName == "setRespawnLocation") then
         if Public.DoesPlayerHaveCustomSpawn(player) then
             Public.ChangePlayerSpawn(player, player.position)
-            Tabs.refresh(player)
+            Gui.refresh(player)
             player.print({"oarc-spawn-point-updated"})
         end
     end
@@ -1685,7 +1685,7 @@ function Public.SpawnCtrlGuiClick(event)
         if ((event.element.parent.join_queue_dropdown == nil) or
             (event.element.parent.join_queue_dropdown.selected_index == 0)) then
             player.print({"oarc-selected-player-not-wait"})
-            Tabs.refresh(player)
+            Gui.refresh(player)
             return
         end
 
@@ -1695,14 +1695,14 @@ function Public.SpawnCtrlGuiClick(event)
         if ((game.players[joinQueuePlayerChoice] == nil) or
             (not game.players[joinQueuePlayerChoice].connected)) then
             player.print({"oarc-selected-player-not-wait"})
-            Tabs.refresh(player)
+            Gui.refresh(player)
             return
         end
 
         if (elemName == "reject_player_request") then
             player.print({"oarc-reject-joiner", joinQueuePlayerChoice})
             Utils.SendMsg(joinQueuePlayerChoice, {"oarc-your-request-rejected"})
-            Tabs.refresh(player)
+            Gui.refresh(player)
 
             -- Close the waiting players menu
             if (game.players[joinQueuePlayerChoice].gui.screen.join_shared_spawn_wait_menu) then
@@ -1726,7 +1726,7 @@ function Public.SpawnCtrlGuiClick(event)
                     table.remove(global.sharedSpawns[player.name].joinQueue, index)
                 end
             end
-            Tabs.refresh(player)
+            Gui.refresh(player)
             -- If player exists, then do stuff.
             if (game.players[joinQueuePlayerChoice]) then
                 -- Send an announcement
@@ -1746,7 +1746,7 @@ function Public.SpawnCtrlGuiClick(event)
                 joiningPlayer.force = game.players[player.name].force
 
                 -- Unlock spawn control gui tab
-                Tabs.set_tab(joiningPlayer, "Spawn Controls", true)
+                Gui.set_tab(joiningPlayer, "Spawn Controls", true)
                 game.permissions.get_group("Default").add_player(joiningPlayer)
                 Score.init_player_table(joiningPlayer)
             else
@@ -2180,8 +2180,8 @@ function Public.BuddySpawnRequestMenuClick(event)
         Utils.SendBroadcastMsg(requesterName .. " and " .. player.name .. " are joining the game together!")
 
         -- Unlock spawn control gui tab
-        Tabs.set_tab(player, "Spawn Controls", true)
-        Tabs.set_tab(game.players[requesterName], "Spawn Controls", true)
+        Gui.set_tab(player, "Spawn Controls", true)
+        Gui.set_tab(game.players[requesterName], "Spawn Controls", true)
         --game.permissions.get_group("Default").add_player(player)
         --game.permissions.get_group("Default").add_player(requesterName)
         Score.init_player_table(player)
@@ -2226,6 +2226,6 @@ function Public.DisplayPleaseWaitForSpawnDialog(player, delay_seconds)
     UtilsGui.AddLabel(pleaseWaitGui, "warning_lbl1", wait_warning_text, UtilsGui.my_warning_style)
 end
 
-panel_tabs["Spawn Controls"] = Public.CreateSpawnCtrlGuiTab
+Gui.tabs["Spawn Controls"] = Public.CreateSpawnCtrlGuiTab
 
 return Public

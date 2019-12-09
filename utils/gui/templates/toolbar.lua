@@ -25,18 +25,31 @@ function toolbar.draw(event)
     local player = game.players[event.player_index]
     if not player then return end
     local frame = mod(player)
+    --frame.clear()
 
     if not Gui.data('toolbar') then return end
     for _, button in pairs(Gui.data('toolbar')) do
         if not player.admin then
         return
-        else button:draw(frame)
+        else
+            if frame[button.name] then
+                game.print(serpent.block(frame[button.name]))
+                frame[button.name].clear()
+            else
+                button:draw(frame)
+            end
         end
 	end
+
+   --script.raise_event(Gui.events.on_gui_removal,
+   --{
+   --    player = player
+   --})
+
 end
 
 Event.add(defines.events.on_player_joined_game, toolbar.draw)
---Event.add(defines.events.on_player_promoted, toolbar.draw)
-Event.add(defines.events.on_player_demoted, toolbar.remove)
+Event.add(defines.events.on_player_promoted, toolbar.draw)
+Event.add(defines.events.on_player_demoted, toolbar.draw)
 
 return toolbar
