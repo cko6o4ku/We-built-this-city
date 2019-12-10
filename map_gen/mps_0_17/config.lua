@@ -7,7 +7,8 @@ global.server_msg = "Rules: Be polite. Ask before changing other players stuff. 
 
 global.scenario_info_msg = "This scenario gives you and/or your friends your own starting area.\n"..
 "You can be on the main team or your own. All teams are friendly.\n"..
-"If you leave in the first 15 minutes, your base and character will be deleted!"
+"If you leave in the first 15 minutes, your base and character will be deleted!\n"..
+"Repeated joining and leaving will result in a temporary ban."
 
 global.enable_vanilla_spawns = false
 
@@ -41,6 +42,9 @@ global.enable_autofill = true
 
 -- Enable vanilla loaders
 global.enable_loaders = true
+
+-- Disable nukes
+global.disable_nukes = true
 
 -- Enable shared vision between teams (all teams are COOP regardless)
 global.enable_shared_team_vision = true

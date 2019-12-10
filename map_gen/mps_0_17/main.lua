@@ -184,7 +184,6 @@ end)
 ----------------------------------------
 Event.add(defines.events.on_player_joined_game, function(event)
     Utils.PlayerJoinedMessages(event)
-    game.speed = 5
 end)
 
 Event.add(defines.events.on_player_created, function(event)
@@ -301,7 +300,10 @@ end)
 ----------------------------------------
 Event.add(defines.events.on_robot_built_entity, function (event)
     if global.frontier_rocket_silo_mode then
-        Silo.BuildSiloAttempt(event)
+        local e = event.entity
+        if e and e.valid then
+            Silo.BuildSiloAttempt(event)
+        end
     end
 end)
 
@@ -341,6 +343,11 @@ Event.add(defines.events.on_research_finished, function(event)
     if global.enable_loaders then
         Utils.EnableLoaders(event)
     end
+
+    if global.disable_nukes then
+        Utils.DisableTech(research.force, 'atomic-bomb')
+    end
+
 end)
 
 ----------------------------------------

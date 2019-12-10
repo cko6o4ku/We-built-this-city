@@ -8,8 +8,10 @@ local m_random = math.random
 
 local Public = {}
 
+Public.debug = false
+
 local function d_print(name, pos)
-	if not _DEBUG then return end
+	if not Public.debug then return end
 	game.print("Spawned "..name.." at: x=" ..pos.x.. ", y=" ..  pos.y)
 end
 

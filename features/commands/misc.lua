@@ -254,14 +254,14 @@ commands.add_command(
 		        p_armor.put({name = "night-vision-equipment"})
 		        p_armor.put({name = "battery-mk2-equipment"})
 		        p_armor.put({name = "battery-mk2-equipment"})
-				local item = game.item_prototypes
+				local proto = game.item_prototypes
 				local i = 0
-				for _k, _v in pairs(item) do
+				for name, item in pairs(proto) do
 					i = i + 1
-					if _k and _v.type ~= "mining-tool" then
+					if name and item.type ~= "mining-tool" then
 						_a[k].character_inventory_slots_bonus["creative"] = tonumber(i)
 						v.character_inventory_slots_bonus = _a[k].character_inventory_slots_bonus["creative"]
-						v.insert{name=_k, count=_v.stack_size}
+						v.insert{name=name, count=item.stack_size}
 						v.print("Inserted all base items.", Color.success)
 						_a.creative_enabled = true
 					end

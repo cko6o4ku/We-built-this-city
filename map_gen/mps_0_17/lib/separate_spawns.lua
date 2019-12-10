@@ -15,6 +15,7 @@ local Config = require 'map_gen.mps_0_17.config'
 local Gui = require 'utils.gui.main'
 
 local Public = {}
+Public.removal = {}
 
 --------------------------------------------------------------------------------
 -- EVENT RELATED FUNCTIONS
@@ -72,21 +73,21 @@ end
 
 
 function Public.Remove_area(pos, chunk_radius)
-    local data = Table.get_table()
+    local data = Public.removal
     local c_pos = Utils.GetChunkPosFromTilePos(pos)
     for i=-chunk_radius,chunk_radius do
         for k=-chunk_radius,chunk_radius do
             local x = c_pos.x+i
             local y = c_pos.y+k
-            table.insert(data.removal_list, {pos={x=x,y=y}})
+            table.insert(data, {pos={x=x,y=y}})
         end
     end
 end
 
 function Public.Init_remove()
-    local data = Table.get_table()
-    while (#data.removal_list > 0) do
-        local c_remove = table.remove(data.removal_list)
+    local data = Public.removal
+    while (#data > 0) do
+        local c_remove = table.remove(data)
         local c_pos = c_remove.pos
         game.surfaces[surface_name].delete_chunk(c_pos)
     end
@@ -163,9 +164,9 @@ function Public.FindUnusedSpawns(player, remove_player)
                 global.uniqueSpawns[player.name] = nil
 
                 log("Removing base: " .. spawnPos.x .. "," .. spawnPos.y)
-                Public.Remove_area(spawnPos, global.check_spawn_ungenerated_chunk_radius)
+                Public.Remove_area(spawnPos, global.check_spawn_ungenerated_chunk_radius+5)
                 Public.Init_remove()
-                Utils.SendBroadcastMsg("Press F for " .. player.name .. ". Their base was deleted because they left within " ..global.min_online.. "minutes of joining.")
+                Utils.SendBroadcastMsg("Press F for " .. player.name .. ". Their base was deleted because they left within " ..global.min_online.. " minutes of joining.")
         end
 
         -- remove that player's cooldown setting
