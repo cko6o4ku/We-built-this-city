@@ -36,6 +36,11 @@ function Public.create_surface()
 		["trees"] = {frequency = 1, size = 1, richness = 1},
 		["enemy-base"] = {frequency = 0.33, size = 0.33, richness = 1}
 	}
+	local mine = {}
+	mine["control-setting:moisture:bias"] = 0.33
+	mine["control-setting:moisture:frequency:multiplier"] = 1
+
+	map_gen_settings.property_expression_names = mine
 
 	if (global_data.island) then
 	    map_gen_settings.property_expression_names.elevation = "0_17-island"
