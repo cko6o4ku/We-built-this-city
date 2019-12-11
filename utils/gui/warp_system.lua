@@ -598,8 +598,6 @@ Gui.on_click(
 
         local position = player.position
 
-        if player.admin then goto continue end
-
         if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 > 64 then
             player.print("You are not standing on a warp platform.", Color.warning)
             return
@@ -609,8 +607,6 @@ Gui.on_click(
             player.print('Destination is source warp: ' .. p.frame, Color.fail)
             return
         end
-
-        ::continue::
 
         Public.clear_player_table(player)
 
