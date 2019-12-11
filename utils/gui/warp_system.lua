@@ -87,7 +87,7 @@ function Public.make_warp_point(player, position,surface,force,name,shared)
     local old_tile = surface.get_tile(offset).name
     local base_tiles = {}
     local tiles = {}
-    local shared = shared or false
+    local _shared = shared or false
     -- player_table makes the base template to make the warp point
     for x = -radius-2, radius+2 do
         for y = -radius-2, radius+2 do
@@ -112,7 +112,7 @@ function Public.make_warp_point(player, position,surface,force,name,shared)
         text='Warp: '..name,
         icon={type='item',name=warp_item}
     })
-    warp_table[name] = {tag=tag,position=tag.position,surface=surface,old_tile=old_tile, created_by=created_by,shared=shared}
+    warp_table[name] = {tag=tag,position=tag.position,surface=surface,old_tile=old_tile, created_by=created_by,shared=_shared}
 end
 
 function Public.make_tag(name, pos, shared)
@@ -562,7 +562,11 @@ Gui.on_click(
 
         p.frame = event.element.parent.name
         Public.remove_warp_point(p.frame)
-        game.print(player.name .. " removed warp: " .. p.frame, Color.warning)
+        if p.shared == true then
+            game.print(player.name .. " removed warp: " .. p.frame, Color.warning)
+        elseif p.shared == false then
+            player.print("Removed warp: " .. p.frame, Color.warning)
+        end
         Public.clear_player_table(player)
         Public.refresh_gui()
     end
@@ -592,13 +596,23 @@ Gui.on_click(
 
         local warp = warp_table[p.frame]
 
-        Public.clear_player_table(player)
-
         local position = player.position
+
+        if player.admin then goto continue end
+
+        if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 > 64 then
+            player.print("You are not standing on a warp platform.", Color.warning)
+            return
+        end
+
         if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
             player.print('Destination is source warp: ' .. p.frame, Color.fail)
             return
         end
+
+        ::continue::
+
+        Public.clear_player_table(player)
 
         Public.refresh_gui_player(player)
 
@@ -623,11 +637,6 @@ Gui.on_click(
         if not validate_player(player) then return end
 
         local p = player_table[player.index]
-
-        if p.spam > game.tick then
-            player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
-            return
-        end
 
         p.frame = event.element.parent.name
 
@@ -665,7 +674,11 @@ Gui.on_click(
             if warp_table[new] then player.print("Warp name already exists!", Color.fail) return end
             p.spam = game.tick + 900
             Public.make_warp_point(player,position,player.surface,player.force,new,shared)
-            game.print(player.name .. " created warp: " .. new, Color.success)
+            if p.shared == true then
+                game.print(player.name .. " created warp: " .. new, Color.success)
+            elseif p.shared == false then
+                player.print("Created warp: " .. new, Color.success)
+            end
             Public.refresh_gui()
         end
         return

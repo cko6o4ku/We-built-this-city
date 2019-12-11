@@ -27,18 +27,13 @@ function Public.get_table()
   return this
 end
 
-local function has_value (tab, val)
-    for index, value in pairs(tab) do
-        if val == index then
-            if value then
-              return true
-            end
-        end
-    end
-    return false
+local function has_value(tab)
+  local count = 0
+  for _, k in pairs(tab) do count = count + 1 end
+  return count
 end
 
-local function return_value (tab)
+local function return_value(tab)
     for index, value in pairs(tab) do
       if value then
         local temp
@@ -132,9 +127,15 @@ local function is_chest_empty(entity, player)
   local inv = this.inf_mode[number]
 
     if inv == 2 then
-      if has_value(this.inf_storage, number) then
-        this.storage[player][number] = this.inf_storage[number]
+      for k, v in pairs(this.inf_storage) do
+        if k == number then
+          if not v then goto no_storage end
+          if (has_value(v) >= 1) then
+            this.storage[player][number] = this.inf_storage[number]
+          end
+        end
       end
+      ::no_storage::
 
       this.inf_chests[number]  = nil
       this.inf_storage[number]  = nil
@@ -156,9 +157,9 @@ local function on_pre_player_mined_item(event)
 
   if entity.name ~= "infinity-chest" then return end
     is_chest_empty(entity, player.index)
-    if player.gui.center then
-      player.gui.center.clear()
-    end
+  local data = this.inf_gui[player.name]
+  if not data then return end
+  data.frame.destroy()
 end
 
 local function update_chest()

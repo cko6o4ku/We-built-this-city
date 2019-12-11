@@ -33,7 +33,6 @@ function toolbar.draw(event)
         return
         else
             if frame[button.name] then
-                game.print(serpent.block(frame[button.name]))
                 frame[button.name].clear()
             else
                 button:draw(frame)

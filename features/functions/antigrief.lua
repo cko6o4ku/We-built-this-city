@@ -72,7 +72,6 @@ local function on_player_ammo_inventory_changed(event)
 	if playtime < 1296000 then
 		local nukes = player.remove_item({name="atomic-bomb", count=1000})
 		if nukes > 0 then
-			player.surface.spill_item_stack(player.position, {name = "atomic-bomb", count = nukes}, false)
 			player.print("You have not grown accustomed to this technology yet.", {r=0.22, g=0.99, b=0.99})
 			Server.to_discord_bold(table.concat{'[Nuke] ' .. player.name .. ' tried to equip nukes but was not trusted. Ask and admin to /trust " .. player.name.. "."'})
 			player.character.health = 0
