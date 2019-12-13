@@ -11,14 +11,9 @@ Public.events = {rank_change = Event.generate_event_name('rank_change')}
 Public._rank = {}
 Public._group = {}
 
-local function p_log(string)
+local function _log(string)
     if not __DEBUG then return end
-    return log("P_LOG: " .. serpent.block(string))
-end
-
-local function s_log(string)
-    if not __DEBUG then return end
-    return log("S_LOG: " .. serpent.block(string))
+    return log("RAW: " .. serpent.block(string))
 end
 
 local function tick_to_min(tick)
@@ -28,7 +23,7 @@ end
 
 function Public.output_ranks(player)
     local this = RT.get_table()
-    local _player = player or game.player.name
+    local _player = player or game.player or game.player.name
     if not _player then return end
     for power,rank in pairs(this.ranks) do
         local output = power..') '..rank.name
@@ -41,12 +36,12 @@ function Public.output_ranks(player)
     end
 end
 
-function Public.add_ranks(names)
+function Public.add_ranks()
     local this = RT.get_table()
     return this.ranks
 end
 
-function Public.add_groups(names)
+function Public.add_groups()
     local this = RT.get_table()
     return this.groups
 end
@@ -64,7 +59,7 @@ end
 function Public.get_rank(player)
     local this = RT.get_table()
     if not player then return false end
-    local _ranks = Public.add_ranks(true)
+    local _ranks = Public.add_ranks()
     local _return
     if Server.is_type(player,'table') then
         if player.index then
@@ -75,8 +70,8 @@ function Public.get_rank(player)
     else
         _return = game.players[player] and _ranks[game.players[player].permission_group.name]
         or Table.autokey(_ranks,player) and Table.autokey(_ranks,player)
-        or string.contains(player,'server') and Public.get_rank(this.meta.root)
-        or string.contains(player,'root') and Public.get_rank(this.meta.root)
+        or string.match(player,'server') and Public.get_rank(this.meta.root)
+        or string.match(player,'root') and Public.get_rank(this.meta.root)
         or nil
     end
     return _return
@@ -84,7 +79,7 @@ end
 
 function Public.get_group(mixed)
     if not mixed then return false end
-    local _groups = Public.add_groups(true)
+    local _groups = Public.add_groups()
     local rank = Public.get_rank(mixed)
     return rank and rank.group
     or Server.is_type(mixed,'table') and mixed.ranks and mixed
@@ -115,7 +110,7 @@ function Public.give_rank(player,rank,by_player,tick)
     local by_player_name = 'script' or player.name or Server.is_type(by_player,'string') and by_player
     local rank = Public.get_rank(rank) or Public.get_rank(this.meta.default)
     local old_rank = Public.get_rank(player) or Public.get_rank(this.meta.default)
-    local message = 'Ranking.rank-down'
+    local message = 'ranking.rank-down'
     -- messaging
     if old_rank.name == rank.name then return end
     if rank.power < old_rank.power then message = 'ranking.rank-up' player.play_sound{path='utility/achievement_unlocked'}
@@ -232,7 +227,7 @@ end
 
 function Public._rank:edit(key,set_value,value)
     if game then return end
-    p_log('Edited Rank: '..self.name..'/'..key)
+    _log('Edited Rank: '..self.name..'/'..key)
     if set_value then self[key] = value return end
     if key == 'disallow' then
         if value ~= {} then
@@ -248,7 +243,7 @@ function Public._group:create(obj)
     local this = RT.get_table()
     if game then return end
     if not Server.is_type(obj.name,'string') then return end
-    p_log('Created Group: '..obj.name)
+    _log('Created Group: '..obj.name)
     setmetatable(obj,{__index=Public._group})
     self.index = #this.groups+1
     obj.ranks = {}
@@ -264,12 +259,11 @@ function Public._group:add_rank(obj)
     not Server.is_type(obj.short_hand,'string') or
     not Server.is_type(obj.tag,'string') or
     not Server.is_type(obj.colour,'table') then return end
-    p_log('Created Rank: '..obj.name)
+    _log('Created Rank: '..obj.name)
     setmetatable(obj,{__index=Public._rank})
     obj.group = self
     obj.allow = obj.allow or {}
     obj.disallow = obj.disallow or {}
-    s_log(self.highest)
     obj.power = obj.power and self.highest and self.highest.power+obj.power or obj.power or self.lowest and self.lowest.power+1 or nil
     setmetatable(obj.allow,{__index=self.allow})
     setmetatable(obj.disallow,{__index=self.disallow})
@@ -282,7 +276,7 @@ end
 
 function Public._group:edit(key,set_value,value)
     if game then return end
-    p_log('Edited Group: '..self.name..'/'..key)
+    _log('Edited Group: '..self.name..'/'..key)
     if set_value then self[key] = value return end
     if key == 'disallow' then
         self.disallow = Table.merge(self.disallow,value,true)

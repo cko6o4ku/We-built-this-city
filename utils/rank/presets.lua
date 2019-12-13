@@ -72,7 +72,7 @@ local jail = Public._group:create{
 root:add_rank{
     name='Root',
     short_hand='Root',
-    tag='[Root]',
+    tag='',
     colour=Color.white,
     is_root=true,
     is_admin=true,
@@ -83,7 +83,7 @@ root:add_rank{
 admin:add_rank{
     name='Admin',
     short_hand='Admin',
-    tag='[Admin]',
+    tag='',
     colour={r=233,g=63,b=233},
     is_admin=true,
     is_spectator=true,
@@ -93,7 +93,7 @@ admin:add_rank{
 user:add_rank{
     name='Member',
     short_hand='Mem',
-    tag='[Member]',
+    tag='',
     colour={r=24,g=172,b=188},
     disallow={
         'set_auto_launch_rocket',
@@ -127,7 +127,7 @@ jail:add_rank{
     base_afk_time=false
 }
 
-function Public._auto_edit_ranks()
+function Public.adjust_ranks()
     local this = RT.get_table()
     for power,rank in pairs(this.ranks) do
         if this.ranks[power-1] then
@@ -144,30 +144,22 @@ function Public._auto_edit_ranks()
 end
 
 -- used to force rank to be read-only
-function Public.add_groups(name)
+function Public.add_groups()
     local this = RT.get_table()
-    if name then
-        if name then
-            local _return = {}
-            for _, group in pairs(this.groups) do
-                _return[group.name] = group
-            end
-            return _return
-        end
+    local _return = {}
+    for _, group in pairs(this.groups) do
+        _return[group.name] = group
     end
-    return this.groups
+    return _return
 end
 
-function Public.add_ranks(name)
+function Public.add_ranks()
     local this = RT.get_table()
-    if name then
-        local _return = {}
-        for _, rank in pairs(this.ranks) do
-            _return[rank.name] = rank
-        end
-        return _return
+    local _return = {}
+    for _, rank in pairs(this.ranks) do
+        _return[rank.name] = rank
     end
-    return this.ranks
+    return _return
 end
 
 function Public._metadata()

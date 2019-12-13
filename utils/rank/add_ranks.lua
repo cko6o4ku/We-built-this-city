@@ -1,6 +1,6 @@
 local Public = require 'utils.rank.main'
 
-local groups = Public.add_groups(true)
+local groups = Public.add_groups()
 
 groups['Root']:edit('allow',false,{
     ['player-list']=true,
@@ -65,7 +65,7 @@ groups['Jail']:edit('allow',false,{
 groups['Root']:add_rank{
     name='Owner',
     short_hand='Owner',
-    tag='[Owner]',
+    tag='',
     time=nil,
     colour={r=170,g=0,b=0},
     disallow={},
@@ -76,7 +76,7 @@ groups['Root']:add_rank{
 groups['Admin']:add_rank{
     name='Mod',
     short_hand='Mod',
-    tag='[Mod]',
+    tag='',
     colour={r=0,g=170,b=0},
     disallow={},
     is_admin = true,
@@ -87,14 +87,14 @@ groups['Admin']:add_rank{
 groups['User']:add_rank{
     name='Veteran',
     short_hand='Vet',
-    tag='[Veteran]',
+    tag='',
     time=600,
     power=1,
     colour={r=26,g=118,b=156},
     base_afk_time=60
 }
 
-local ranks = Public.add_ranks(true)
+local ranks = Public.add_ranks()
 
 ranks['Admin']:edit('allow',false,{
     ['game-settings']=true,
@@ -116,7 +116,7 @@ ranks['Member']:edit('allow',false,{
     ['make-warp']=true,
     ['nuke']=true,
     ['base-damage']=true,
-    ['varified']=true,
+    ['verified']=true,
     ['kill']=true,
     ['decon']=true,
     ['capsules']=true

@@ -16,6 +16,7 @@ Minor changes by ~~~Gerkiz~~~
 local event = require 'utils.event'
 local play_time = require 'utils.session_data'
 local Gui = require 'utils.gui.main'
+local Ranks = require 'utils.rank.main'
 
 local symbol_asc = "▲"
 local symbol_desc = "▼"
@@ -148,6 +149,7 @@ local function get_sorted_list(sort_by)
 		player_list[i] = {}
 		player_list[i].rank = get_rank(player)
 		player_list[i].name = player.name
+		player_list[i].admin = player.admin
 
 		local t = 0
 		if play_table[player.name] then t = play_table[player.name] end
@@ -176,8 +178,8 @@ local function player_list_show(player, frame, sort_by)
 	frame.style.padding = 8
 
 	-- Header management
-	local t = frame.add { type = "table", name = "player_list_panel_header_table", column_count = 5 }
-	local column_widths = {tonumber(40), tonumber(250), tonumber(250), tonumber(150), tonumber(100)}
+	local t = frame.add { type = "table", name = "player_list_panel_header_table", column_count = 6 }
+	local column_widths = {tonumber(40), tonumber(150), tonumber(150), tonumber(120), tonumber(120), tonumber(100)}
 	for _, w in ipairs(column_widths) do
 		local label = t.add { type = "label", caption = "" }
 		label.style.minimal_width = w
@@ -194,19 +196,22 @@ local function player_list_show(player, frame, sort_by)
 				.. tostring(#game.players - #game.connected_players)
 				.. "[/color]"
 				.. " Offline",
-		[3] = "Total Time",
-		[4] = "Current Time",
-		[5] = "Poke"
+		[3] = "Rank",
+		[4] = "Total Time",
+		[5] = "Current Time",
+		[6] = "Poke"
 	}
 	local header_modifier = {
 		["name_asc"]  = function (h) h[2] = symbol_asc  .. h[2] end,
 		["name_desc"] = function (h) h[2] = symbol_desc .. h[2] end,
-		["total_time_played_asc"]  = function (h) h[3] = symbol_asc  .. h[3] end,
-		["total_time_played_desc"] = function (h) h[3] = symbol_desc .. h[3] end,
-		["time_played_asc"]  = function (h) h[4] = symbol_asc  .. h[4] end,
-		["time_played_desc"] = function (h) h[4] = symbol_desc .. h[4] end,
-		["pokes_asc"]  = function (h) h[5] = symbol_asc  .. h[5] end,
-		["pokes_desc"] = function (h) h[5] = symbol_desc .. h[5] end
+		["rank_asc"]  = function (h) h[3] = symbol_asc  .. h[3] end,
+		["rank_desc"] = function (h) h[3] = symbol_desc .. h[3] end,
+		["total_time_played_asc"]  = function (h) h[4] = symbol_asc  .. h[4] end,
+		["total_time_played_desc"] = function (h) h[4] = symbol_desc .. h[4] end,
+		["time_played_asc"]  = function (h) h[5] = symbol_asc  .. h[5] end,
+		["time_played_desc"] = function (h) h[5] = symbol_desc .. h[5] end,
+		["pokes_asc"]  = function (h) h[6] = symbol_asc  .. h[6] end,
+		["pokes_desc"] = function (h) h[6] = symbol_desc .. h[6] end
 	}
 	
 	if sort_by then
@@ -237,12 +242,12 @@ local function player_list_show(player, frame, sort_by)
 	local player_list_panel_table = frame.add { type = "scroll-pane", name = "scroll_pane", direction = "vertical", horizontal_scroll_policy = "never", vertical_scroll_policy = "auto"}
 	player_list_panel_table.style.maximal_height = 400
 
-	player_list_panel_table = player_list_panel_table.add { type = "table", name = "player_list_panel_table", column_count = 5 }
+	player_list_panel_table = player_list_panel_table.add { type = "table", name = "player_list_panel_table", column_count = 6 }
 	
 	local player_list = get_sorted_list(sort_by)
 	for i = 1, #player_list, 1 do
 		-- Icon
-		local sprite = player_list_panel_table.add { type = "sprite", name = "player_rank_sprite_" .. i, sprite = player_list[i].rank }
+		local sprite = player_list_panel_table.add { type = "sprite", name = "player_rank_sprite_" .. i, sprite = player_list[i].rank}
 		sprite.style.minimal_width = column_widths[1]
 		sprite.style.maximal_width = column_widths[1]
 		
@@ -257,15 +262,19 @@ local function player_list_show(player, frame, sort_by)
 		label.style.minimal_width = column_widths[2]
 		label.style.maximal_width = column_widths[2]
 
-		-- Total time
-		local label = player_list_panel_table.add { type = "label", name = "player_list_panel_player_total_time_played_" .. i, caption = player_list[i].total_played_time }
+		local label = player_list_panel_table.add { type = "label", name = "player_list_panel_rank_" .. i, caption =  Ranks.get_rank(player_list[i].name).name, tooltip = "Admin: " ..  tostring(player_list[i].admin) }
 		label.style.minimal_width = column_widths[3]
 		label.style.maximal_width = column_widths[3]
 
-		-- Current time
-		local label = player_list_panel_table.add { type = "label", name = "player_list_panel_player_time_played_" .. i, caption = player_list[i].played_time }
+		-- Total time
+		local label = player_list_panel_table.add { type = "label", name = "player_list_panel_player_total_time_played_" .. i, caption = player_list[i].total_played_time }
 		label.style.minimal_width = column_widths[4]
 		label.style.maximal_width = column_widths[4]
+
+		-- Current time
+		local label = player_list_panel_table.add { type = "label", name = "player_list_panel_player_time_played_" .. i, caption = player_list[i].played_time }
+		label.style.minimal_width = column_widths[5]
+		label.style.maximal_width = column_widths[5]
 
 		-- Poke
 		local flow = player_list_panel_table.add { type = "flow", name = "button_flow_" .. i, direction = "horizontal" }
@@ -307,13 +316,21 @@ local function on_gui_click(event)
 
 		["player_list_panel_header_3"] = function ()
 			if string.find(event.element.caption, symbol_desc) then
+				player_list_show(player, frame,"rank_asc")
+			else
+				player_list_show(player, frame,"rank_desc")
+			end
+		end,
+
+		["player_list_panel_header_4"] = function ()
+			if string.find(event.element.caption, symbol_desc) then
 				player_list_show(player, frame,"total_time_played_asc")
 			else
 				player_list_show(player, frame,"total_time_played_desc")
 			end
 		end,
 
-		["player_list_panel_header_4"] = function ()
+		["player_list_panel_header_5"] = function ()
 			if string.find(event.element.caption, symbol_desc) then
 				player_list_show(player, frame,"time_played_asc")
 			else
@@ -321,7 +338,7 @@ local function on_gui_click(event)
 			end
 		end,
 
-		["player_list_panel_header_5"] = function ()
+		["player_list_panel_header_6"] = function ()
 			if string.find(event.element.caption, symbol_desc) then
 				player_list_show(player, frame,"pokes_asc")
 			else

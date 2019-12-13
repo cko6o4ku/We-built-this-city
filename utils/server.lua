@@ -162,16 +162,15 @@ function Public.player_return(rtn,colour,player)
     local _colour = colour or Color.white
     local _player = player or game.player
     if _player then
-        local __player = _player
-        if not __player then return end
-        __player.play_sound{path='utility/scenario_message'}
+        if not player then return end
+        player.play_sound{path='utility/scenario_message'}
         if Public.is_type(rtn,'table') then
-            if Public.is_type(rtn.__self,'userdata') then __player.print('Can not display userdata',_colour)
-            elseif Public.is_type(rtn[1],'string') and string.find(rtn[1],'.+[.].+') and not string.find(rtn[1],'%s') then pcall(__player.print,rtn,_colour)
-            else __player.print(Table.to_string(rtn),_colour)
+            if Public.is_type(rtn.__self,'userdata') then player.print('Can not display userdata',_colour)
+            elseif Public.is_type(rtn[1],'string') and string.find(rtn[1],'.+[.].+') and not string.find(rtn[1],'%s') then pcall(player.print,rtn,_colour)
+            else player.print(Table.to_string(rtn),_colour)
             end
-        elseif Public.is_type(rtn,'function') then __player.print('Can not display functions',_colour)
-        else __player.print(tostring(rtn),_colour)
+        elseif Public.is_type(rtn,'function') then player.print('Can not display functions',_colour)
+        else player.print(tostring(rtn),_colour)
         end
     else
         local _return

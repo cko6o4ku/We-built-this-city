@@ -47,11 +47,18 @@ local try_download_data =
     function(data)
         local key = data.key
         local value = data.value
+        local player = game.players[key]
         if value then
             session[key] = value
             if value > 2592000 then
-                Ranks.give_rank(key, 'Member')
+                if trusted[key] and trusted[key] == true then goto continue end
+                if not player then trusted[key] = true goto continue end
+                local power = Ranks.get_rank(player).power
+                if power >= 5 then
+                    Ranks.give_rank(player, 'Member')
+                end
                 trusted[key] = true
+                ::continue::
             end
         else
             session[key] = 0
