@@ -925,6 +925,32 @@ function Public.CreateCropCircle(surface, centerPos, chunkArea, tileRadius, fill
     surface.set_tiles(dirtTiles)
 end
 
+function Public.CreateCropCircleNoTrees(surface, centerPos, chunkArea, tileRadius, fillTile)
+
+    local tileRadSqr = tileRadius^2
+
+    local dirtTiles = {}
+    for i=chunkArea.left_top.x,chunkArea.right_bottom.x,1 do
+        for j=chunkArea.left_top.y,chunkArea.right_bottom.y,1 do
+
+            -- This ( X^2 + Y^2 ) is used to calculate if something
+            -- is inside a circle area.
+            local distVar = math_floor((centerPos.x - i)^2 + (centerPos.y - j)^2)
+
+            -- Fill in all unexpected water in a circle
+            if (distVar < tileRadSqr) then
+                if (surface.get_tile(i,j).collides_with("water-tile") or
+                    global.scenario_config.gen_settings.force_grass or
+                    (game.active_mods["oarc-restricted-build"])) then
+                    table_insert(dirtTiles, {name = fillTile, position ={i,j}})
+                end
+            end
+        end
+    end
+
+    surface.set_tiles(dirtTiles)
+end
+
 function Public.CreateCropSquare(surface, centerPos, area, tileRadius, fillTile)
     local left_top = area.left_top
     local right_bottom = area.right_bottom

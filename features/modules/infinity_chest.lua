@@ -58,7 +58,7 @@ end
 local function built_entity(event)
   local entity =  event.created_entity
   if not entity.valid then return end
-  if entity.name ~= "infinity-chest" then return end
+  if entity.name ~= "compilatron-chest" then return end
   if event.player_index then
     local player = game.get_player(event.player_index)
     if this.storage[player.index] then
@@ -85,7 +85,7 @@ end
 local function built_entity_robot(event)
   local entity =  event.created_entity
   if not entity.valid then return end
-  if entity.name ~= "infinity-chest" then return end
+  if entity.name ~= "compilatron-chest" then return end
   entity.destroy()
 end
 
@@ -155,7 +155,7 @@ local function on_pre_player_mined_item(event)
     this.storage[player.index] = {}
   end
 
-  if entity.name ~= "infinity-chest" then return end
+  if entity.name ~= "compilatron-chest" then return end
     is_chest_empty(entity, player.index)
   local data = this.inf_gui[player.name]
   if not data then return end
@@ -202,9 +202,9 @@ local function gui_opened(event)
   if not event.gui_type == defines.gui_type.entity then return end
   local entity = event.entity
   if not entity then return end
-  if not entity.valid or entity.name ~= 'infinity-chest' then return end
+  if not entity.valid or entity.name ~= 'compilatron-chest' then return end
   local player = game.players[event.player_index]
-  local frame = player.gui.center.add{ type = "frame", caption = "Infinity Chest", direction = "vertical", name = entity.unit_number}
+  local frame = player.gui.center.add{ type = "frame", caption = "Compilatron Chest", direction = "vertical", name = entity.unit_number}
   local controls = frame.add{ type = "flow", direction = "horizontal"}
   local items = frame.add{ type = "flow", direction = "vertical"}
 
@@ -246,7 +246,7 @@ local function update_gui()
     if mode == 2 and this.inf_gui[player.name].updated then goto continue end
     frame.clear()
 
-    local tbl = frame.add{ type = "table", column_count = 10, name = "infinity_chest_inventory" }
+    local tbl = frame.add{ type = "table", column_count = 10, name = "compilatron_chest_inventory" }
     local total = 0
     local items = {}
 
@@ -332,7 +332,7 @@ local function gui_click(event)
   if not element.valid then return end
   local parent = element.parent
   if not parent then return end
-  if parent.name ~= "infinity_chest_inventory" then return end
+  if parent.name ~= "compilatron_chest_inventory" then return end
   local unit_number = tonumber(parent.parent.parent.name)
   if tonumber(element.name) == unit_number then return end
 

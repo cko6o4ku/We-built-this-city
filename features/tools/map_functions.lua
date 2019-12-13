@@ -35,6 +35,7 @@ f.draw_noise_entity_ring = function(surface, position, name, force, radius_min, 
 	local modifier_1 = 1 / (radius_max * 2)
 	local modifier_2 = 1 / (radius_max * 0.5)
 	local seed = game.surfaces[1].map_gen_settings.seed
+	local force = force or "neutral"
 	local tiles = {}
 	
 	for y = radius_max * -2, radius_max * 2, 1 do

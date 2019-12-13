@@ -16,6 +16,8 @@ function Public.OarcEnemiesOnTick()
     local global_data = Table.get_table()
     local gd = OE_Table.get_table()
 
+    if gd.disable then gd.attacks = {} goto continue end
+
     -- Cleanup attacks that have died or somehow become invalid.
     if ((game.tick % (global_data.ticks_per_second)) == 20) then
         for key,attack in pairs(gd.attacks) do
@@ -122,6 +124,8 @@ function Public.OarcEnemiesOnTick()
     -- process_find_retry_path_calc -- WAIT FOR EVENT
     -- Event Function: ProcessAttackCheckPathComplete(event)
 
+    ::continue::
+
 end
 
 
@@ -167,7 +171,11 @@ function Public.ProcessPlayerTimersEverySecond()
                 else
                     if (timer_name == "next_wave_player") then
                         OE.OarcEnemiesPlayerAttackCharacter(name)
-                        gd.p_time[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
+                        if _DEBUG then
+                            gd.p_time[name][timer_name] = 50
+                        else
+                            gd.p_time[name][timer_name] = (Evo.GetRandomizedPlayerTimer(game.players[name].online_time/global_data.ticks_per_second, 0) + gd.next_wave)
+                        end
 
                     --elseif (timer_name == "next_wave_buildings") then
                     --    OE.OarcEnemiesBuildingAttack(name, gd.enemy_targets)
@@ -257,7 +265,7 @@ function Public.ProcessAttackFindSpawn(key, attack)
         elseif (attack.target_chunk) then
             c_pos = attack.target_chunk
         end
-        local spawns = OE.SpiralSearch(c_pos, gd.search_radius_chunks, 200)
+        local spawns = OE.SpiralSearch(c_pos, gd.search_radius_chunks, 500)
 
         if (spawns ~= nil) then
             gd.attacks[key].spawn_chunk = spawns[Utils.GetRandomKeyFromTable(spawns)]
@@ -464,9 +472,11 @@ function Public.ProcessAttackCreateGroup(key, attack)
         -- On the first time the player has a direct attack, warn them?
         if (attack.target_type == gd.type_target_player) and
            (not gd.player_sbubbles[attack.target_player].uh_oh) then
-            Utils.DisplaySpeechBubble(game.players[attack.target_player],
-                                "I got the scent that biters are headed my way!", 15)
-            gd.player_sbubbles[attack.target_player].uh_oh = true
+            if (gd.player_sbubbles[attack.target_player].wave < 10) or ((gd.player_sbubbles[attack.target_player].wave < 50) and ((gd.player_sbubbles[attack.target_player].wave % 5) == 0)) or ((gd.player_sbubbles[attack.target_player].wave % 25) == 0) then
+                gd.player_sbubbles[attack.target_player].wave = gd.player_sbubbles[attack.target_player].wave + 1
+                Utils.DisplaySpeechBubble(game.players[attack.target_player],
+                                    ">> Biters are headed my way! Round: " .. gd.player_sbubbles[attack.target_player].wave .. " <<", 15)
+            end
         end
 
         return true
@@ -670,7 +680,8 @@ function Public.ProcessAttackRetryPath(key, attack)
     end
 
     -- Check group still exists
-    if (attack.group and attack.group_id and attack.group.valid and attack.group.members and attack.group.members[1].valid) then
+    if (attack.group and attack.group_id and attack.group.valid and attack.group.members) then
+        if not (attack.group.members[1] and attack.group.members[1].valid) then return end
 
         -- Path request
         gd.attacks[key].path_id =

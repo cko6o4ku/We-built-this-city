@@ -38,12 +38,12 @@ commands.add_command(
             if x^2+y^2 < range^2 then
                 for key, entity in pairs(player.surface.find_entities_filtered({area={{x+center.x,y+center.y},{x+center.x+1,y+center.y+1}},type='entity-ghost'})) do
                     if not disallow[entity.name] then
-                        entity.revive()
+                        entity.silent_revive()
                     else player.print('You have repaired: '..entity.name..' this item is not allowed.') end
                 end
                 for key, entity in pairs(player.surface.find_entities({{x+center.x,y+center.y},{x+center.x+1,y+center.y+1}})) do if entity.health then entity.health = 10000 end end
             end
         end
     end
-    Server.to_admin_embed(table.concat{'[Info] ', player.name, ' ran command: ', args.parameter, ' at game.tick: ', game.tick, '.'})
+    Server.to_admin_embed(table.concat{'[Info] ', player.name, ' ran command: ', args.name, " ", args.parameter, ' at game.tick: ', game.tick, '.'})
 end)

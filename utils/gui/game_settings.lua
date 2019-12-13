@@ -2,13 +2,17 @@ local Gui = require 'utils.gui.core'
 local Server = require 'utils.callback_token'
 local Modifiers = require 'utils.player_modifiers'
 
+if Gui.popup then Gui.popup._load() end
+
 local basic_settings = {
     {type='slider',object='force',key='manual_mining_speed_modifier',name='mining-speed',min=0,max=30},
-    {type='slider',object='force',key='manual_crafting_speed_modifier',name='craft-speed',min=0,max=30},
+    {type='slider',object='force',key='manual_crafting_speed_modifier',name='craft-speed',min=0,max=50},
     {type='slider',object='force',key='character_running_speed_modifier',name='running-speed',min=0,max=10},
     {type='slider',object='force',key='character_build_distance_bonus',name='build-distance',min=0,max=50},
     {type='slider',object='force',key='character_reach_distance_bonus',name='reach-distance',min=0,max=50},
     {type='slider',object='force',key='worker_robots_speed_modifier',name='bot-speed',min=0,max=20},
+    {type='slider',object='force',key='worker_robots_battery_modifier',name='bot-battery',min=0,max=20},
+    {type='slider',object='force',key='worker_robots_storage_bonus',name='bot-storage',min=0,max=20},
     {type='slider',object='force',key='laboratory_speed_modifier',name='lab-speed',min=0,max=40},
     {type='slider',object='force',key='stack_inserter_capacity_bonus',name='stack-bonus',min=1,max=40}
 }
@@ -69,7 +73,9 @@ for name,group in pairs(_root_list) do
                         local object = objects[data.object]
                         local _caption = string.format('%.2f',value); if value > 2 then _caption = string.format('%.2f',math.floor(value)) end
                         object[data.key] = tonumber(_caption)
+                        if not _a[player.index][data.key] then goto continue end
                         _a[player.index][data.key]["bonus"] = tonumber(_caption)
+                        ::continue::
                         element.parent.counter.caption = _caption
                     end
                 )

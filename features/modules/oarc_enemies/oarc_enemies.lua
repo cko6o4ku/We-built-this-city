@@ -285,7 +285,11 @@ function Public.OarcEnemiesPlayerCreatedEvent(event)
     --validate(p_name)
 
     if not gd.p_time[player] then
-        gd.p_time[player] = {next_wave_player=7200}
+        if _DEBUG then
+            gd.p_time[player] = {next_wave_player=50}
+        else
+            gd.p_time[player] = {next_wave_player=3600}
+        end
     end
 
     --if not gd.p_time[player] then
@@ -303,7 +307,7 @@ function Public.OarcEnemiesPlayerCreatedEvent(event)
 
     -- Setup tracking of first time chat bubble displays
     if (gd.player_sbubbles[player] == nil) then
-        gd.player_sbubbles[player] = {uh_oh=false, rocket=false}
+        gd.player_sbubbles[player] = {uh_oh=false, rocket=false, wave=0}
     end
 end
 

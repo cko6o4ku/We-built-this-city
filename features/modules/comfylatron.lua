@@ -1,5 +1,16 @@
 local event = require 'utils.event'
+local Global = require 'utils.global'
 local math_random = math.random
+
+local this = {
+}
+
+Global.register(
+    {this = this},
+    function(tbl)
+        this = tbl.this
+    end
+)
 
 local function shuffle(tbl)
 	local size = #tbl

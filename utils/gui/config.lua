@@ -3,14 +3,14 @@
 local Gui = require 'utils.gui.main'
 
 local functions = {
- 	["panel_spectator_switch"] = function(event) 
+	["panel_spectator_switch"] = function(event) 
 		if event.element.switch_state == "left" then
 			game.players[event.player_index].spectator = true
 		else
 			game.players[event.player_index].spectator = false
 		end
 	end,
-	
+
 	["panel_auto_hotbar_switch"] = function(event) 
 		if event.element.switch_state == "left" then
 			global.auto_hotbar_enabled[event.player_index] = true

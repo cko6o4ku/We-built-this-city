@@ -4,7 +4,7 @@ local validate_player = require "utils.validate_player"
 local funct
 
 local items = {
-  ["infinity-chest"]    = { stack = 1, price = 50},
+  ["compilatron-chest"]    = { stack = 1, price = 50},
   --Logistics
   ["transport-belt"]    = { stack = 1, price = 1},
   ["underground-belt"]  = { stack = 2, price = 2},
@@ -120,7 +120,7 @@ local function redraw_market_items(gui, player, search_text)
       sprite = "item/"..name,
       number = item_count,
       name   = name,
-      tooltip = {"market.tooltip", name == "infinity-chest" and "Infinite Storage Chest" or name:gsub("-"," "), item_cost, item_count},
+      tooltip = {"market.tooltip", name == "compilatron-chest" and "Infinite Storage Chest" or name:gsub("-"," "), item_cost, item_count},
       style  = "slot_button"
     })
     local label = flow.add({ 

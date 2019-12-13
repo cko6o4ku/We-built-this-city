@@ -69,7 +69,7 @@ function Public.SetRandomSiloPosition(num_silos)
 
         table.insert(global.siloPosition, {x=math.floor(global_data.tx), y=math.floor(global_data.ty)})
 
-        log("Silo position: " .. global_data.tx .. ", " .. global_data.ty .. ", " .. global_data.angle)
+        --log("Silo position: " .. global_data.tx .. ", " .. global_data.ty .. ", " .. global_data.angle)
     end
 end
 
@@ -183,7 +183,7 @@ function Public.BuildSiloAttempt(event)
             event.created_entity.last_user.mine_entity(event.created_entity, true)
         end
     else
-        log("ERROR! Rocket-silo had no valid last user?!?!")
+        --log("ERROR! Rocket-silo had no valid last user?!?!")
     end
 end
 
@@ -254,7 +254,7 @@ function Public.DelayedSiloCreationOnTick(surface)
 
     -- Delay the creation of the silos so we place them on already generated lands.
     if (not global.oarc_silos_generated and (game.tick >= #global.siloPosition*10*global_data.ticks_per_second)) then
-        log("Frontier silos generated!")
+        --log("Frontier silos generated!")
         Utils.SendBroadcastMsg("Rocket silos are now available!")
         global.oarc_silos_generated = true
         Public.GenerateAllSilos(surface)

@@ -14,6 +14,12 @@ require 'utils.color_data'
 require 'utils.session_data'
 require 'utils.player_modifiers'
 require 'utils.surface'
+require 'utils.rank.main'
+local Rank = require 'utils.rank.presets'
+--require 'utils.rank.add_ranks'
+Rank._auto_edit_ranks()
+
+
 
 require 'utils.gui.main'
 require 'utils.gui.player_list'

@@ -14,9 +14,9 @@
 -- @param[opt] ... additional arguments passed to the function
 -- @treturn table a new table containing the keys and mapped values
 
-local table = {}
+local Public = {}
 
-function table.map(tbl, func, ...)
+function Public.map(tbl, func, ...)
     local newtbl = {}
     for i, v in pairs(tbl) do
         newtbl[i] = func(v, i, ...)
@@ -35,7 +35,7 @@ end
 -- @tparam function func the function to filter values
 -- @param[opt] ... additional arguments passed to the function
 -- @treturn table a new table containing the filtered key-value pairs
-function table.filter(tbl, func, ...)
+function Public.filter(tbl, func, ...)
     local newtbl = {}
     local insert = #tbl > 0
     for k, v in pairs(tbl) do
@@ -58,7 +58,7 @@ end
 -- @tparam function func the function to use to search for any matching element
 -- @param[opt] ... additional arguments passed to the function
 -- @treturn ?|nil|Mixed the first found value, or nil if none was found
-function table.find(tbl, func, ...)
+function Public.find(tbl, func, ...)
     for k, v in pairs(tbl) do
         if func(v, k, ...) then
             return v, k
@@ -79,7 +79,7 @@ end
 -- @tparam function func the function to use to search for any matching element
 -- @param[opt] ... additional arguments passed to the function
 -- @treturn boolean true if an element was found, false if none was found
-function table.any(tbl, func, ...)
+function Public.any(tbl, func, ...)
     return table.find(tbl, func, ...) ~= nil
 end
 
@@ -93,7 +93,7 @@ end
 -- @tparam function func the function to apply to elements
 -- @param[opt] ... additional arguments passed to the function
 -- @treturn table the table where the given function has been applied to its elements
-function table.each(tbl, func, ...)
+function Public.each(tbl, func, ...)
     for k, v in pairs(tbl) do
         if func(v, k, ...) then
             break
@@ -109,7 +109,7 @@ end
 -- @tparam array tbl the array to be flattened
 -- @tparam[opt] uint level recursive levels, or no limit to recursion if not supplied
 -- @treturn array a new array that represents the flattened contents of the given array
-function table.flatten(tbl, level)
+function Public.flatten(tbl, level)
     local flattened = {}
     table.each(tbl,
         function(value)
@@ -134,14 +134,14 @@ end
 --- Given an array, returns the first element or nil if no element exists.
 -- @tparam array tbl the array
 -- @treturn ?|nil|Mixed the first element
-function table.first(tbl)
+function Public.first(tbl)
     return tbl[1]
 end
 
 --- Given an array, returns the last element or nil if no elements exist.
 -- @tparam array tbl the array
 -- @treturn ?|nil|Mixed the last element or nil
-function table.last(tbl)
+function Public.last(tbl)
     local size = #tbl
     if size == 0 then return nil end
     return tbl[size]
@@ -150,7 +150,7 @@ end
 --- Given an array of only numeric values, returns the minimum or nil if no element exists.
 -- @tparam {number,...} tbl the array with only numeric values
 -- @treturn ?|nil|number the minimum value
-function table.min(tbl)
+function Public.min(tbl)
     if #tbl == 0 then return nil end
 
     local min = tbl[1]
@@ -163,7 +163,7 @@ end
 ---Given an array of only numeric values, returns the maximum or nil if no element exists.
 -- @tparam {number,...} tbl the array with only numeric values
 -- @treturn ?|nil|number the maximum value
-function table.max(tbl)
+function Public.max(tbl)
     if #tbl == 0 then return nil end
 
     local max = tbl[1]
@@ -176,7 +176,7 @@ end
 --- Given an array of only numeric values, return the sum of all values, or 0 for empty arrays.
 -- @tparam {number,...} tbl the array with only numeric values
 -- @treturn number the sum of the numbers or zero if the given array was empty
-function table.sum(tbl)
+function Public.sum(tbl)
     local sum = 0
     for _, num in pairs(tbl) do
         sum = sum + num
@@ -187,7 +187,7 @@ end
 --- Given an array of only numeric values, returns the average or nil if no element exists.
 -- @tparam {number,...} tbl the array with only numeric values
 -- @treturn ?|nil|number the average value
-function table.avg(tbl)
+function Public.avg(tbl)
     local cnt = #tbl
     return cnt ~= 0 and table.sum(tbl) / cnt or nil
 end
@@ -204,7 +204,7 @@ end
 -- @tparam table tblB second table
 -- @tparam[opt=false] boolean array_merge set to true to merge the tables as an array or false for an associative array
 -- @treturn array|table an array or an associated array where tblA and tblB have been merged
-function table.merge(tblA, tblB, array_merge)
+function Public.merge(tblA, tblB, array_merge)
     if not tblB then
         return tblA
     end
@@ -227,7 +227,7 @@ end
 -- @usage local copy = table.deepcopy[data.raw.["stone-furnace"]["stone-furnace"]] -- returns a copy of the stone furnace entity
 -- @tparam table object the table to copy
 -- @treturn table a copy of the table
-function table.deepcopy(object)
+function Public.deepcopy(object)
     local lookup_table = {}
     local function _copy(this_object)
         if type(this_object) ~= "table" then
@@ -252,7 +252,7 @@ end
 -- @tparam[opt] boolean sorted whether to sort the keys (slower) or keep the random order from pairs()
 -- @tparam[opt] boolean as_string whether to try and parse the values as strings, or leave them as their existing type
 -- @treturn array an array with a copy of all the values in the table
-function table.values(tbl, sorted, as_string)
+function Public.values(tbl, sorted, as_string)
     if not tbl then return {} end
     local valueset = {}
     local n = 0
@@ -290,7 +290,7 @@ end
 -- @tparam[opt] boolean sorted whether to sort the keys (slower) or keep the random order from pairs()
 -- @tparam[opt] boolean as_string whether to try and parse the keys as strings, or leave them as their existing type
 -- @treturn array an array with a copy of all the keys in the table
-function table.keys(tbl, sorted, as_string)
+function Public.keys(tbl, sorted, as_string)
     if not tbl then return {} end
     local keyset = {}
     local n = 0
@@ -331,7 +331,7 @@ end
 -- @tparam table tbl the table to remove the keys from
 -- @tparam {Mixed,...} keys an array of keys that exist in the given table
 -- @treturn table tbl without the specified keys
-function table.remove_keys(tbl, keys)
+function Public.remove_keys(tbl, keys)
     for i = 1, #keys do
         tbl[keys[i]] = nil
     end
@@ -348,7 +348,7 @@ end
 -- table.count_keys(a) -- produces: 5, 5
 -- @usage local a = {1, 2, 3, 4, 5}
 -- table.count_keys(a, function(v, k) return k % 2 == 1 end) -- produces: 3, 5
-function table.count_keys(tbl, func, ...)
+function Public.count_keys(tbl, func, ...)
     if type(tbl) ~= 'table' then return 0, 0 end
     local count, total = 0, 0
     for k, v in pairs(tbl) do
@@ -371,7 +371,7 @@ end
 --table.invert(b) --returns {'foo' = k1, 'bar' = ?}
 -- @tparam table tbl the table to invert
 -- @treturn table a new table with inverted mapping
-function table.invert(tbl)
+function Public.invert(tbl)
     local inverted = {}
     for k, v in pairs(tbl) do
         inverted[v] = k
@@ -390,7 +390,7 @@ table.size = table_size
 -- table.array_to_dict_bool(a) -- return {["v1"] = true, ["v2"]= true}
 -- @tparam table tbl the table to convert
 -- @treturn table the converted table
-function table.arr_to_bool(tbl)
+function Public.arr_to_bool(tbl)
     local newtbl = {}
     for _, v in pairs(tbl) do
         if type(v) == "string" or type(v) == "number" then
@@ -402,14 +402,14 @@ end
 
 --- Returns a value in a form able to be read as a key
 -- @usage local a = 'key'
--- table.key_to_str(a) -- return '["key"]'
+-- Public.key_to_str(a) -- return '["key"]'
 -- @param k key to convert
 -- @treturn string the converted key
-function table.key_to_str (k)
+function Public.key_to_str (k)
     if "string" == type(k) and string.match(k,"^[_%player][_%player%d]*$") then
         return k
     else
-        return "["..table.val_to_str(k).."]"
+        return "["..Public.val_to_str(k).."]"
     end
 end
 
@@ -418,16 +418,16 @@ end
 -- table.tostring(a) -- return '{["k1"]="foo",["k2"]="bar"}'
 -- @tparam table tbl table to convert
 -- @treturn string the converted table
-function table.to_string(tbl)
+function Public.to_string(tbl)
     local result, done = {}, {}
     for k, v in ipairs(tbl) do
-      table.insert(result,table.val_to_str(v))
+      table.insert(result,Public.val_to_str(v))
       done[k] = true
     end
     for k, v in pairs(tbl) do
       if not done[k] then
         table.insert(result,
-          table.key_to_str(k).."="..table.val_to_str(v))
+          Public.key_to_str(k).."="..Public.val_to_str(v))
       end
     end
     return "{"..table.concat(result,",") .."}"
@@ -438,11 +438,11 @@ end
 -- talbe.json(a) -- return '{"k1":"foo","k2":"bar"}'
 -- @tparam table lua_table the table to convert
 -- @treturn string the table in a json format
-function table.json(lua_table)
+function Public.json(lua_table)
     local result, done, only_indexs = {}, {}, true
     for key,value in ipairs(lua_table) do
         done[key] = true
-        if type(value) == 'table' then table.insert(result,table.json(value,true))
+        if type(value) == 'table' then table.insert(result,Public.json(value,true))
         elseif type(value) == 'string' then table.insert(result,'"'..value..'"')
         elseif type(value) == 'number' then table.insert(result,value)
         elseif type(value) == 'boolean' then table.insert(result,tostring(value))
@@ -452,7 +452,7 @@ function table.json(lua_table)
     for key,value in pairs(lua_table) do
       if not done[key] then
         only_indexs = false
-        if type(value) == 'table' then table.insert(result,'"'..key..'":'..table.json(value,true))
+        if type(value) == 'table' then table.insert(result,'"'..key..'":'..Public.json(value,true))
         elseif type(value) == 'string' then table.insert(result,'"'..key..'":"'..value..'"')
         elseif type(value) == 'number' then table.insert(result,'"'..key..'":'..value)
         elseif type(value) == 'boolean' then table.insert(result,'"'..key..'":'..tostring(value))
@@ -468,7 +468,7 @@ end
 --- Returns the closest match to a key
 -- @usage tbl = {foo=1,bar=2}
 -- table.autokey(tbl,'f') -- return 1 
-function table.autokey(tbl,str)
+function Public.autokey(tbl,str)
     local _return = {}
     for key,value in pairs(tbl) do
         if string.contains(string.lower(key),string.lower(str)) then table.insert(_return,value) end
@@ -476,4 +476,4 @@ function table.autokey(tbl,str)
     return _return[1] or false
 end
 
-return table
+return Public

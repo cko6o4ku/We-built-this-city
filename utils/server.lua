@@ -4,6 +4,8 @@ local Global = require 'utils.global'
 local Event = require 'utils.event'
 local Game = require 'utils.game'
 local Print = require('utils.print_override')
+local Table = require 'utils.extended_table'
+local Color = require 'utils.color_presets'
 
 local serialize = serpent.serialize
 local concat = table.concat
@@ -151,6 +153,35 @@ local default_ping_token =
         game.print(message)
     end
 )
+
+function Public.is_type(v,test_type)
+    return test_type and v and type(v) == test_type or not test_type and not v or false
+end
+
+function Public.player_return(rtn,colour,player)
+    local _colour = colour or Color.white
+    local _player = player or game.player
+    if _player then
+        local __player = game.get_player(_player)
+        if not __player then return end
+        __player.play_sound{path='utility/scenario_message'}
+        if Public.is_type(rtn,'table') then
+            if Public.is_type(rtn.__self,'userdata') then __player.print('Can not display userdata',_colour)
+            elseif Public.is_type(rtn[1],'string') and string.find(rtn[1],'.+[.].+') and not string.find(rtn[1],'%s') then pcall(__player.print,rtn,_colour)
+            else __player.print(Table.to_string(rtn),_colour)
+            end
+        elseif Public.is_type(rtn,'function') then __player.print('Can not display functions',_colour)
+        else __player.print(tostring(rtn),_colour)
+        end
+    else
+        local _return
+        if Public.is_type(rtn,'table') then _return = Table.to_string(rtn)
+        elseif Public.is_type(rtn,'function') then _return = 'Can not display functions'
+        elseif Public.is_type(rtn,'userdata') then _return = 'Can not display userdata'
+        else _return = tostring(rtn)
+        end log(_return)
+    end
+end
 
 --- Pings the web server.
 -- @param  func_token<token> The function that is called when the web server replies.
