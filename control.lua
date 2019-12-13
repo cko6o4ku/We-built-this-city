@@ -16,7 +16,7 @@ require 'utils.player_modifiers'
 require 'utils.surface'
 require 'utils.rank.main'
 local Rank = require 'utils.rank.presets'
---require 'utils.rank.add_ranks'
+require 'utils.rank.add_ranks'
 Rank._auto_edit_ranks()
 
 

@@ -1,5 +1,3 @@
--- luacheck: ignore
-
 local Global = require 'utils.global'
 local Game = require 'utils.game'
 local Token = require 'utils.token'
@@ -7,6 +5,7 @@ local Server = require 'utils.server'
 local Event = require 'utils.event'
 local table = require 'utils.table'
 local Print = require('utils.print_override')
+local Ranks = require 'utils.rank.main'
 local raw_print = Print.raw_print
 
 local session_data_set = 'sessions'
@@ -51,6 +50,7 @@ local try_download_data =
         if value then
             session[key] = value
             if value > 2592000 then
+                Ranks.give_rank(key, 'Member')
                 trusted[key] = true
             end
         else
@@ -89,29 +89,27 @@ end
 --- Tries to get data from the webpanel and updates the local table with values.
 -- @param data_set player token
 function Public.try_dl_data(key)
-    local key = tostring(key)
+    local _key = tostring(key)
     local secs = Server.get_current_time()
     if secs == nil then
         raw_print(error_offline)
         return
     else
-        try_get_data(session_data_set, key, try_download_data)
-        secs = nil
-    end 
+        try_get_data(session_data_set, _key, try_download_data)
+    end
 end
 
 --- Tries to get data from the webpanel and updates the local table with values.
 -- @param data_set player token
 function Public.try_ul_data(key)
-    local key = tostring(key)
+    local _key = tostring(key)
     local secs = Server.get_current_time()
     if secs == nil then
         raw_print(error_offline)
         return
     else
-        try_get_data(session_data_set, key, try_upload_data)
-        secs = nil
-    end 
+        try_get_data(session_data_set, _key, try_upload_data)
+    end
 end
 
 --- Checks if a player exists within the table
@@ -159,7 +157,7 @@ Event.add(
             return
         end
         if game.is_multiplayer() then
-            Public.try_dl_data(player.name)   
+            Public.try_dl_data(player.name)
         else
             session[player.name] = player.online_time
         end

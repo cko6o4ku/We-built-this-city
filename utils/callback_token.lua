@@ -67,7 +67,7 @@ function Public._thread:open()
     if Server.is_type(self.timeout,'number') then table.insert(threads.timeout,uuid) end
     if Server.is_type(self._tick,'function') then table.insert(threads.tick,uuid) end
     if Server.is_type(self.name,'string') then threads.named[self.name] = threads.named[self.name] or self.uuid end
-    if Server.is_type(self._events,'table') then 
+    if Server.is_type(self._events,'table') then
         Table.each(self._events,function(callback,event,threads,uuid)
             -- cant be used V
             --Public.add_thread_handler(event)

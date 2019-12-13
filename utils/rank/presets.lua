@@ -1,7 +1,8 @@
 local RT = require 'utils.rank.table'
+local Color = require 'utils.color_presets'
 local Public = require 'utils.rank.main'
 
-function Public._add_group(group) local this = RT.get_table() if game then return end table.insert(this.groups, group) end
+function Public._add_group(group) local this = RT.get_table() if game then return end table.insert(this.groups,group) end
 function Public._add_rank(rank,pos) local this = RT.get_table() if game then return end if pos then table.insert(this.ranks,pos,rank) else table.insert(this.ranks,rank) end end
 function Public._set_rank_power() local this = RT.get_table() if game then return end for power,rank in pairs(this.ranks) do rank.power = power end end
 function Public._update_rank(rank) local this = RT.get_table() if game then return end this.ranks[rank.power] = rank end
@@ -11,12 +12,13 @@ local root = Public._group:create{
     name='Root',
     allow={
         ['interface'] = true
-    }
+    },
+    disallow={}
 }
 local admin = Public._group:create{
     name='Admin',
+    allow={},
     disallow={
-        'set_allow_commands',
         'edit_permission_group',
         'delete_permission_group',
         'add_permission_group'
@@ -24,30 +26,29 @@ local admin = Public._group:create{
 }
 local user = Public._group:create{
     name='User',
+    allow={},
     disallow={
-        'set_allow_commands',
         'edit_permission_group',
         'delete_permission_group',
-        'add_permission_group',
-        'edit_custom_tag'
+        'add_permission_group'
     }
 }
 local jail = Public._group:create{
     name='Jail',
+    allow={},
     disallow={
-        'set_allow_commands',
         'edit_permission_group',
         'delete_permission_group',
         'add_permission_group',
         'open_character_gui',
         'begin_mining',
         'start_walking',
-        'player_leave_game',
         'open_blueprint_library_gui',
         'build_item',
         'use_item',
         'select_item',
         'rotate_entity',
+        'select_blueprint_entities',
         'open_train_gui',
         'open_train_station_gui',
         'open_gui',
@@ -57,54 +58,77 @@ local jail = Public._group:create{
         'cancel_research',
         'start_research',
         'set_train_stopped',
-        'select_gun',
+        'select_next_valid_gun',
         'open_technology_gui',
         'open_trains_gui',
         'edit_custom_tag',
         'craft',
-        'setup_assembling_machine'
+        'setup_assembling_machine',
     }
 }
 
+-- If you wish to add more ranks please use addons/playerRanks.lua
+-- If you wish to add to these rank use addons/playerRanks.lua
 root:add_rank{
     name='Root',
     short_hand='Root',
-    tag='',
-    colour={r=179,g=125,b=46},
+    tag='[Root]',
+    colour=Color.white,
     is_root=true,
     is_admin=true,
     is_spectator=true,
     base_afk_time=false
 }
+
 admin:add_rank{
     name='Admin',
     short_hand='Admin',
-    tag='',
+    tag='[Admin]',
     colour={r=233,g=63,b=233},
     is_admin=true,
     is_spectator=true,
     base_afk_time=false
 }
+
 user:add_rank{
-    name='Members',
-    short_hand='Members',
-    tag='',
+    name='Member',
+    short_hand='Mem',
+    tag='[Member]',
     colour={r=24,g=172,b=188},
-	is_default=true,
-    disallow={},
-    base_afk_time=30
+    disallow={
+        'set_auto_launch_rocket',
+        'change_programmable_speaker_alert_parameters',
+        'drop_item'
+    },
+    base_afk_time=60
 }
+user:add_rank{
+    name='Rookie',
+    short_hand='',
+    tag='',
+    colour={r=185,g=187,b=160},
+    is_default=true,
+    disallow={
+        'build_terrain',
+        'remove_cables',
+        'launch_rocket',
+        'reset_assembling_machine',
+        'cancel_research'
+    },
+    base_afk_time=10
+}
+
 jail:add_rank{
     name='Jail',
     short_hand='Jail',
     tag='[Jail]',
     colour={r=50,g=50,b=50},
     disallow={},
-    base_afk_time=1
+    base_afk_time=false
 }
 
 function Public._auto_edit_ranks()
-	local this = RT.get_table()
+    local this = RT.get_table()
     for power,rank in pairs(this.ranks) do
         if this.ranks[power-1] then
             rank:edit('disallow',false,this.ranks[power-1].disallow)
@@ -120,8 +144,8 @@ function Public._auto_edit_ranks()
 end
 
 -- used to force rank to be read-only
-function Public._groups(name)
-	local this = RT.get_table()
+function Public.add_groups(name)
+    local this = RT.get_table()
     if name then
         if name then
             local _return = {}
@@ -134,8 +158,8 @@ function Public._groups(name)
     return this.groups
 end
 
-function Public._ranks(name)
-	local this = RT.get_table()
+function Public.add_ranks(name)
+    local this = RT.get_table()
     if name then
         local _return = {}
         for _, rank in pairs(this.ranks) do
@@ -146,11 +170,11 @@ function Public._ranks(name)
     return this.ranks
 end
 
-function Public._meta()
-	local this = RT.get_table()
+function Public._metadata()
+    local this = RT.get_table()
     local meta = this.meta
     if not meta.time_ranks then
-		meta.time_ranks = {}
+        meta.time_ranks = {}
     end
     for power,rank in pairs(this.ranks) do
         meta.rank_count = power
@@ -168,7 +192,5 @@ function Public._meta()
     end
     return meta
 end
-
-Public._meta()
 
 return Public

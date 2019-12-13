@@ -162,7 +162,7 @@ function Public.player_return(rtn,colour,player)
     local _colour = colour or Color.white
     local _player = player or game.player
     if _player then
-        local __player = game.get_player(_player)
+        local __player = _player
         if not __player then return end
         __player.play_sound{path='utility/scenario_message'}
         if Public.is_type(rtn,'table') then
