@@ -134,6 +134,8 @@ local comparators = {
 	["total_time_played_desc"] = function (a,b) return a.total_played_ticks > b.total_played_ticks end,
 	["time_played_asc"]  = function (a,b) return a.played_ticks < b.played_ticks end,
 	["time_played_desc"] = function (a,b) return a.played_ticks > b.played_ticks end,
+	["rank_asc"]  = function (a,b) return a.rank_power < b.rank_power end,
+	["rank_desc"] = function (a,b) return a.rank_power > b.rank_power end,
 	["name_asc"]  = function (a,b) return a.name:lower() < b.name:lower() end,
 	["name_desc"] = function (a,b) return a.name:lower() > b.name:lower() end
 }
@@ -159,6 +161,7 @@ local function get_sorted_list(sort_by)
 
 		player_list[i].played_time = get_formatted_playtime(player.online_time)
 		player_list[i].played_ticks = player.online_time
+		player_list[i].rank_power = Ranks.get_rank(player).power
 		
 		player_list[i].pokes = global.player_list.pokes[player.index]
 		player_list[i].player_index = player.index
