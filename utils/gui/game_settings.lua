@@ -58,7 +58,7 @@ for name,group in pairs(_root_list) do
         for key,setting in pairs(group) do
             local _added = nil
             if setting.type == 'slider' then
-                _added = Gui.inputs.add_slider('game-settings-'..setting.name,'horizontal',setting.min,setting.max,
+                _added = Gui.inputs.add_slider('game-settings-'..setting.name,'horizontal',setting.min,setting.max, 0.10,
                     function(player,root_frame)
                         local data = _get_data(root_frame)
                         local objects = _object_list(player)
@@ -105,7 +105,7 @@ for name,group in pairs(_root_list) do
         for key,setting in pairs(group) do
             local _added = nil
             if setting.type == 'slider' then
-                _added = Gui.inputs.add_slider('game-settings-'..setting.name,'horizontal',setting.min,setting.max,
+                _added = Gui.inputs.add_slider('game-settings-'..setting.name,'horizontal',setting.min,setting.max, 0.10,
                     function(player,root_frame)
                         local data = _get_data(root_frame)
                         local objects = _object_list(player)

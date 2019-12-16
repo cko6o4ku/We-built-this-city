@@ -24,6 +24,10 @@ function Public.map(tbl, func, ...)
     return newtbl
 end
 
+function Public.string_contains(s, contains)
+    return s and string.find(s, contains) ~= nil
+end
+
 --- Given a filter function, creates a filtered copy of the table
 --- by calling the function for each element in the table, and
 --- filtering out any key-value pairs for non-true results. Passes the index as second argument to the function.

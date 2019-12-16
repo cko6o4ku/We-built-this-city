@@ -16,7 +16,8 @@ Minor changes by ~~~Gerkiz~~~
 local event = require 'utils.event'
 local play_time = require 'utils.session_data'
 local Gui = require 'utils.gui.main'
-local Ranks = require 'utils.rank.main'
+local Roles = require 'utils.role.main'
+local Color = require 'utils.color_presets'
 
 local symbol_asc = "▲"
 local symbol_desc = "▼"
@@ -134,8 +135,8 @@ local comparators = {
 	["total_time_played_desc"] = function (a,b) return a.total_played_ticks > b.total_played_ticks end,
 	["time_played_asc"]  = function (a,b) return a.played_ticks < b.played_ticks end,
 	["time_played_desc"] = function (a,b) return a.played_ticks > b.played_ticks end,
-	["rank_asc"]  = function (a,b) return a.rank_power < b.rank_power end,
-	["rank_desc"] = function (a,b) return a.rank_power > b.rank_power end,
+	["role_asc"]  = function (a,b) return a.role_power < b.role_power end,
+	["role_desc"] = function (a,b) return a.role_power > b.role_power end,
 	["name_asc"]  = function (a,b) return a.name:lower() < b.name:lower() end,
 	["name_desc"] = function (a,b) return a.name:lower() > b.name:lower() end
 }
@@ -161,7 +162,7 @@ local function get_sorted_list(sort_by)
 
 		player_list[i].played_time = get_formatted_playtime(player.online_time)
 		player_list[i].played_ticks = player.online_time
-		player_list[i].rank_power = Ranks.get_rank(player).power
+		player_list[i].role_power = Roles.get_role(player).power
 		
 		player_list[i].pokes = global.player_list.pokes[player.index]
 		player_list[i].player_index = player.index
@@ -199,7 +200,7 @@ local function player_list_show(player, frame, sort_by)
 				.. tostring(#game.players - #game.connected_players)
 				.. "[/color]"
 				.. " Offline",
-		[3] = "Rank",
+		[3] = "Role",
 		[4] = "Total Time",
 		[5] = "Current Time",
 		[6] = "Poke"
@@ -207,8 +208,8 @@ local function player_list_show(player, frame, sort_by)
 	local header_modifier = {
 		["name_asc"]  = function (h) h[2] = symbol_asc  .. h[2] end,
 		["name_desc"] = function (h) h[2] = symbol_desc .. h[2] end,
-		["rank_asc"]  = function (h) h[3] = symbol_asc  .. h[3] end,
-		["rank_desc"] = function (h) h[3] = symbol_desc .. h[3] end,
+		["role_asc"]  = function (h) h[3] = symbol_asc  .. h[3] end,
+		["role_desc"] = function (h) h[3] = symbol_desc .. h[3] end,
 		["total_time_played_asc"]  = function (h) h[4] = symbol_asc  .. h[4] end,
 		["total_time_played_desc"] = function (h) h[4] = symbol_desc .. h[4] end,
 		["time_played_asc"]  = function (h) h[5] = symbol_asc  .. h[5] end,
@@ -265,7 +266,15 @@ local function player_list_show(player, frame, sort_by)
 		label.style.minimal_width = column_widths[2]
 		label.style.maximal_width = column_widths[2]
 
-		local label = player_list_panel_table.add { type = "label", name = "player_list_panel_rank_" .. i, caption =  Ranks.get_rank(player_list[i].name).name, tooltip = "Admin: " ..  tostring(player_list[i].admin) }
+		--local label
+		--if Roles.get_role(player_list[i].name).is_admin then
+		--	label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name .. ' [A]', tooltip = 'Admin'}
+		--elseif Roles.get_role(player_list[i].name).group.name == 'Veteran' then
+		--	label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name .. ' [T]', tooltip = 'Trusted'}
+		--else
+			label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name}
+		--end
+		label.style.font_color = Roles.get_role(player_list[i].name).color
 		label.style.minimal_width = column_widths[3]
 		label.style.maximal_width = column_widths[3]
 
@@ -319,9 +328,9 @@ local function on_gui_click(event)
 
 		["player_list_panel_header_3"] = function ()
 			if string.find(event.element.caption, symbol_desc) then
-				player_list_show(player, frame,"rank_asc")
+				player_list_show(player, frame,"role_asc")
 			else
-				player_list_show(player, frame,"rank_desc")
+				player_list_show(player, frame,"role_desc")
 			end
 		end,
 

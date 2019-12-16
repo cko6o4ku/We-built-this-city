@@ -7,6 +7,7 @@ local Surface = require 'utils.surface'
 local Tabs = require 'utils.gui.main'
 local Color = require 'utils.color_presets'
 local Session = require 'utils.session_data'
+local Roles = require 'utils.role.main'
 
 local warp_entities = {
     {'small-lamp',-3,-2},{'small-lamp',-3,2},{'small-lamp',3,-2},{'small-lamp',3,2},
@@ -150,12 +151,14 @@ local function draw_create_warp(parent, player, p)
     local posx = position.x
     local posy = position.y
     local dist2 = 100^2
-    for name,warp in pairs(warp_table) do
-        local pos = warp.position
-        if (posx-pos.x)^2+(posy-pos.y)^2 < dist2 then
-            player.print('Too close to another warp: ' .. name , Color.fail)
-            p.creating = false
-            return
+    if not Roles.get_role(player):allowed('always-warp') then
+        for name,warp in pairs(warp_table) do
+            local pos = warp.position
+            if (posx-pos.x)^2+(posy-pos.y)^2 < dist2 then
+                player.print('Too close to another warp: ' .. name , Color.fail)
+                p.creating = false
+                return
+            end
         end
     end
 
@@ -177,6 +180,8 @@ local function draw_create_warp(parent, player, p)
     textfield.style.minimal_width = 10
     textfield.style.height = 24
     --textfield.style.horizontally_stretchable = true
+    p.frame = {new_name = textfield}
+    --Gui.set_d("parent", {textfield = textfield})
 
     local _flow = x.add{
     type = 'flow'
@@ -221,7 +226,7 @@ local function draw_remove_warp(parent, player)
         btn.focus()
 end
 
-local function draw_player_warp_only(player, p, table, sub_table, name, warp)
+local function draw_player_warp_only(player, p, table, sub_table, name, warp ,e)
     if not warp.tag or not warp.tag then
         for k, v in pairs (game.forces) do
             v.add_chart_tag(warp.surface,{
@@ -259,14 +264,15 @@ local function draw_player_warp_only(player, p, table, sub_table, name, warp)
     end
 
     if p.removing == true then
-        if bottom_warp_flow.name == p.frame then
+        if bottom_warp_flow.name == e then
             draw_remove_warp(bottom_warp_flow, player)
             p.removing = false
         end
     end
 end
 
-local function draw_main_frame(player, left)
+local function draw_main_frame(player, left, are_you_sure)
+    local e = are_you_sure
     local p = player_table[player.index]
     local trusted = Session.get_trusted_table()
     local frame = left.add{type = "frame", name = main_frame_name, caption = "Warps", direction = "vertical", style = "changelog_subheader_frame"}
@@ -276,35 +282,34 @@ local function draw_main_frame(player, left)
     frame.style.maximal_width = 500
     frame.style.minimal_width = 320
 
-    local tbl = frame.add{type = "table", column_count = 1}
+    local tbl = frame.add{type = "table", column_count = 1, name = "_1"}
     tbl.style.vertical_spacing = 0
 
-    local _flows1 = tbl.add{type = 'flow'}
+    local _flows1 = tbl.add{type = 'flow', name = "_2"}
     --_flows1.style.minimal_width = 150
     _flows1.style.horizontally_stretchable = true
 
-    local warp_list = _flows1.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'always', horizontal_scroll_policy = 'never'}
+    local warp_list = _flows1.add{type = 'scroll-pane', direction = 'vertical', vertical_scroll_policy = 'always', horizontal_scroll_policy = 'never', name = "_3"}
     warp_list.style.maximal_height = 200
     warp_list.style.horizontally_stretchable = true
     warp_list.style.minimal_height = 200
     warp_list.style.right_padding = 0
 
-    local table = warp_list.add{type = 'table', column_count = 3}
+    local table = warp_list.add{type = 'table', column_count = 3, name = "_4"}
     --table.style.vertical_spacing = 0
 
-    local sub_table = warp_list.add{type = 'table', column_count = 3}
-    p.sub_table = sub_table
+    local sub_table = warp_list.add{type = 'table', column_count = 3, name = "_5"}
 
     for name,warp in pairs(warp_table) do
         if p.only_my_warps then
             if (warp.created_by == player.name or warp.created_by == "script") then
-                draw_player_warp_only(player, p, table, sub_table, name, warp)
+                draw_player_warp_only(player, p, table, sub_table, name, warp, e)
             end
         else
             if (warp.created_by == player.name and not warp.shared) then
-                draw_player_warp_only(player, p, table, sub_table, name, warp)
+                draw_player_warp_only(player, p, table, sub_table, name, warp, e)
             elseif warp.shared == true then
-                draw_player_warp_only(player, p, table, sub_table, name, warp)
+                draw_player_warp_only(player, p, table, sub_table, name, warp, e)
             end
         end
     end
@@ -353,7 +358,8 @@ function Public.toggle(player)
     end
 end
 
-function Public.refresh_gui_player(player)
+function Public.refresh_gui_player(player, are_you_sure)
+    local e = are_you_sure
     local gui = player.gui
     local left = gui.left
     local main_frame = left[main_frame_name]
@@ -362,7 +368,7 @@ function Public.refresh_gui_player(player)
 
     if main_frame then
         Public.close_gui_player(main_frame)
-        draw_main_frame(player, left)
+        draw_main_frame(player, left, e)
     end
 
 end
@@ -486,16 +492,17 @@ Gui.on_click(
 
         if not validate_player(player) then return end
 
+        local are_you_sure = event.element.parent.name
+
         local p = player_table[player.index]
 
         if not p then
             return
         end
 
-        p.frame = event.element.parent.name
         if not p.removing == true then
             p.removing = true
-            Public.refresh_gui_player(player)
+            Public.refresh_gui_player(player, are_you_sure)
         end
     end
 )
@@ -560,12 +567,11 @@ Gui.on_click(
             return
         end
 
-        p.frame = event.element.parent.name
-        Public.remove_warp_point(p.frame)
+        Public.remove_warp_point(event.element.parent.name)
         if p.shared == true then
-            game.print(player.name .. " removed warp: " .. p.frame, Color.warning)
+            game.print(player.name .. " removed warp: " .. event.element.parent.name, Color.warning)
         elseif p.shared == false then
-            player.print("Removed warp: " .. p.frame, Color.warning)
+            player.print("Removed warp: " .. event.element.parent.name, Color.warning)
         end
         Public.clear_player_table(player)
         Public.refresh_gui()
@@ -578,6 +584,10 @@ Gui.on_click(
         local player = game.get_player(event.player_index)
         local gui = player.gui
         local left = gui.left
+        local element = event.element
+        if not element then return end
+        local parent = element.parent
+        if not parent then return end
 
         if not validate_player(player) then return end
 
@@ -587,38 +597,44 @@ Gui.on_click(
             return
         end
 
-        if p.spam > game.tick then
-            player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
-            return
+        local warp
+
+        local position
+
+        if not Roles.get_role(player):allowed('always-warp') then
+            if p.spam > game.tick then
+                player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
+                return
+            end
+
+            warp = warp_table[parent.name]
+
+            position = player.position
+
+            if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 > 64 then
+                player.print("You are not standing on a warp platform.", Color.warning)
+                return
+            end
+
+            if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
+                player.print('Destination is source warp: ' .. parent.name, Color.fail)
+                return
+            end
+        else
+            warp = warp_table[parent.name]
         end
-
-        p.frame = event.element.parent.name
-
-        local warp = warp_table[p.frame]
-
-        local position = player.position
-
-        if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 > 64 then
-            player.print("You are not standing on a warp platform.", Color.warning)
-            return
-        end
-
-        if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
-            player.print('Destination is source warp: ' .. p.frame, Color.fail)
-            return
-        end
-
-        Public.clear_player_table(player)
-
-        Public.refresh_gui_player(player)
 
         if player.vehicle then player.vehicle.set_driver(nil) end
         if player.vehicle then player.vehicle.set_passenger(nil) end
         if player.vehicle then return end
 
         player.teleport(warp.surface.find_non_colliding_position('character',warp.position,32,1),warp.surface)
-        player.print('Warped you over to: ' .. p.frame, Color.success)
+        player.print('Warped you over to: ' .. parent.name, Color.success)
         p.spam = game.tick + 900
+
+        Public.clear_player_table(player)
+
+        Public.refresh_gui_player(player)
 
         Public.close_gui_player(left[main_frame_name])
         return
@@ -633,8 +649,6 @@ Gui.on_click(
         if not validate_player(player) then return end
 
         local p = player_table[player.index]
-
-        p.frame = event.element.parent.name
 
         Public.clear_player_table(player)
 
@@ -654,17 +668,16 @@ Gui.on_click(
 
         local p = player_table[player.index]
 
-
-        if p.spam > game.tick then
-            player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
-            return
+        if not Roles.get_role(player):allowed('always-warp') then
+            if p.spam > game.tick then
+                player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
+                return
+            end
         end
 
-        p.frame = event.element.parent.name
         local shared = p.shared
 
-
-        local new = p.sub_table.wp_table.wp_text.text
+        local new = p.frame.new_name.text
         if new ~= "" and new ~= "Spawn" and new ~= "Name:" and new ~= "Warp name:" then
             local position = player.position
             if warp_table[new] then player.print("Warp name already exists!", Color.fail) return end
@@ -676,6 +689,7 @@ Gui.on_click(
                 player.print("Created warp: " .. new, Color.success)
             end
             Public.refresh_gui()
+            p.frame = nil
         end
         return
     end

@@ -82,6 +82,14 @@ function inputs._input:draw(root)
     end
 end
 
+function inputs._input:remove(root)
+    local player = game.get_player(root.player_index)
+    local gui = player.gui.left.mod_gui_frame_flow
+    if gui[self.draw_data.name] then
+        gui[self.draw_data.name].destroy()
+    end
+end
+
 --- Add a new input, this is the same as doing frame.add{} but returns a diffrent object
 -- @usage Gui.inputs.add{type='button',name='test',caption='Test'}
 -- @tparam table obj the new element to add if caption is a sprite path then sprite is used
@@ -299,17 +307,19 @@ end
 -- @tapram string text the caption to go with the slider
 -- @tparam number min the lowest number
 -- @tparam number max the highest number
+-- @tparam value_step step increasing
 -- @param start_callback either a number or a function to return a number
 -- @tparam function callback the function to be called on value_changed function(player,value,percent,element)
 -- @treturn table the slider object that was made, to allow a custom error event if wanted
-function inputs.add_slider(name,orientation,min,max,start_callback,callback)
+function inputs.add_slider(name,orientation,min,max,value_step,start_callback,callback)
     local slider = inputs.add{
         type='slider',
         name=name,
         orientation=orientation,
         minimum_value=min,
         maximum_value=max,
-        value=start_callback
+        value=start_callback,
+        value_step=value_step
     }
     slider.data._start = start_callback
     slider.data._callback = callback

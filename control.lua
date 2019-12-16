@@ -15,11 +15,11 @@ require 'utils.session_data'
 require 'utils.player_modifiers'
 require 'utils.surface'
 
--- Rank system
-require 'utils.rank.main'
-local Rank = require 'utils.rank.presets'
-require 'utils.rank.add_ranks'
-Rank.adjust_ranks()
+-- Role system
+require 'utils.role.main'
+local Role = require 'utils.role.permissions'
+require 'utils.role.roles'
+Role.adjust_permission()
 
 -- gui and modules
 require 'utils.gui.main'

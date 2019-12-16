@@ -5,7 +5,7 @@ local Server = require 'utils.server'
 local Event = require 'utils.event'
 local table = require 'utils.table'
 local Print = require('utils.print_override')
-local Ranks = require 'utils.rank.main'
+local Roles = require 'utils.role.main'
 local raw_print = Print.raw_print
 
 local session_data_set = 'sessions'
@@ -48,17 +48,15 @@ local try_download_data =
         local key = data.key
         local value = data.value
         local player = game.players[key]
+        if not player then return end
         if value then
             session[key] = value
             if value > 2592000 then
-                if trusted[key] and trusted[key] == true then goto continue end
-                if not player then trusted[key] = true goto continue end
-                local power = Ranks.get_rank(player).power
+                local power = Roles.get_role(player).power
                 if power >= 5 then
-                    Ranks.give_rank(player, 'Member')
+                    Roles.give_rank(player, 'Veteran')
                 end
                 trusted[key] = true
-                ::continue::
             end
         else
             session[key] = 0

@@ -1,4 +1,3 @@
-
 local Event = require 'utils.event'
 local Global = require 'utils.global'
 local Gui = require 'utils.gui'
@@ -8,9 +7,9 @@ local Public = require 'utils.gui'
 local mod = m_gui.get_frame_flow
 local disabled_tabs = {}
 local icons = {
-	"entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
-	 "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
-	  "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
+    "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
+     "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
+      "entity/small-biter", "entity/character", "entity/medium-biter", "entity/character", "entity/big-biter",
 }
 local this = {}
 
@@ -46,7 +45,12 @@ Gui.data = setmetatable({},{
 })
 
 
-function Public.get_table()
+function Public.get_table(key)
+    if key == "tabs" then
+        return disabled_tabs
+    elseif key == "icons" then
+        return icons
+    end
     return Gui.data
 end
 

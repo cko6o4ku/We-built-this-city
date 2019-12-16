@@ -1,4 +1,4 @@
-	require 'util'
+require 'util'
 local Global = require 'utils.global'
 local Event = require 'utils.event'
 local Validate = require 'utils.validate_player'

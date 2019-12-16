@@ -1,5 +1,6 @@
 local Event = require 'utils.event'
 local Gui = require 'utils.gui.main'
+local Roles = require 'utils.role.main'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
 
@@ -22,33 +23,25 @@ end
 -- @usage toolbar.draw(1)
 -- @param player the player to draw the tool bar of
 function toolbar.draw(event)
-    local player = game.players[event.player_index]
-    if not player then return end
-    local frame = mod(player)
-    --frame.clear()
+  local player = game.players[event.player_index]
+  if not player then return end
+  local frame = mod(player)
 
-    if not Gui.data('toolbar') then return end
-    for _, button in pairs(Gui.data('toolbar')) do
-        if not player.admin then
-        return
+  if not Gui.data('toolbar') then return end
+  for name, button in pairs(Gui.data('toolbar')) do
+    button:remove(frame)
+     if Roles.is_type(Roles,'table') and Roles.config.meta.role_count > 0 then
+        local role = Roles.get_role(player)
+        if role:allowed(name) then
+            button:draw(frame)
         else
-            if frame[button.name] then
-                frame[button.name].clear()
-            else
-                button:draw(frame)
-            end
+          button:remove(frame)
         end
-	end
-
-   --script.raise_event(Gui.events.on_gui_removal,
-   --{
-   --    player = player
-   --})
-
+    end
+  end
 end
 
+Event.add(Roles.events.on_role_change,toolbar.draw)
 Event.add(defines.events.on_player_joined_game, toolbar.draw)
---Event.add(defines.events.on_player_promoted, toolbar.draw)
---Event.add(defines.events.on_player_demoted, toolbar.draw)
 
 return toolbar

@@ -147,7 +147,14 @@ local function on_gui_click(event)
 		local new_group_name = frame.frame2.group_table.new_group_name.text
 		local new_group_description = frame.frame2.group_table.new_group_description.text
 		if new_group_name == "Comfy" then player.print("Heretic!") return end
-		if new_group_name ~= "" and new_group_name ~= "Name" and new_group_description ~= "Description" then
+		if new_group_name ~= ""
+		and new_group_name ~= "Name"
+		and new_group_name ~= "Owner"
+		and new_group_name ~= "root"
+		and new_group_name ~= "admin"
+		and new_group_name ~= "Root"
+		and new_group_name ~= "Admin"
+		and new_group_description ~= "Description" then
 
 			if string.len(new_group_name) > 64 then
 				player.print("Group name is too long. 64 characters maximum.", { r=0.90, g=0.0, b=0.0})

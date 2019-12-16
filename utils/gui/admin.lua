@@ -4,7 +4,12 @@ local event = require 'utils.event'
 local Gui = require 'utils.gui.main'
 local Surface = require 'utils.surface'.get_surface_name()
 local Color = require 'utils.color_presets'
+local Global = require 'utils.global'
+local Roles = require 'utils.role.main'
 
+local this = {}
+
+Global.register(this,function(t) this=t end)
 
 local function admin_only_message(str)
 	for _, player in pairs(game.connected_players) do
@@ -19,18 +24,12 @@ local jail_messages = {
 	"Busted!"
 }
 local function jail(player, source_player)
-	local permission_group = game.permissions.get_group("prisoner")
-	if not permission_group then
-		permission_group = game.permissions.create_group("prisoner")
-		for action_name, _ in pairs(defines.input_action) do
-			permission_group.set_allows_action(defines.input_action[action_name], false)
-		end
-		permission_group.set_allows_action(defines.input_action.write_to_console, true)
-		permission_group.set_allows_action(defines.input_action.gui_click, true)
-		permission_group.set_allows_action(defines.input_action.gui_selection_state_changed, true)
-	end
-	permission_group.add_player(player.name)
+	local source_role = Roles.get_role(source_player)
+	local target_role = Roles.get_role(player)
+	if source_role.power >= target_role.power then source_player.print(player.name .. " has a higher role than you!") return end
+	this[player.index] = player.permission_group.name
 	game.print(player.name .. " has been jailed. " .. jail_messages[math.random(1, #jail_messages)], { r=0.98, g=0.66, b=0.22})
+	Roles.give_role(player, 'Jail')
 	admin_only_message(player.name .. " was jailed by " .. source_player.name)
 end
 
@@ -39,8 +38,12 @@ local freedom_messages = {
 	"Welcome back!"
 }
 local function free(player, source_player)
-	local permission_group = game.permissions.get_group("Default")
-	permission_group.add_player(player.name)
+	if this[player.index] then
+		Roles.give_role(player, tostring(this[player.index]))
+		this[player.index] = nil
+	else
+		return
+	end
 	game.print(player.name .. " was set free from jail. " .. freedom_messages[math.random(1, #freedom_messages)], { r=0.98, g=0.66, b=0.22})
 	admin_only_message(source_player.name .. " set " .. player.name .. " free from jail")
 end
