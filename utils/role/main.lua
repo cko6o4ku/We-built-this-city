@@ -3,43 +3,12 @@ local Color = require 'utils.color_presets'
 local Event = require "utils.event"
 local Table = require 'utils.extended_table'
 local Public = require 'utils.role.table'
+local Server = require 'utils.server'
 
+-- @usage _log('something')
 local function _log(string)
     if not __DEBUG then return end
     return log("RAW: " .. serpent.block(string))
-end
-
-function Public.is_type(v,test_type)
-    return test_type and v and type(v) == test_type or not test_type and not v or false
-end
-
-function Public.player_return(rtn,colour,player)
-    local _colour = colour or Color.white
-    local _player = player or game.player
-    if _player then
-        if not player then return end
-        player.play_sound{path='utility/scenario_message'}
-        if Public.is_type(rtn,'table') then
-            if Public.is_type(rtn.__self,'userdata') then player.print('Can not display userdata',_colour)
-            elseif Public.is_type(rtn[1],'string') and string.find(rtn[1],'.+[.].+') and not string.find(rtn[1],'%s') then pcall(player.print,rtn,_colour)
-            else player.print(Table.to_string(rtn),_colour)
-            end
-        elseif Public.is_type(rtn,'function') then player.print('Can not display functions',_colour)
-        else player.print(tostring(rtn),_colour)
-        end
-    else
-        local _return
-        if Public.is_type(rtn,'table') then _return = Table.to_string(rtn)
-        elseif Public.is_type(rtn,'function') then _return = 'Can not display functions'
-        elseif Public.is_type(rtn,'userdata') then _return = 'Can not display userdata'
-        else _return = tostring(rtn)
-        end log(_return)
-    end
-end
-
-local function tick_to_min(tick)
-    if not Public.is_type(tick,'number') then return 0 end
-    return math.floor(tick/(3600))
 end
 
 function Public.output_roles(player)
@@ -53,7 +22,7 @@ function Public.output_roles(player)
         output=output..' Admin: '..admin
         output=output..' Group: '..role.group.name
         output=output..' AFK: '..tostring(role.base_afk_time)
-        Public.player_return(output,role.colour,_player)
+        Server.player_return(output,role.colour,_player)
     end
 end
 
@@ -70,7 +39,7 @@ function Public.get_role(player)
     if not player then return false end
     local _roles = Public.add_roles()
     local _return
-    if Public.is_type(player,'table') then
+    if Server.is_type(player,'table') then
         if player.index then
             _return = game.players[player.index] and _roles[player.permission_group.name] or nil
         else
@@ -91,17 +60,17 @@ function Public.get_group(mixed)
     local _groups = Public.add_groups()
     local role = Public.get_role(mixed)
     return role and role.group
-    or Public.is_type(mixed,'table') and mixed.roles and mixed
-    or Public.is_type(mixed,'string') and Table.autokey(_groups,mixed) and Table.autokey(_groups,mixed)
+    or Server.is_type(mixed,'table') and mixed.roles and mixed
+    or Server.is_type(mixed,'string') and Table.autokey(_groups,mixed) and Table.autokey(_groups,mixed)
     or false
 end
 
 -- @usage Public.give_role(1,'member')
-function Public.give_role(player,role,by_player,tick)
+function Public.give_role(player,role,by_player,tick,raise_event)
     local this = Public.config
     local print_colour = Color.warning
     local _tick = tick or game.tick
-    local by_player_name = 'script' or player.name or Public.is_type(by_player,'string') and by_player
+    local by_player_name = Server.is_type(by_player,'string') and by_player or player.name or 'script'
     local this_role = Public.get_role(role) or Public.get_role(this.meta.default)
     local old_role = Public.get_role(player) or Public.get_role(this.meta.default)
     local message = 'roles.role-down'
@@ -110,21 +79,25 @@ function Public.give_role(player,role,by_player,tick)
     if this_role.power < old_role.power then message = 'roles.role-up' player.play_sound{path='utility/achievement_unlocked'}
     else player.play_sound{path='utility/game_lost'} end
     if player.online_time > 60 or by_player_name ~= 'server' then game.print({message,player.name,this_role.name,by_player_name},print_colour) end
-    if this_role.group.name ~= 'User' then Public.player_return({'roles.role-given',this_role.name},print_colour,player) end
-    if player.tag ~= old_role.tag then Public.player_return({'roles.tag-reset'},print_colour,player) end
+    if this_role.group.name ~= 'User' then Server.player_return({'roles.role-given',this_role.name},print_colour,player) end
+    if player.tag ~= old_role.tag then Server.player_return({'roles.tag-reset'},print_colour,player) end
     -- role change
     player.permission_group = game.permissions.get_group(this_role.name)
     player.tag = this_role.tag
     if old_role.group.name ~= 'Jail' then this.old[player.index] = old_role.name end
     player.admin = this_role.is_admin or false
     player.spectator = this_role.is_spectator or false
-    script.raise_event(Public.events.on_role_change,{
-        tick=_tick,
-        player_index=player.index,
-        by_player_name=by_player_name,
-        new_role=this_role,
-        old_role=old_role
-    })
+    if raise_event == nil then
+        if Public.events.on_role_change then
+            script.raise_event(Public.events.on_role_change,{
+                tick=_tick,
+                player_index=player.index,
+                by_player_name=by_player_name,
+                new_role=this_role,
+                old_role=old_role
+            })
+        end
+    end
 end
 
 function Public.revert(player,by_player)
@@ -146,10 +119,10 @@ function Public.update_role(player,tick)
         table.insert(_roles,role)
     end
     if not meta_data.next_role_power then return end
-    if current_role.power > meta_data.next_role_power and tick_to_min(player.online_time) > meta_data.time_lowest then
+    if current_role.power > meta_data.next_role_power and Server.tick_to_min(player.online_time) > meta_data.time_lowest then
         for _,role_name in pairs(meta_data.next_role_name) do
             local role = Public.get_role(role_name)
-            if tick_to_min(player.online_time) > role.time then
+            if Server.tick_to_min(player.online_time) > role.time then
                 table.insert(_roles,role)
             end
         end
@@ -163,7 +136,7 @@ function Public.update_role(player,tick)
             player.tag = _role.tag
             player.permission_group = game.permissions.get_group(_role.name)
         else
-            Public.give_role(player,_role,nil,tick)
+            Public.give_role(player,_role,'Script',tick,false)
         end
     end
 end
@@ -207,6 +180,9 @@ end
 
 function Public._metadata()
     local meta = Public.config.meta
+    if not meta.next_role_name then
+        meta.next_role_name = {}
+    end
     for power,role in pairs(Public.config.role) do
         meta.role_count = power
         if role.is_default then
@@ -216,7 +192,7 @@ function Public._metadata()
             meta.root = role.name
         end
         if role.time then
-            meta.next_role_name = role.name
+            table.insert(meta.next_role_name, role.name)
             if not meta.next_role_power or power < meta.next_role_power then meta.next_role_power = power end
             if not meta.time_lowest or role.time < meta.time_lowest then meta.time_lowest = role.time end
         end
@@ -258,7 +234,7 @@ end
 function Public._group:create(obj)
     local this = Public.config
     if game then return end
-    if not Public.is_type(obj.name,'string') then return end
+    if not Server.is_type(obj.name,'string') then return end
     _log('Created Group: '..obj.name)
     setmetatable(obj,{__index=Public._group})
     self.index = #this.group+1
@@ -271,10 +247,10 @@ end
 
 function Public._group:add_role(obj)
     if game then return end
-    if not Public.is_type(obj.name,'string') or
-    not Public.is_type(obj.short_hand,'string') or
-    not Public.is_type(obj.tag,'string') or
-    not Public.is_type(obj.colour,'table') then return end
+    if not Server.is_type(obj.name,'string') or
+    not Server.is_type(obj.short_hand,'string') or
+    not Server.is_type(obj.tag,'string') or
+    not Server.is_type(obj.colour,'table') then return end
     _log('Created role: '..obj.name)
     setmetatable(obj,{__index=Public._role})
     obj.group = self
@@ -305,9 +281,8 @@ function Public._group:edit(key,set_value,value)
     Public.config.group[self.index] = self
 end
 
-Event.add(Public.events.on_role_change, function(e)
-    local p = game.players[e.player_index]
-    Public.update_role(p)
+Event.add(Public.events.on_role_change, function(player_index)
+    Public.update_role(player_index)
 end)
 Event.add(defines.events.on_player_joined_game, function(e)
     local p = game.players[e.player_index]
@@ -330,13 +305,11 @@ end)
 Event.add(defines.events.on_tick,function(event)
     if (((event.tick+10)/(3600))+(15/2))% 15 == 0 then
         if not Callback or not Callback._thread then
-            raw("is_not_callback")
             for _,player in pairs(game.connected_players) do
                 Public.update_role(player)
             end
         else
-            raw("is_callback")
-            Callback.new_thread{
+            Callback.event_add{
                 data={players=game.connected_players}
             }:on_event('tick',function(thread)
                 if #thread.data.players == 0 then thread:close() return end

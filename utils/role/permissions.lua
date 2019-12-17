@@ -91,7 +91,16 @@ trusted:add_role{
     name='Veteran',
     short_hand='Veteran',
     tag='',
-    time=100,
+    time=300,
+    colour={r=26,g=118,b=156},
+    base_afk_time=120
+}
+
+trusted:add_role{
+    name='Casual',
+    short_hand='Casual',
+    tag='',
+    time=50,
     colour={r=26,g=118,b=156},
     base_afk_time=60
 }

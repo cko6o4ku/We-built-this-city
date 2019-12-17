@@ -54,7 +54,7 @@ local try_download_data =
             if value > 2592000 then
                 local power = Roles.get_role(player).power
                 if power >= 5 then
-                    Roles.give_rank(player, 'Veteran')
+                    Roles.give_rank(player, 'Casual')
                 end
                 trusted[key] = true
             end

@@ -179,9 +179,7 @@ local function draw_create_warp(parent, player, p)
     p.shared = true
     textfield.style.minimal_width = 10
     textfield.style.height = 24
-    --textfield.style.horizontally_stretchable = true
     p.frame = {new_name = textfield}
-    --Gui.set_d("parent", {textfield = textfield})
 
     local _flow = x.add{
     type = 'flow'
@@ -380,6 +378,14 @@ function Public.close_gui_player(frame)
 
     if frame then
         frame.destroy()
+    end
+
+end
+
+function Public.is_spam(p, player)
+    if p.spam > game.tick then
+        player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
+        return
     end
 
 end
@@ -602,10 +608,7 @@ Gui.on_click(
         local position
 
         if not Roles.get_role(player):allowed('always-warp') then
-            if p.spam > game.tick then
-                player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
-                return
-            end
+            Public.is_spam(p, player)
 
             warp = warp_table[parent.name]
 
@@ -669,10 +672,7 @@ Gui.on_click(
         local p = player_table[player.index]
 
         if not Roles.get_role(player):allowed('always-warp') then
-            if p.spam > game.tick then
-                player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
-                return
-            end
+            Public.is_spam(p, player)
         end
 
         local shared = p.shared

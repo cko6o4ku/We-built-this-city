@@ -266,14 +266,14 @@ local function player_list_show(player, frame, sort_by)
 		label.style.minimal_width = column_widths[2]
 		label.style.maximal_width = column_widths[2]
 
-		--local label
-		--if Roles.get_role(player_list[i].name).is_admin then
-		--	label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name .. ' [A]', tooltip = 'Admin'}
-		--elseif Roles.get_role(player_list[i].name).group.name == 'Veteran' then
-		--	label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name .. ' [T]', tooltip = 'Trusted'}
-		--else
-			label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name}
-		--end
+		local label
+		if Roles.get_role(player_list[i].name).is_admin then
+			label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name .. ' [A]', tooltip = 'Admin'}
+		elseif Roles.get_role(player_list[i].name).power <= 6 then
+			label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name .. ' [T]', tooltip = 'Trusted'}
+		else
+			label = player_list_panel_table.add { type = "label", name = "player_list_panel_role_" .. i, caption =  Roles.get_role(player_list[i].name).name, tooltip = 'Not trusted :<'}
+		end
 		label.style.font_color = Roles.get_role(player_list[i].name).color
 		label.style.minimal_width = column_widths[3]
 		label.style.maximal_width = column_widths[3]

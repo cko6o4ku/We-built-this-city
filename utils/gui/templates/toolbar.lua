@@ -1,6 +1,7 @@
 local Event = require 'utils.event'
 local Gui = require 'utils.gui.main'
 local Roles = require 'utils.role.main'
+local Server = require 'utils.server'
 local m_gui = require "mod-gui"
 local mod = m_gui.get_frame_flow
 
@@ -30,7 +31,7 @@ function toolbar.draw(event)
   if not Gui.data('toolbar') then return end
   for name, button in pairs(Gui.data('toolbar')) do
     button:remove(frame)
-     if Roles.is_type(Roles,'table') and Roles.config.meta.role_count > 0 then
+     if Server.is_type(Roles,'table') and Roles.config.meta.role_count > 0 then
         local role = Roles.get_role(player)
         if role:allowed(name) then
             button:draw(frame)

@@ -2,6 +2,7 @@ local Event = require 'utils.event'
 local Server = require 'utils.server'
 local session = require 'utils.session_data'
 local Color = require 'utils.color_presets'
+local Roles = require 'utils.role.main'
 local font = "default-game"
 
 local brain = {
@@ -29,7 +30,11 @@ local links = {
 
 local function on_player_created(event)
     local player = game.players[event.player_index]
-    player.print("[font=" .. font .. "]" .. "Join our sweet discord >> discord.io/wbtc" .. "[/font]", Color.success)
+    local trusted = session.get_trusted_table()
+    --player.print("[font=" .. font .. "]" .. "Join our sweet discord >> discord.io/wbtc" .. "[/font]", Color.success)
+    if player.admin then
+        trusted[player.name] = true
+    end
 end
 
 commands.add_command(
@@ -54,9 +59,15 @@ commands.add_command(
 
             if cmd.parameter == nil then return end
             local target_player = game.players[cmd.parameter]
+            if not target_player then return end
             if target_player then
-                if target_player.name == player.name then game.print("You can't trust yourself ;)", Color.info) return end
+                --if target_player.name == player.name then game.print("You can't trust yourself ;)", Color.info) return end
                 if trusted[target_player.name] == true then game.print(target_player.name .. " is already trusted!") return end
+                local target_role = Roles.get_role(target_player)
+                local source_role = Roles.get_role(player)
+                if source_role.power <= target_role.power then
+                    Roles.give_role(target_player, 'Casual')
+                end
                 trusted[target_player.name] = true
                 game.print(target_player.name .. " is now a trusted player.", Color.success)
                 for _, a in pairs(game.connected_players) do
@@ -101,9 +112,15 @@ commands.add_command(
 
             if cmd.parameter == nil then return end
             local target_player = game.players[cmd.parameter]
+            if not target_player then return end
             if target_player then
                 if target_player.name == player.name then game.print("You can't untrust yourself ;)", Color.info) return end
                 if trusted[target_player.name] == false then game.print(target_player.name .. " is already untrusted!") return end
+                local target_role = Roles.get_role(target_player)
+                local source_role = Roles.get_role(player)
+                if source_role.power <= target_role.power then
+                    Roles.give_role(target_player, 'Rookie')
+                end
                 trusted[target_player.name] = false
                 game.print(target_player.name .. " is now untrusted.", Color.success)
                 for _, a in pairs(game.connected_players) do
@@ -152,5 +169,5 @@ local function on_console_command(event)
 end
 
 Event.add(defines.events.on_player_created, on_player_created)
-Event.add(defines.events.on_console_chat, on_console_chat)
+--Event.add(defines.events.on_console_chat, on_console_chat)
 Event.add(defines.events.on_console_command, on_console_command)

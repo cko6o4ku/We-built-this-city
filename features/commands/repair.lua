@@ -2,6 +2,7 @@
 --local Modifiers = require 'utils.player_modifiers'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
+local Roles = require 'utils.role.main'
 
 -- these items are not repaired, true means it is blocked
 local disallow = {
@@ -22,15 +23,17 @@ commands.add_command(
     local player = game.player
     if player then
         if player ~= nil then
-            local p = player.print
-            if not player.admin then
+            if not Roles.get_role(player):allowed('repair') then
+                local p = player.print
                 p("[ERROR] Only admins are allowed to run this command!", Color.fail)
                 return
             end
         end
     end
     local range = tonumber(args.parameter)
-    local max_range = const
+    local role = Roles.get_role(player)
+    local highest_admin_power = Roles.get_group('Admin').highest.power-1
+    local max_range = role.power-highest_admin_power > 0 and const/(role.power-highest_admin_power) or nil
     local center = player and player.position or {x=0,y=0}
     if not range or max_range and range > max_range then player.print("Invalid range.") return end
     for x = -range-2, range+2 do

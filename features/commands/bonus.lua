@@ -1,8 +1,8 @@
 local Event = require 'utils.event'
 local Global = require 'utils.global'
-local Session = require 'utils.session_data'
 local Modifiers = require 'utils.player_modifiers'
 local Color = require 'utils.color_presets'
+local Roles = require 'utils.role.main'
 
 local Public = {}
 
@@ -32,18 +32,15 @@ commands.add_command(
     'bonus',
     'Set your player bonus (speed, mining etc)',
     function(args)
-    local trusted = Session.get_trusted_table()
     local player = game.player
     local p_modifer = Modifiers.get_table()
     local _a = p_modifer
     if player then
         if player ~= nil then
-            local p = player.print
-            if not trusted[player.name] then
-                if not player.admin then
-                    p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail)
-                    return
-                end
+            if not Roles.get_role(player):allowed('bonus') then
+                local p = player.print
+                p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail)
+                return
             end
         end
     end
@@ -64,8 +61,7 @@ end)
 
 Event.add(defines.events.on_pre_player_died,function(event)
     local player = game.players[event.player_index]
-    local trusted = Session.get_trusted_table()
-    if trusted[player.name] or player.admin then
+    if Roles.get_role(player):allowed('bonus-respawn') then
         player.ticks_to_respawn = 120
         script.raise_event(defines.events.on_player_died,{
             tick=event.tick,

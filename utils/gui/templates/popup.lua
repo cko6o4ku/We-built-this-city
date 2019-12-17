@@ -76,7 +76,7 @@ function popup.open(style,data,players)
             else error('No Draw On Popup '.._popup.name) end
         end
     else
-        Server.new_thread{
+        Server.event_add{
             data={players=players,popup=_popup,data=data}
         }:on_event('tick',function(thread)
             if #thread.data.players == 0 then thread:close() return end

@@ -177,11 +177,11 @@ function Public._threads(t)
     return this
 end
 
-function Public.new_thread(obj)
+function Public.event_add(obj)
     return Public._thread:create(obj)
 end
 
-function Public.get_thread(mixed)
+function Public.event_retrieve(mixed)
     local threads = this
     if threads.named[mixed] then return threads.all[threads.named[mixed]]
     elseif threads.paused[mixed] then return threads.all[threads.paused[mixed]]
@@ -208,7 +208,7 @@ end
 
 function Public.run_tick_threads()
     Table.each(this.tick,function(uuid)
-        local next_thread = Public.get_thread(uuid)
+        local next_thread = Public.event_retrieve(uuid)
         if next_thread and next_thread:valid() and next_thread._tick then
             local success, err = pcall(next_thread._tick,next_thread)
             if not success then next_thread:error(err) end
@@ -218,7 +218,7 @@ end
 
 function Public.check_timeouts()
     Table.each(this.timeout,function(uuid)
-        local next_thread = Public.get_thread(uuid)
+        local next_thread = Public.event_retrieve(uuid)
         if next_thread and next_thread:valid() then
             next_thread:check_timeout()
         end
@@ -243,7 +243,7 @@ function Public._thread_handler(event)
     local threads = this.events[event_id]
     if not threads then return end
     Table.each(threads,function(uuid)
-        local next_thread = Public.get_thread(uuid)
+        local next_thread = Public.event_retrieve(uuid)
         if next_thread and next_thread:valid() then
             if is_type(next_thread._events[event_id],'function') then
                 local success, err = pcall(next_thread._events[event_id],next_thread,event)
@@ -257,7 +257,7 @@ for _,event in pairs(defines.events) do Event.add(event,Public._thread_handler) 
 
 function Public.interface(callback,use_thread,...)
     if use_thread then
-        if use_thread == true then use_thread = Public.new_thread{data={callback,...}} end
+        if use_thread == true then use_thread = Public.event_add{data={callback,...}} end
         use_thread:on_event('resolve',function(thread)
             if is_type(thread.data[1],'function') then
                 local success, err = pcall(unpack(thread.data))

@@ -480,4 +480,13 @@ function Public.autokey(tbl,str)
     return _return[1] or false
 end
 
+function Public.sizeof(tbl)
+  if not tbl then return 0 end
+  local len = 0
+  for k, v in pairs(tbl) do
+    len = len + 1
+  end
+  return len
+end
+
 return Public

@@ -40,12 +40,29 @@ roles['Owner']:edit('allow',false,{
     ['admin-items']=true,
     ['admin-commands']=true,
     ['interface'] = true,
-    ['warp-list']=true,
-    ['repair']=true,
+    ['warp-list']=true
+})
+
+roles['Moderator']:edit('allow',false,{
+    ['repair']=true
+})
+
+roles['Veteran']:edit('allow',false,{
+    ['bonus']=true,
+    ['bonus-respawn']=true
+})
+
+roles['Rookie']:edit('allow',false,{
+    ['global-chat']=true
 })
 
 Public.standard_roles{
-    ['gerkiz']='Owner'
+    ['gerkiz']='Owner',
+    ['cko6o4ku']='Moderator',
+    ['userguide']='Moderator',
+    ['panterh3art']='Moderator',
+    ['mewmew']='Moderator',
+    ['redlabel']='Moderator',
 }
 
 return Public
