@@ -2,9 +2,9 @@ local Event = require 'utils.event'
 local market_items = require "features.modules.map_market_items"
 local Tabs = require 'utils.gui.main'
 local RPG = require 'features.modules.rpg'
-local fish = require 'features.modules.launch_fish_to_win'
+local Fish = require 'features.modules.launch_fish_to_win'
 
-require 'features.modules.scramble'
+--require 'features.modules.scramble'
 require 'features.modules.spawn_ent.main'
 require 'features.modules.biters_yield_coins'
 require 'features.modules.dangerous_goods'
@@ -59,6 +59,9 @@ local function on_start()
         "Mining productivity research, will overhaul your mining equipment,\n",
         "reinforcing your pickaxe as well as increasing the size of your backpack.\n",
         "\n",
+        "Biters drop coin when defeated,\n",
+        "Use these coins to purchase loot from markets that spawn around the map.\n",
+        "\n",
         "Good luck, over and out!"
         })
         T.main_caption_color = {r = 150, g = 150, b = 0}
@@ -75,29 +78,6 @@ local function on_start()
     if (global.frontier_rocket_silo_mode) then
         Silo.SpawnSilosAndGenerateSiloAreas()
     end
-
-    local p = game.permissions.create_group("spectator")
-    for action_name, _ in pairs(defines.input_action) do
-        p.set_allows_action(defines.input_action[action_name], false)
-    end
-
-    local defs = {
-        defines.input_action.write_to_console,
-        defines.input_action.gui_click,
-        defines.input_action.gui_selection_state_changed,
-        defines.input_action.gui_checked_state_changed,
-        defines.input_action.gui_selected_tab_changed,
-        defines.input_action.gui_elem_changed,
-        defines.input_action.gui_text_changed,
-        defines.input_action.gui_value_changed,
-        defines.input_action.open_kills_gui,
-        defines.input_action.open_character_gui,
-        defines.input_action.edit_permission_group,
-        defines.input_action.toggle_show_entity_info,
-        defines.input_action.rotate_entity,
-    }
-    for k, v in pairs(defs) do p.set_allows_action(v, true) end
-
     -- Everyone do the shuffle. Helps avoid always starting at the same location.
     global.vanillaSpawns = Utils.shuffle(global.vanillaSpawns)
     --log ("Vanilla spawns:")
@@ -197,10 +177,6 @@ Event.add(defines.events.on_player_created, function(event)
         Utils.GivePlayerLongReach(player)
     end
 
-    if player.online_time == 0 then
-        game.permissions.get_group("spectator").add_player(player)
-    end
-
     SS.SeparateSpawnsPlayerCreated(event.player_index)
 end)
 
@@ -288,10 +264,12 @@ end)
 --end)
 
 Event.add(defines.events.on_player_mined_entity, function(event)
+    local player = game.players[event.player_index]
+    if not player then return end
     local e = event.entity
     if e.type ~= "tree" then return end
-    if e and e.valid and math_random(1, 5) == 1 then
-      e.surface.spill_item_stack(game.players[event.player_index].position,{name = "coin", count = math_random(1,2)},true)
+    if e and e.valid and math_random(1, 4) == 1 then
+        player.insert({name = "coin", count = math_random(1,3)})
     end
 end)
 

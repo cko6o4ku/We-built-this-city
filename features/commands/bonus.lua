@@ -3,6 +3,7 @@ local Global = require 'utils.global'
 local Modifiers = require 'utils.player_modifiers'
 local Color = require 'utils.color_presets'
 local Roles = require 'utils.role.main'
+local Server = require 'utils.server'
 
 local Public = {}
 
@@ -38,8 +39,8 @@ commands.add_command(
     if player then
         if player ~= nil then
             if not Roles.get_role(player):allowed('bonus') then
-                local p = player.print
-                p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail)
+                local p = Server.player_return
+                p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail, player)
                 return
             end
         end

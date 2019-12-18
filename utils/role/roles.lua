@@ -40,16 +40,26 @@ roles['Owner']:edit('allow',false,{
     ['admin-items']=true,
     ['admin-commands']=true,
     ['interface'] = true,
-    ['warp-list']=true
+    ['warp-list']=true,
+    ['pregen_map']=true,
+    ['dump_layout']=true,
+    ['creative']=true
 })
 
 roles['Moderator']:edit('allow',false,{
-    ['repair']=true
+    ['repair']=true,
+    ['spaghetti']=true
 })
 
 roles['Veteran']:edit('allow',false,{
     ['bonus']=true,
-    ['bonus-respawn']=true
+    ['bonus-respawn']=true,
+    ['clear_corpses']=true,
+})
+
+roles['Casual']:edit('allow',false,{
+    ['trust']=true,
+    ['untrust']=true
 })
 
 roles['Rookie']:edit('allow',false,{

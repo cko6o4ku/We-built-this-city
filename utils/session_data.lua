@@ -53,8 +53,18 @@ local try_download_data =
             session[key] = value
             if value > 2592000 then
                 local power = Roles.get_role(player).power
-                if power >= 5 then
-                    Roles.give_rank(player, 'Casual')
+                local name = Roles.get_role(player).name
+                if name == 'Jail' then return end
+                if power >= 6 then
+                    Roles.give_role(player, 'Casual', 'Script')
+                end
+                trusted[key] = true
+            elseif value > 5184000 then
+                local power = Roles.get_role(player).power
+                local name = Roles.get_role(player).name
+                if name == 'Jail' then return end
+                if power >= 6 then
+                    Roles.give_role(player, 'Veteran', 'Script')
                 end
                 trusted[key] = true
             end

@@ -27,13 +27,12 @@ Global.register(
 
 Public.events = {on_gui_removal = Event.generate_event_name('on_gui_removal')}
 
-Public.data = {}
 Public.classes = {}
 Public.defines = {}
 Public.names = {}
 Public.tabs = {}
 
-Gui.data = setmetatable({},{
+Public.data = setmetatable({},{
     __call=function(tbl,location,key,value)
         if not location then return tbl end
         if not key then return rawget(tbl,location) or rawset(tbl,location,{}) and rawget(tbl,location) end

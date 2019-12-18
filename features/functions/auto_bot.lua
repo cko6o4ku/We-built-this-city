@@ -3,44 +3,21 @@ local Event = require 'utils.event'
 local Roles = require 'utils.role.main'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
+local nth_tick = 54001
+local msg = {{'chat-bot.join-us'},{'chat-bot.discord'},{'chat-bot.custom-commands'}}
 
-Event.on_init(function()
-    Callback.event_add{
-        name='auto-message',
-        timeout=54000, -- 3240000 = 15 hours dont make the mistake i did, 54000 is 15 minutes
-        reopen=true,
-        data={
-            high_role= 'Root',
-            low_role= 'Casual',
-            low={
-                {'chat-bot.join-us'},
-                {'chat-bot.discord'},
-                {'chat-bot.custom-commands'}
-            }
-        }
-    }:on_event('timeout',function(self)
-        local data = self.data
-        if not data.high_role or not data.low_role
-        or not data.low then self.reopen = false return end
-        local _high = Roles.get_role(data.high_role)
-        game.print{'chat-bot.message',{'chat-bot.players-online',#game.connected_players}}
-        game.print{'chat-bot.message',{'chat-bot.map-time', Server.tick_to_display_format(game.tick)}}
-        self.reopen = true
-    end):on_event(defines.events.on_player_joined_game,function(self,event)
-        local player = game.players[event.player_index]
-        if not player then return end
-        local data = self.data
-        if not data.high_role or not data.low_role
-        or not data.low then self.reopen = false return end
-        --if Roles.get_role(player).power <= Roles.get_role(data.low_role).power then return end
-        for _,message in pairs(data.low) do
-            Server.player_return({'chat-bot.message',message},Color.success,player)
-        end
-    end):on_event('error',function(self,err)
-        self.reopen = false
-        self:close()
-        log(err)
-    end):open()
+Event.add(defines.events.on_player_joined_game, function(event)
+    local player = game.players[event.player_index]
+    if not player then return end
+    for _,message in pairs(msg) do
+        Server.player_return({'chat-bot.message',message},Color.success,player)
+    end
+end)
+
+Event.on_nth_tick(nth_tick, function()
+    if game.tick <= 10 then return end
+    game.print{'chat-bot.message',{'chat-bot.players-online',#game.connected_players}}
+    game.print{'chat-bot.message',{'chat-bot.map-time', Server.tick_to_display_format(game.tick)}}
 end)
 
 local messages = {

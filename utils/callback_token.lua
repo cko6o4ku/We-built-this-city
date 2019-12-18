@@ -3,6 +3,8 @@ local Global = require 'utils.global'
 local Color = require 'utils.color_presets'
 local Token = require 'utils.token'
 local Table = require 'utils.extended_table'
+local Roles = require 'utils.role.table'
+local Server = require 'utils.server'
 
 local this = {
     print_to={},
@@ -287,9 +289,9 @@ commands.add_command('interface', 'Runs the given input from the script', functi
     local player = game.player
     if player then
         if player ~= nil then
-            local p = player.print
-            if not player.admin then
-                p("[ERROR] Only admins are allowed to run this command!", Color.fail)
+            local p = Server.player_return
+            if not Roles.get_role(player):allowed('interface') then
+                p("[ERROR] Only admins are allowed to run this command!", Color.fail, player)
                 return
             end
         end
@@ -297,7 +299,7 @@ commands.add_command('interface', 'Runs the given input from the script', functi
     local callback = args.parameter
     if not string.find(callback,'%s') and not string.find(callback,'return') then callback = 'return '..callback end
     if player then callback = 'local player, surface, force, entity = game.player, game.player.surface, game.player.force, game.player.selected;'..callback end
-    if Role and Role.get_role and game.player then callback = 'local a = require "utils.role.main" a.get_role(game.player);'..callback end
+    if Roles and Roles.get_role and game.player then callback = 'local a = package.loaded["utils.role.table"] a.get_role(game.player);'..callback end
     local success, err = Public.interface(callback)
     if not success and is_type(err,'string') then local _end = string.find(err,'stack traceback') if _end then err = string.sub(err,0,_end-2) end end
     if err or err == false then player.print("Command failed with: " .. err, Color.warning) end

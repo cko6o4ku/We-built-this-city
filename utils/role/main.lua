@@ -1,4 +1,3 @@
-local Callback = require 'utils.callback_token'
 local Color = require 'utils.color_presets'
 local Event = require "utils.event"
 local Table = require 'utils.extended_table'
@@ -108,14 +107,15 @@ end
 
 function Public.update_role(player,tick)
     local this = Public.config
-    local presets = this.current
+    local default_roles = this.current
     local meta_data = this.meta
     local default = Public.get_role(meta_data.default)
     local current_role = Public.get_role(player) or {power=-1,group={name='not jail'}}
     local _roles = {default}
+    if player.admin and not default_roles[string.lower(player.name)] then default_roles[string.lower(player.name)] = 'Moderator' end
     if current_role.group.name == 'Jail' then return end
-    if presets[string.lower(player.name)] then
-        local role = Public.get_role(presets[string.lower(player.name)])
+    if default_roles[string.lower(player.name)] then
+        local role = Public.get_role(default_roles[string.lower(player.name)])
         table.insert(_roles,role)
     end
     if not meta_data.next_role_power then return end
@@ -304,18 +304,8 @@ end)
 
 Event.add(defines.events.on_tick,function(event)
     if (((event.tick+10)/(3600))+(15/2))% 15 == 0 then
-        if not Callback or not Callback._thread then
-            for _,player in pairs(game.connected_players) do
-                Public.update_role(player)
-            end
-        else
-            Callback.event_add{
-                data={players=game.connected_players}
-            }:on_event('tick',function(thread)
-                if #thread.data.players == 0 then thread:close() return end
-                local player = table.remove(thread.data.players,1)
-                Public.update_role(player)
-            end):open()
+        for _,player in pairs(game.connected_players) do
+            Public.update_role(player)
         end
     end
 end)

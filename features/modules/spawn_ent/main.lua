@@ -55,6 +55,7 @@ local function spawn_market(center, surface)
 					  color = { r=0.98, g=0.66, b=0.22},
 					  alignment = "center"
 					}
+					a.destructible = false
 				end
 				d_print("market", pos)
 			else
@@ -69,6 +70,7 @@ local function spawn_market(center, surface)
 					  color = { r=0.98, g=0.66, b=0.22},
 					  alignment = "center"
 					}
+					a.destructible = false
 
 				end
 				d_print("market", pos)

@@ -2,6 +2,7 @@ local Session = require 'utils.session_data'
 local Modifiers = require 'utils.player_modifiers'
 local Server = require 'utils.server'
 local Color = require 'utils.color_presets'
+local Roles = require 'utils.role.table'
 
 commands.add_command(
     'spaghetti',
@@ -16,24 +17,22 @@ commands.add_command(
 
         if player then
             if player ~= nil then
-                p = player.print
-                if not player.admin then
-                    p("[ERROR] You're not admin!", Color.fail)
+                if not Roles.get_role(player):allowed('spaghetti') then
+                    p = Server.player_return
+                    p("[ERROR] Only admins are allowed to run this command!", Color.fail, player)
                     return
                 end
-			else
-                p = log
-			end
+            end
         end
 
-        if param == nil then player.print("[ERROR] Arguments are true/false", Color.yellow) return end
+        if param == nil then Server.player_return("[ERROR] Arguments are true/false", Color.yellow, player) return end
         if param == "true" then
 			if not _a.spaghetti_are_you_sure then
 				_a.spaghetti_are_you_sure = true
-				player.print("Spaghetti is not enabled, run this command again to enable spaghett", Color.yellow)
+				Server.player_return("Spaghetti is not enabled, run this command again to enable spaghett", Color.yellow, player)
 				return
 			end
-			if _a.spaghetti_enabled == true then player.print("Spaghetti is already enabled.", Color.yellow) return end
+			if _a.spaghetti_enabled == true then Server.player_return("Spaghetti is already enabled.", Color.yellow, player) return end
 			game.print("The world has been spaghettified!", Color.success)
 			force.technologies["logistic-system"].enabled = false
 			force.technologies["construction-robotics"].enabled = false
@@ -103,21 +102,19 @@ commands.add_command(
 
         if player then
             if player ~= nil then
-                p = player.print
-                if not player.admin then
-                    p("[ERROR] You're not admin!", Color.fail)
+                if not Roles.get_role(player):allowed('pregen_map') then
+                    p = Server.player_return
+                    p("[ERROR] Only admins are allowed to run this command!", Color.fail, player)
                     return
                 end
-			else
-                p = log
-			end
+            end
         end
-        if param == nil then player.print("[ERROR] Must specify radius!", Color.fail) return end
-        if param > 50 then player.print("[ERROR] Value is too big.", Color.fail) return end
+        if param == nil then Server.player_return("[ERROR] Must specify radius!", Color.fail, player) return end
+        if param > 50 then Server.player_return("[ERROR] Value is too big.", Color.fail, player) return end
 
 		if not _a.generate_map then
             _a.generate_map = true
-            player.print("[WARNING] This command will make the server LAG, run this command again if you really want to do this!", Color.yellow)
+            Server.player_return("[WARNING] This command will make the server LAG, run this command again if you really want to do this!", Color.yellow, player)
             return
         end
         local radius = param
@@ -147,18 +144,16 @@ commands.add_command(
 
         if player then
             if player ~= nil then
-                p = player.print
-                if not player.admin then
-                    p("[ERROR] You're not admin!", Color.warning)
+                if not Roles.get_role(player):allowed('dump_layout') then
+                    p = Server.player_return
+                    p("[ERROR] Only admins are allowed to run this command!", Color.fail, player)
                     return
                 end
-			else
-                p = log
-			end
+            end
         end
 		if not _a.dump_layout then
             _a.dump_layout = true
-            player.print("[WARNING] This command will make the server LAG, run this command again if you really want to do this!", Color.yellow)
+            Server.player_return("[WARNING] This command will make the server LAG, run this command again if you really want to do this!", Color.yellow, player)
             return
         end
 		local surface = game.players[1].surface
@@ -200,7 +195,7 @@ commands.add_command(
 			str = str .. t.name
 			str = str .. '"},'
 			game.write_file("layout.lua", str .. '\n' , true)
-			player.print("Dumped layout as file: layout.lua", Color.success)
+			Server.player_return("Dumped layout as file: layout.lua", Color.success, player)
 		end
 		_a.dump_layout = false
 end)
@@ -216,21 +211,19 @@ commands.add_command(
 
         if player then
             if player ~= nil then
-                p = player.print
-                if not player.admin then
-                    p("[ERROR] You're not admin!", Color.fail)
+                if not Roles.get_role(player):allowed('creative') then
+                    p = Server.player_return
+                    p("[ERROR] Only admins are allowed to run this command!", Color.fail, player)
                     return
                 end
-			else
-                p = log
-			end
+            end
         end
 		if not _a.creative_are_you_sure then
             _a.creative_are_you_sure = true
-            player.print("[WARNING] This command will enable creative/cheat-mode for all connected players, run this command again if you really want to do this!", Color.yellow)
+            Server.player_return("[WARNING] This command will enable creative/cheat-mode for all connected players, run this command again if you really want to do this!", Color.yellow, player)
             return
         end
-		if _a.creative_enabled == true then player.print("[ERROR] Creative/cheat-mode is already active!", Color.fail) return end
+		if _a.creative_enabled == true then Server.player_return("[ERROR] Creative/cheat-mode is already active!", Color.fail, player) return end
 
         game.print(player.name .. " has activated creative-mode!", Color.warning)
         Server.to_discord_bold(table.concat{'[Creative] ' .. player.name .. ' has activated creative-mode!'})
@@ -262,7 +255,7 @@ commands.add_command(
 						_a[k].character_inventory_slots_bonus["creative"] = tonumber(i)
 						v.character_inventory_slots_bonus = _a[k].character_inventory_slots_bonus["creative"]
 						v.insert{name=name, count=item.stack_size}
-						v.print("Inserted all base items.", Color.success)
+						Server.player_return("Inserted all base items.", Color.success, v)
 						_a.creative_enabled = true
 					end
 				end
@@ -275,30 +268,127 @@ commands.add_command(
     'Clears all the biter corpses..',
     function(cmd)
         local player = game.player
-        local trusted = Session.get_trusted_table()
         local param = tonumber(cmd.parameter)
         local p
 
         if player then
             if player ~= nil then
-                p = player.print
-                if not trusted[player.name] then
-	                if not player.admin then
-	                    p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail)
-	                    return
-	                end
-	            end
-			else
-                p = log
-			end
+                if not Roles.get_role(player):allowed('clear_corpses') then
+                    p = Server.player_return
+                    p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail, player)
+                    return
+                end
+            end
         end
-	    if param == nil then player.print("[ERROR] Must specify radius!", Color.fail) return end
-	    if param > 500 then player.print("[ERROR] Value is too big.", Color.fail) return end
+	    if param == nil then Server.player_return("[ERROR] Must specify radius!", Color.fail, player) return end
+	    if param > 500 then Server.player_return("[ERROR] Value is too big.", Color.fail, player) return end
 	    local pos = player.position
 
         local radius = {{x = (pos.x + -param), y = (pos.y + -param)}, {x = (pos.x + param), y = (pos.y + param)}}
 		for _, entity in pairs(player.surface.find_entities_filtered{area = radius, type = "corpse"}) do
 			entity.destroy()
 		end
-		player.print("Cleared biter-corpses.", Color.success)
+		Server.player_return("Cleared biter-corpses.", Color.success, player)
 end)
+
+commands.add_command(
+    'trust',
+    'Promotes a player to trusted!',
+    function(cmd)
+        local trusted = Session.get_trusted_table()
+        local server = 'Server'
+        local player = game.player
+        local p
+
+        if player then
+            if player ~= nil then
+                if not Roles.get_role(player):allowed('trust') then
+                    p = Server.player_return
+                    p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail, player)
+                    return
+                end
+            end
+
+            if cmd.parameter == nil then return end
+            local target_player = game.players[cmd.parameter]
+            if not target_player then return end
+            if target_player then
+                --if target_player.name == player.name then game.print("You can't trust yourself ;)", Color.info) return end
+                if trusted[target_player.name] == true then Server.player_return(target_player.name .. " is already trusted!", Color.info, player) return end
+                local target_role = Roles.get_role(target_player)
+                local source_role = Roles.get_role(player)
+                if source_role.power <= target_role.power then
+                    Roles.give_role(target_player, 'Casual', player.name)
+                end
+                trusted[target_player.name] = true
+                game.print(target_player.name .. " is now a trusted player.", Color.success)
+                for _, a in pairs(game.connected_players) do
+                    if a.admin == true and a.name ~= player.name then
+                        a.print("[INFO]: " .. player.name .. " trusted " .. target_player.name, Color.info)
+                        Server.to_admin_embed(table.concat{'[Info] ', player.name, ' has trusted ', target_player.name, '.'})
+                    end
+                end
+            end
+        else
+            if cmd.parameter == nil then return end
+            local target_player = game.players[cmd.parameter]
+            if target_player then
+                if trusted[target_player.name] == true then log(target_player.name .. " is already trusted!") return end
+                trusted[target_player.name] = true
+                game.print(target_player.name .. " is now a trusted player.", Color.success)
+                Server.to_admin_embed(table.concat{'[Info] ', server, ' has trusted ', target_player.name, '.'})
+            end
+        end
+    end
+)
+
+commands.add_command(
+    'untrust',
+    'Demotes a player from trusted!',
+    function(cmd)
+        local trusted = Session.get_trusted_table()
+        local server = 'server'
+        local player = game.player
+        local p
+
+        if player then
+            if player ~= nil then
+                if not Roles.get_role(player):allowed('untrust') then
+                    p = Server.player_return
+                    p("[ERROR] Only admins and trusted weebs are allowed to run this command!", Color.fail, player)
+                    return
+                end
+            end
+
+            if cmd.parameter == nil then return end
+            local target_player = game.players[cmd.parameter]
+            if not target_player then return end
+            if target_player then
+                if target_player.name == player.name then Server.player_return("You can't untrust yourself ;)", Color.info, player) return end
+                if trusted[target_player.name] == false then Server.player_return(target_player.name .. " is already untrusted!", Color.info, player) return end
+                local target_role = Roles.get_role(target_player)
+                local source_role = Roles.get_role(player)
+                if source_role.power <= target_role.power then
+                    Roles.give_role(target_player, 'Rookie', player.name)
+                end
+                trusted[target_player.name] = false
+                game.print(target_player.name .. " is now untrusted.", Color.success)
+                for _, a in pairs(game.connected_players) do
+                    if a.admin == true and a.name ~= player.name then
+                        a.print("[ADMIN]: " .. player.name .. " untrusted " .. target_player.name, Color.info)
+                        Server.to_admin_embed(table.concat{'[Info] ', player.name, ' has untrusted ', target_player.name, '.'})
+                    end
+                end
+            end
+        else
+            if cmd.parameter == nil then return end
+            local target_player = game.players[cmd.parameter]
+            if target_player then
+                if trusted[target_player.name] == false then log(target_player.name .. " is already untrusted!") return end
+                trusted[target_player.name] = false
+                game.print(target_player.name .. " is now untrusted.", Color.success)
+                Server.to_admin_embed(table.concat{'[Info] ', server,  ' has untrusted ', target_player.name, '.'})
+            end
+        end
+    end
+)

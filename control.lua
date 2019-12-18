@@ -1,8 +1,27 @@
 -- control stages
 require 'utils.data_stages'
 _LIFECYCLE = _STAGE.control -- Control stage
-_DEBUG = true
+_DEBUG = false
 _DUMP_ENV = false
+
+local loaded = _G.package.loaded
+local require_return_err = false
+local _require = require
+require = function(path)
+    local _path = path
+    local _return = {pcall(_require,path)}
+    if not table.remove(_return, 1) then
+        local __return = {pcall(_require,path)}
+        if not table.remove(__return, 1) then
+            if _DEBUG then
+                log('Failed to load: '.._path..' ('.._return[1]..')')
+                log('Also Attemped: '..path..' ('..__return[1]..')')
+            end
+            if require_return_err then error(unpack(_return)) end
+        else if _DEBUG then log('Loaded: '.._path) return unpack(__return) end end
+    else if _DEBUG then log('Loaded: '.._path) end end
+    return unpack(_return) and loaded[path]
+end
 
 -- other stuff
 local Event = require 'utils.event'
@@ -75,12 +94,6 @@ end
 local function on_init()
 	game.forces.player.research_queue_enabled = true
 end
-
-local loaded = _G.package.loaded
-function require(path)
-    return loaded[path] or error('Can only require files at runtime that have been required in the control stage.', 2)
-end
-
 
 Event.on_init(on_init)
 Event.add(defines.events.on_player_created, on_player_created)

@@ -7,7 +7,7 @@ local Surface = require 'utils.surface'
 local Tabs = require 'utils.gui.main'
 local Color = require 'utils.color_presets'
 local Session = require 'utils.session_data'
-local Roles = require 'utils.role.main'
+local Roles = require 'utils.role.table'
 
 local warp_entities = {
     {'small-lamp',-3,-2},{'small-lamp',-3,2},{'small-lamp',3,-2},{'small-lamp',3,2},
@@ -385,9 +385,9 @@ end
 function Public.is_spam(p, player)
     if p.spam > game.tick then
         player.print("Please wait " .. math.ceil((p.spam - game.tick)/60) .. " seconds before trying to warp or add warps again.", Color.warning)
-        return
+        return true
     end
-
+    return false
 end
 
 function Public.clear_player_table(player)
@@ -608,16 +608,17 @@ Gui.on_click(
         local position
 
         if not Roles.get_role(player):allowed('always-warp') then
-            Public.is_spam(p, player)
+            if Public.is_spam(p, player) then return end
 
             warp = warp_table[parent.name]
 
             position = player.position
 
-            if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 > 64 then
-                player.print("You are not standing on a warp platform.", Color.warning)
-                return
-            end
+            -- does not work
+            --if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 > 64 then
+            --    player.print("You are not standing on a warp platform.", Color.warning)
+            --    return
+            --end
 
             if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
                 player.print('Destination is source warp: ' .. parent.name, Color.fail)
@@ -679,6 +680,7 @@ Gui.on_click(
 
         local new = p.frame.new_name.text
         if new ~= "" and new ~= "Spawn" and new ~= "Name:" and new ~= "Warp name:" then
+            if string.len(new) > 15 then player.print('Warp name is too long!', Color.fail) return end
             local position = player.position
             if warp_table[new] then player.print("Warp name already exists!", Color.fail) return end
             p.spam = game.tick + 900

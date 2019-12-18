@@ -2,7 +2,6 @@ local Event = require 'utils.event'
 local Server = require 'utils.server'
 local session = require 'utils.session_data'
 local Color = require 'utils.color_presets'
-local Roles = require 'utils.role.main'
 local font = "default-game"
 
 local brain = {
@@ -36,112 +35,6 @@ local function on_player_created(event)
         trusted[player.name] = true
     end
 end
-
-commands.add_command(
-    'trust',
-    'Promotes a player to trusted!',
-    function(cmd)
-        local trusted = session.get_trusted_table()
-        local server = 'Server'
-        local player = game.player
-        local p
-
-        if player then
-            if player ~= nil then
-                p = player.print
-                if not (player.admin or trusted[player.name]) then
-                    p("You're not admin nor trusted!", Color.fail)
-                    return
-                end
-            else
-                p = log
-            end
-
-            if cmd.parameter == nil then return end
-            local target_player = game.players[cmd.parameter]
-            if not target_player then return end
-            if target_player then
-                --if target_player.name == player.name then game.print("You can't trust yourself ;)", Color.info) return end
-                if trusted[target_player.name] == true then game.print(target_player.name .. " is already trusted!") return end
-                local target_role = Roles.get_role(target_player)
-                local source_role = Roles.get_role(player)
-                if source_role.power <= target_role.power then
-                    Roles.give_role(target_player, 'Casual')
-                end
-                trusted[target_player.name] = true
-                game.print(target_player.name .. " is now a trusted player.", Color.success)
-                for _, a in pairs(game.connected_players) do
-                    if a.admin == true and a.name ~= player.name then
-                        a.print("[INFO]: " .. player.name .. " trusted " .. target_player.name, Color.info)
-                        Server.to_admin_embed(table.concat{'[Info] ', player.name, ' has trusted ', target_player.name, '.'})
-                    end
-                end
-            end
-        else
-            if cmd.parameter == nil then return end
-            local target_player = game.players[cmd.parameter]
-            if target_player then
-                if trusted[target_player.name] == true then log(target_player.name .. " is already trusted!") return end
-                trusted[target_player.name] = true
-                game.print(target_player.name .. " is now a trusted player.", Color.success)
-                Server.to_admin_embed(table.concat{'[Info] ', server, ' has trusted ', target_player.name, '.'})
-            end
-        end
-    end
-)
-
-commands.add_command(
-    'untrust',
-    'Demotes a player from trusted!',
-    function(cmd)
-        local trusted = session.get_trusted_table()
-        local server = 'server'
-        local player = game.player
-        local p
-
-        if player then
-            if player ~= nil then
-                p = player.print
-                if not (player.admin or trusted[player.name]) then
-                    p("You're not admin nor trusted!", Color.fail)
-                    return
-                end
-            else
-                p = log
-            end
-
-            if cmd.parameter == nil then return end
-            local target_player = game.players[cmd.parameter]
-            if not target_player then return end
-            if target_player then
-                if target_player.name == player.name then game.print("You can't untrust yourself ;)", Color.info) return end
-                if trusted[target_player.name] == false then game.print(target_player.name .. " is already untrusted!") return end
-                local target_role = Roles.get_role(target_player)
-                local source_role = Roles.get_role(player)
-                if source_role.power <= target_role.power then
-                    Roles.give_role(target_player, 'Rookie')
-                end
-                trusted[target_player.name] = false
-                game.print(target_player.name .. " is now untrusted.", Color.success)
-                for _, a in pairs(game.connected_players) do
-                    if a.admin == true and a.name ~= player.name then
-                        a.print("[ADMIN]: " .. player.name .. " untrusted " .. target_player.name, Color.info)
-                        Server.to_admin_embed(table.concat{'[Info] ', player.name, ' has untrusted ', target_player.name, '.'})
-                    end
-                end
-            end
-        else
-            if cmd.parameter == nil then return end
-            local target_player = game.players[cmd.parameter]
-            if target_player then
-                if trusted[target_player.name] == false then log(target_player.name .. " is already untrusted!") return end
-                trusted[target_player.name] = false
-                game.print(target_player.name .. " is now untrusted.", Color.success)
-                Server.to_admin_embed(table.concat{'[Info] ', server,  ' has untrusted ', target_player.name, '.'})
-            end
-        end
-    end
-)
 
 local function process_bot_answers(event)
     local message = event.message
