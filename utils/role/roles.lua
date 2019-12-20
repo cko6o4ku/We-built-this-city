@@ -2,14 +2,6 @@ local Public = require 'utils.role.main'
 
 local groups = Public.add_groups()
 
-groups['Admin']:edit('allow',false,{
-    ['polls']=true,
-    ['global-chat']=true,
-    ['set-home']=true,
-    ['home']=true,
-    ['return']=true,
-})
-
 groups['Root']:add_role{
     name='Owner',
     short_hand='Owner',
@@ -49,22 +41,24 @@ roles['Owner']:edit('allow',false,{
 
 roles['Moderator']:edit('allow',false,{
     ['repair']=true,
-    ['spaghetti']=true
+    ['spaghetti']=true,
+    ['tree-decon']=true
 })
 
 roles['Veteran']:edit('allow',false,{
     ['bonus']=true,
     ['bonus-respawn']=true,
-    ['clear_corpses']=true,
+    ['clear_corpses']=true
 })
 
 roles['Casual']:edit('allow',false,{
     ['trust']=true,
-    ['untrust']=true
+    ['untrust']=true,
+    ['show-warp']=true
 })
 
 roles['Rookie']:edit('allow',false,{
-    ['global-chat']=true
+    ['global-chat']=true,
 })
 
 Public.standard_roles{

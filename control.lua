@@ -49,7 +49,6 @@ require 'utils.gui.poll'
 require 'utils.gui.score'
 require 'utils.gui.config'
 require 'utils.gui.game_settings'
---require 'utils.gui.tag'
 require 'utils.gui.warp_system'
 require 'features.functions.auto_bot'
 require 'features.functions.chatbot'
@@ -58,14 +57,10 @@ require 'features.modules.corpse_markers'
 require 'features.modules.floaty_chat'
 require 'features.modules.autohotbar'
 require 'features.modules.autostash'
+require 'features.modules.tree_decon'
 require 'features.commands.repair'
 require 'features.commands.bonus'
 require 'features.commands.misc'
-
-if not _DEBUG then
-require 'utils.debug.safe.command'
-end
-
 require 'features.modules.rpg'
 
 -- load from config/map
@@ -73,26 +68,19 @@ require 'config'
 
 -- lua profiler by boodals
 if _DEBUG then
+    require 'utils.debug.command'
 	require 'utils.profiler'
+    function raw(string)
+        return game.print(serpent.block(string))
+    end
 end
 
-if _DEBUG then
-	function raw(string)
-		return game.print(serpent.block(string))
-	end
+if not _DEBUG then
+require 'utils.debug.safe.command'
 end
 
 if _DUMP_ENV then
     require 'utils.dump_env'
-end
-if _DEBUG then
-    require 'utils.debug.command'
-end
-
-local function on_player_created(event)
-	local player = game.players[event.player_index]
-	player.gui.top.style = 'slot_table_spacing_horizontal_flow'
-	player.gui.left.style = 'slot_table_spacing_vertical_flow'
 end
 
 local function on_init()
@@ -100,4 +88,3 @@ local function on_init()
 end
 
 Event.on_init(on_init)
-Event.add(defines.events.on_player_created, on_player_created)

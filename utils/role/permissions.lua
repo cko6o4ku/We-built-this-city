@@ -118,7 +118,7 @@ user:add_role{
         'reset_assembling_machine',
         'cancel_research'
     },
-    base_afk_time=60
+    base_afk_time=30
 }
 
 jail:add_role{

@@ -64,7 +64,7 @@ function Public.get_group(mixed)
     or false
 end
 
--- @usage Public.give_role(1,'member')
+
 function Public.give_role(player,role,by_player,tick,raise_event)
     local this = Public.config
     local print_colour = Color.warning
@@ -202,6 +202,10 @@ end
 
 function Public._role:allowed(action)
     return self.allow[action] or self.is_root or false
+end
+
+function Public._role:disallowed(action)
+    return not self.allow[action] or false
 end
 
 function Public._role:get_players(online)

@@ -150,8 +150,14 @@ function Public.make_tag(name, pos, shared)
 end
 
 
-function Public.create_warp_button(player)
-    if mod(player)[main_button_name] then return end
+function Public.create_warp_button(player, raise_event)
+    if raise_event == nil then
+        if Roles.events.on_role_change then
+            if mod(player)[main_button_name] then mod(player)[main_button_name].destroy() end
+        end
+    end
+	if not Roles.get_role(player):allowed('show-warp') then return end
+	if mod(player)[main_button_name] then return end
     mod(player).add{
     type = "sprite-button",
     sprite = "item/discharge-defense-equipment",
@@ -454,7 +460,7 @@ local function on_player_joined_game(event)
         }
     end
 
-    Public.create_warp_button(player)
+    Public.create_warp_button(player, false)
 
 end
 
@@ -653,6 +659,7 @@ Gui.on_click(
 
         player.teleport(warp.surface.find_non_colliding_position('character',warp.position,32,1),warp.surface)
         player.print('Warped you over to: ' .. parent.name, Color.success)
+        player.play_sound{path="utility/armor_insert", volume_modifier=1}
         p.spam = game.tick + 900
 
         Public.clear_player_table(player)
@@ -725,6 +732,10 @@ end)
 Event.add(defines.events.on_player_died, on_player_died)
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_left_game, on_player_left_game)
+Event.add(Roles.events.on_role_change, function(event)
+	local player = game.players[event.player_index]
+	Public.create_warp_button(player)
+end)
 
 
 return Public

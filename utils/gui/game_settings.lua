@@ -85,7 +85,7 @@ for name,group in pairs(_root_list) do
                     local objects = _object_list(player)
                     local object = objects[data.object]
                     pcall(object[data.key],unpack(data.params))
-                    Server.event_add{
+                    Server.new_thread{
                         timeout=60,
                         data=element
                     }:on_event('timeout',function(self)
@@ -128,7 +128,7 @@ for name,group in pairs(_root_list) do
                     local objects = _object_list(player)
                     local object = objects[data.object]
                     pcall(object[data.key],unpack(data.params))
-                    Server.event_add{
+                    Server.new_thread{
                         timeout=60,
                         data=element
                     }:on_event('timeout',function(self)
@@ -149,7 +149,7 @@ end
 
 local are_you_sure = Gui.inputs.add_checkbox('game-settings-are-you-sure',true,nil,false,function(player,element)
     element.parent.sure.visible = true
-    Server.event_add{
+    Server.new_thread{
         timeout=600,
         data=element
     }:on_event('timeout',function(self)

@@ -259,7 +259,7 @@ for _,event in pairs(defines.events) do Event.add(event,Public._thread_handler) 
 
 function Public.interface(callback,use_thread,...)
     if use_thread then
-        if use_thread == true then use_thread = Public.event_add{data={callback,...}} end
+        if use_thread == true then use_thread = Public.new_thread{data={callback,...}} end
         use_thread:on_event('resolve',function(thread)
             if is_type(thread.data[1],'function') then
                 local success, err = pcall(unpack(thread.data))

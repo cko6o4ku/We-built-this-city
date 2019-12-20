@@ -46,12 +46,12 @@ function left.update(frame,players)
         local frames = Core.data('left') or {}
         if frame then frames = {[frame]=frames[frame]} or {} end
         local players = game.connected_players
-        Server.event_add{
+        Server.new_thread{
             data={players=players,frames=frames}
         }:on_event('tick',function(thread)
             if #thread.data.players == 0 then thread:close() return end
             local player = table.remove(thread.data.players,1)
-            Server.event_add{
+            Server.new_thread{
                 data={player=player,frames=thread.data.frames}
             }:on_event('resolve',function(thread)
                 for name,left in pairs(thread.data.frames) do
@@ -77,7 +77,7 @@ function left.open(left_name)
             if left_flow[_left.name] then left_flow[_left.name].style.visible = true end
         end
     else
-        Server.event_add{
+        Server.new_thread{
             data={players=game.connected_players}
         }:on_event('tick',function(thread)
             if #thread.data.players == 0 then thread:close() return end
@@ -100,7 +100,7 @@ function left.close(left_name)
             if left_flow[_left.name] then left_flow[_left.name].style.visible = false end
         end
     else
-        Server.event_add{
+        Server.new_thread{
             data={players=game.connected_players}
         }:on_event('tick',function(thread)
             if #thread.data.players == 0 then thread:close() return end
