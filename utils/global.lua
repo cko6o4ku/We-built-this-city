@@ -2,12 +2,18 @@ local Event = require 'utils.event_core'
 local Token = require 'utils.token'
 
 local Global = {}
+local names = {}
+Global.names = names
+local concat = table.concat
 
 function Global.register(tbl, callback)
     if _LIFECYCLE ~= _STAGE.control then
         error('can only be called during the control stage', 2)
     end
+    local filepath = debug.getinfo(2, 'S').source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)
     local token = Token.register_global(tbl)
+
+    names[token] = concat {token, ' - ', filepath}
 
     Event.on_load(
         function()
@@ -22,7 +28,9 @@ function Global.register_init(tbl, init_handler, callback)
     if _LIFECYCLE ~= _STAGE.control then
         error('can only be called during the control stage', 2)
     end
+    local filepath = debug.getinfo(2, 'S').source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)
     local token = Token.register_global(tbl)
+    names[token] = concat {token, ' - ', filepath}
 
     Event.on_init(
         function()
@@ -41,10 +49,10 @@ function Global.register_init(tbl, init_handler, callback)
 end
 
 if _DEBUG then
-    local concat = table.concat
+    --local concat = table.concat
 
-    local names = {}
-    Global.names = names
+    --local names = {}
+    --Global.names = names
 
     function Global.register(tbl, callback)
         local filepath = debug.getinfo(2, 'S').source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)

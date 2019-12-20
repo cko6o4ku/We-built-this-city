@@ -62,6 +62,10 @@ require 'features.commands.repair'
 require 'features.commands.bonus'
 require 'features.commands.misc'
 
+if not _DEBUG then
+require 'utils.debug.safe.command'
+end
+
 require 'features.modules.rpg'
 
 -- load from config/map

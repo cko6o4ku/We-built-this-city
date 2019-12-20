@@ -24,8 +24,8 @@ commands.add_command(
     if player then
         if player ~= nil then
             if not Roles.get_role(player):allowed('repair') then
-                local p = player.print
-                p("[ERROR] Only admins are allowed to run this command!", Color.fail)
+                local p = Server.player_return
+                p("[ERROR] Only admins are allowed to run this command!", Color.fail, player)
                 return
             end
         end
@@ -35,14 +35,14 @@ commands.add_command(
     local highest_admin_power = Roles.get_group('Admin').highest.power-1
     local max_range = role.power-highest_admin_power > 0 and const/(role.power-highest_admin_power) or nil
     local center = player and player.position or {x=0,y=0}
-    if not range or max_range and range > max_range then player.print("Invalid range.") return end
+    if not range or max_range and range > max_range then Server.player_return("Invalid range.", Color.fail, player) return end
     for x = -range-2, range+2 do
         for y = -range-2, range+2 do
             if x^2+y^2 < range^2 then
                 for key, entity in pairs(player.surface.find_entities_filtered({area={{x+center.x,y+center.y},{x+center.x+1,y+center.y+1}},type='entity-ghost'})) do
                     if not disallow[entity.name] then
                         entity.silent_revive()
-                    else player.print('You have repaired: '..entity.name..' this item is not allowed.') end
+                    else Server.player_return('You have repaired: '..entity.name..' this item is not allowed.', Color.warning, player) end
                 end
                 for key, entity in pairs(player.surface.find_entities({{x+center.x,y+center.y},{x+center.x+1,y+center.y+1}})) do if entity.health then entity.health = 10000 end end
             end

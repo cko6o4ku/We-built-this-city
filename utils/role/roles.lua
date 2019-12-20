@@ -35,6 +35,7 @@ groups['Admin']:add_role{
 local roles = Public.add_roles()
 
 roles['Owner']:edit('allow',false,{
+    ['debugger']=true,
     ['game-settings']=true,
     ['always-warp']=true,
     ['admin-items']=true,

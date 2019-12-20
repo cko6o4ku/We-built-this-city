@@ -58,6 +58,21 @@ local function validate_player(player)
   return true
 end
 
+function Public.inside(pos, area)
+    local lt = area.left_top
+    local rb = area.right_bottom
+
+    return pos.x >= lt.x and pos.y >= lt.y and pos.x <= rb.x and pos.y <= rb.y
+end
+function Public.contains_positions(area)
+    for _, pos in pairs(warp_table) do
+        if Public.inside(pos.position, area) then
+            return true
+        end
+    end
+    return false
+end
+
 function Public.remove_warp_point(name)
     local warp = warp_table[name]
     if not warp then return end
@@ -614,11 +629,15 @@ Gui.on_click(
 
             position = player.position
 
-            -- does not work
-            --if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 > 64 then
-            --    player.print("You are not standing on a warp platform.", Color.warning)
-            --    return
-            --end
+            local area = {
+                        left_top = {x = position.x - 5, y = position.y - 5},
+                        right_bottom = {x = position.x + 5, y = position.y + 5}
+                        }
+
+            if not Public.contains_positions(area) then
+                player.print("You are not standing on a warp platform.", Color.warning)
+                return
+            end
 
             if (warp.position.x - position.x)^2 + (warp.position.y - position.y)^2 < 1024 then
                 player.print('Destination is source warp: ' .. parent.name, Color.fail)

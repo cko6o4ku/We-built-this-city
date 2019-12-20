@@ -31,7 +31,7 @@ local settings = {
 
 commands.add_command(
     'bonus',
-    'Set your player bonus (speed, mining etc)',
+    'Set your player bonus (speed, mining etc)(Veterans or higher can run this)',
     function(args)
     local player = game.player
     local p_modifer = Modifiers.get_table()
@@ -46,10 +46,10 @@ commands.add_command(
         end
     end
     local bonus = tonumber(args.parameter)
-    if not bonus or bonus < 0 or bonus > 50 then player.print("Invalid range.") return end
+    if not bonus or bonus < 0 or bonus > 50 then Server.player_return("Invalid range.", Color.fail, player) return end
     for _,setting in pairs(settings) do _a[player.index][setting.key]["bonus"] = setting.scale*math.floor(bonus)*0.01 player[setting.key] = setting.scale*math.floor(bonus)*0.01 end
     this[player.index]=bonus
-    player.print('Bonus set to: '..math.floor(bonus)..'%')
+    Server.player_return('Bonus set to: '..math.floor(bonus)..'%', Color.success, player)
 end)
 
 Event.add(defines.events.on_player_respawned,function(event)

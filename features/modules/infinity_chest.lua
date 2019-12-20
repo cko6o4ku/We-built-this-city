@@ -17,9 +17,9 @@ local Public = {}
 Public.storage = {}
 
 Global.register(
-    {this = this},
+    this,
     function(tbl)
-        this = tbl.this
+        this = tbl
     end
 )
 
@@ -145,6 +145,17 @@ local function is_chest_empty(entity, player)
       this.inf_storage[number]  = nil
       this.inf_mode[number] = nil
     end
+end
+
+local function on_entity_died(event)
+  local entity = event.entity
+  if not entity then return end
+  if entity.name ~= "compilatron-chest" then return end
+  local number = entity.unit_number
+    this.inf_mode[number] = nil
+    this.inf_chests[number]  = nil
+    this.inf_storage[number]  = nil
+    this.inf_mode[number] = nil
 end
 
 local function on_pre_player_mined_item(event)
@@ -396,5 +407,6 @@ Event.add(defines.events.on_built_entity, built_entity)
 Event.add(defines.events.on_robot_built_entity, built_entity_robot)
 Event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
 Event.add(defines.events.on_gui_selection_state_changed, state_changed)
+Event.add(defines.events.on_entity_died, on_entity_died)
 
 return Public

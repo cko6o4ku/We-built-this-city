@@ -48,17 +48,17 @@ local commands = {
     ['evolution']=function() return {'chat-bot.current-evolution',string.format('%.2f',game.forces['enemy'].evolution_factor)} end,
     --Jokes about food and drink
     ['foodpls']={'chat-bot.food'},
-    ['popcorn']=function(player) Callback.event_add{
+    ['popcorn']=function(player) Callback.new_thread{
         timeout=math.floor(180*(math.random()+0.5)),data=player.name
     }:on_event('timeout',function(self)
         if self.data then game.print{'chat-bot.message',{'chat-bot.get-popcorn-2',self.data}} end
     end):open() return {'chat-bot.get-popcorn-1'} end,
-    ['meadpls']=function(player) Callback.event_add{
+    ['meadpls']=function(player) Callback.new_thread{
         timeout=math.floor(180*(math.random()+0.5)),data=player.name
     }:on_event('timeout',function(self)
         if self.data then game.print{'chat-bot.message',{'chat-bot.get-mead-2',self.data}} end
     end):open() return {'chat-bot.get-mead-1'} end,
-    ['beerpls']=function(player) Callback.event_add{
+    ['beerpls']=function(player) Callback.new_thread{
         timeout=math.floor(180*(math.random()+0.5)),data=player.name
     }:on_event('timeout',function(self)
         if self.data then game.print{'chat-bot.message',{'chat-bot.get-beer-2',self.data}} end

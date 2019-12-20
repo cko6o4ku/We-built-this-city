@@ -179,7 +179,7 @@ function Public._threads(t)
     return this
 end
 
-function Public.event_add(obj)
+function Public.new_thread(obj)
     return Public._thread:create(obj)
 end
 
@@ -275,7 +275,7 @@ function Public.interface(callback,use_thread,...)
         use_thread:open()
         Public.queue_thread(use_thread)
     else
-        if is_type(callback,'function') then
+        if type(callback) == 'function' then
             local success, err = pcall(callback,...)
             return success, err
         else
@@ -297,12 +297,13 @@ commands.add_command('interface', 'Runs the given input from the script', functi
         end
     end
     local callback = args.parameter
+    if not callback then return end
     if not string.find(callback,'%s') and not string.find(callback,'return') then callback = 'return '..callback end
     if player then callback = 'local player, surface, force, entity = game.player, game.player.surface, game.player.force, game.player.selected;'..callback end
-    if Roles and Roles.get_role and game.player then callback = 'local a = package.loaded["utils.role.table"] a.get_role(game.player);'..callback end
+    if string.find(callback,'Roles') or string.find(callback,'roles') then callback = 'local Roles = require "utils.role.main" Roles.get_role(game.player);'..callback end
     local success, err = Public.interface(callback)
-    if not success and is_type(err,'string') then local _end = string.find(err,'stack traceback') if _end then err = string.sub(err,0,_end-2) end end
-    if err or err == false then player.print("Command failed with: " .. err, Color.warning) end
+    if not success and type(err) == 'string' then local _end = string.find(err,'stack traceback') if _end then err = string.sub(err,0,_end-2) end end
+    if err or err == false then Server.player_return(err, Color.warning, player) end
 end)
 
 Event.add(defines.events.on_tick,function(event)
